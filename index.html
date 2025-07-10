@@ -3,28 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Resume Builder Pro</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
         body {
-            font-family: 'Arial', sans-serif;
-            background-color: #f5f5f5;
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
             color: #333;
         }
-
+        
         .container {
             max-width: 1400px;
             margin: 0 auto;
             padding: 20px;
         }
-
+        
         .header {
             background: linear-gradient(135deg, #c8102e 0%, #8b0b1f 100%);
             color: white;
@@ -32,120 +27,72 @@
             text-align: center;
             border-radius: 10px;
             margin-bottom: 30px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
         }
-
+        
         .controls {
             background: white;
             padding: 20px;
             border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
             margin-bottom: 30px;
             display: flex;
-            flex-wrap: wrap;
             gap: 15px;
-            align-items: center;
+            flex-wrap: wrap;
         }
-
+        
         .btn {
             padding: 10px 20px;
             border: none;
             border-radius: 5px;
             cursor: pointer;
-            font-size: 14px;
-            transition: all 0.3s;
             font-weight: 600;
         }
-
-        .btn-primary {
-            background: #667eea;
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background: #5a67d8;
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
-        }
-
-        .btn-secondary {
-            background: #48bb78;
-            color: white;
-        }
-
-        .btn-secondary:hover {
-            background: #38a169;
-        }
-
-        .btn-danger {
-            background: #f56565;
-            color: white;
-        }
-
-        select {
+        
+        .btn-primary { background: #667eea; color: white; }
+        .btn-add { background: #38a169; color: white; margin-top: 10px; }
+        .btn-remove { background: #e53e3e; color: white; }
+        .btn-small { padding: 6px 12px; font-size: 12px; }
+        
+        select, input, textarea {
             padding: 10px;
             border: 2px solid #e2e8f0;
             border-radius: 5px;
             font-size: 14px;
-            cursor: pointer;
         }
-
+        
         .main-content {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 30px;
         }
-
-        .form-section {
+        
+        .form-section, .preview-section {
             background: white;
             padding: 30px;
             border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
             max-height: 80vh;
             overflow-y: auto;
         }
-
-        .preview-section {
-            background: white;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            max-height: 80vh;
-            overflow-y: auto;
-        }
-
+        
         .form-group {
             margin-bottom: 20px;
         }
-
+        
         .form-group label {
             display: block;
             margin-bottom: 5px;
             font-weight: 600;
             color: #4a5568;
         }
-
-        .form-group input,
-        .form-group textarea {
+        
+        .form-group input, .form-group textarea {
             width: 100%;
-            padding: 10px;
-            border: 2px solid #e2e8f0;
-            border-radius: 5px;
-            font-size: 14px;
-            transition: border-color 0.3s;
         }
-
-        .form-group input:focus,
-        .form-group textarea:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-
+        
         .form-group textarea {
-            min-height: 100px;
+            min-height: 80px;
             resize: vertical;
         }
-
+        
         .section-title {
             font-size: 20px;
             font-weight: bold;
@@ -154,199 +101,480 @@
             border-bottom: 2px solid #667eea;
             padding-bottom: 5px;
         }
-
+        
+        .dynamic-section {
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 15px;
+            background: #f9f9f9;
+            position: relative;
+        }
+        
+        .remove-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .skill-item {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+            align-items: center;
+        }
+        
+        .skill-item input { flex: 1; }
+        .skill-item select { width: 120px; }
+        
         .resume-preview {
             background: white;
             padding: 40px;
-            min-height: 842px;
-            box-shadow: 0 0 20px rgba(0,0,0,0.1);
-            position: relative;
+            min-height: 600px;
         }
+        
+       /* PLANTILLA MODERNA */
+.template-modern .name {
+    font-size: 32px;
+    color: #2d3748;
+    margin-bottom: 10px;
+    font-weight: bold;
+}
 
+.template-modern .resume-header {
+    border-bottom: 3px solid #667eea;
+    padding-bottom: 20px;
+    margin-bottom: 30px;
+}
+
+.template-modern .contact-info {
+    font-size: 14px;
+    color: #718096;
+}
+
+.template-modern .resume-section h3 {
+    color: #2d3748;
+    border-bottom: 2px solid #667eea;
+    padding-bottom: 5px;
+    margin-bottom: 15px;
+    font-size: 18px;
+}
+
+/* PLANTILLA CREATIVA */
+.template-creative .resume-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 30px;
+    margin: -40px -40px 30px -40px;
+    text-align: center;
+    border-radius: 0;
+}
+
+.template-creative .name {
+    font-size: 32px;
+    margin-bottom: 10px;
+    font-weight: bold;
+    color: white;
+}
+
+.template-creative .contact-info {
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.template-creative .resume-section h3 {
+    color: #667eea;
+    border-bottom: 2px solid #667eea;
+    padding-bottom: 5px;
+    margin-bottom: 15px;
+    font-size: 18px;
+}
+
+/* PLANTILLA MINIMALISTA */
+.template-minimal .resume-header {
+    text-align: center;
+    margin-bottom: 40px;
+    border-bottom: 1px solid #e2e8f0;
+    padding-bottom: 20px;
+}
+
+.template-minimal .name {
+    font-size: 28px;
+    font-weight: 300;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #2d3748;
+    margin-bottom: 10px;
+}
+
+.template-minimal .contact-info {
+    font-size: 14px;
+    color: #718096;
+    font-weight: 300;
+}
+
+.template-minimal .resume-section h3 {
+    color: #2d3748;
+    border-bottom: 1px solid #e2e8f0;
+    padding-bottom: 5px;
+    margin-bottom: 15px;
+    font-size: 16px;
+    font-weight: 400;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* PLANTILLA ELEGANTE */
 .template-elegant .resume-header {
     background-color: #1a202c;
     color: white;
     padding: 30px;
     text-align: center;
+    margin: -40px -40px 30px -40px;
+    border-radius: 0;
 }
 
 .template-elegant .name {
-    font-size: 36px;
-    text-transform: uppercase;
-    letter-spacing: 2px;
+    font-size: 32px;
+    margin-bottom: 10px;
+    font-weight: bold;
+    color: white;
+    font-family: 'Georgia', serif;
 }
 
 .template-elegant .contact-info {
-    font-size: 13px;
-    margin-top: 5px;
+    font-size: 14px;
     color: #cbd5e0;
+    font-style: italic;
 }
 
-.template-elegant .section-title {
+.template-elegant .resume-section h3 {
     color: #1a202c;
-    border-bottom: 1px solid #1a202c;
+    border-bottom: 2px solid #1a202c;
+    padding-bottom: 5px;
+    margin-bottom: 15px;
+    font-size: 18px;
+    font-family: 'Georgia', serif;
 }
 
+/* PLANTILLA CLARA */
 .template-clean .resume-header {
-    text-align: left;
-    padding: 20px 0;
     border-bottom: 3px solid #48bb78;
+    padding-bottom: 20px;
+    margin-bottom: 30px;
 }
 
 .template-clean .name {
-    font-size: 30px;
     color: #2f855a;
+    font-size: 30px;
+    margin-bottom: 10px;
+    font-weight: bold;
 }
 
 .template-clean .contact-info {
     font-size: 14px;
-    color: #4a5568;
+    color: #68d391;
 }
 
-.template-clean .section-title {
+.template-clean .resume-section h3 {
     color: #2f855a;
-    border-left: 5px solid #48bb78;
-    padding-left: 10px;
+    border-bottom: 2px solid #48bb78;
+    padding-bottom: 5px;
+    margin-bottom: 15px;
+    font-size: 18px;
 }
+
+.template-clean .skill-tag {
+    background: #48bb78;
+    color: white;
+}
+
+/* PLANTILLA CORPORATIVA */
 .template-corporate .resume-header {
     background: linear-gradient(to right, #2b6cb0, #2c5282);
     color: white;
-    padding: 20px;
+    padding: 25px;
+    margin: -40px -40px 30px -40px;
+    border-radius: 0;
 }
 
 .template-corporate .name {
-    font-size: 34px;
-    font-weight: 700;
+    font-size: 30px;
+    margin-bottom: 10px;
+    font-weight: bold;
+    color: white;
 }
 
 .template-corporate .contact-info {
-    font-size: 12px;
-    color: #cbd5e0;
+    font-size: 14px;
+    color: #bee3f8;
 }
 
-.template-corporate .section-title {
-    color: #2c5282;
-    text-transform: uppercase;
-    font-size: 16px;
-    margin-top: 20px;
+.template-corporate .resume-section h3 {
+    color: #2b6cb0;
     border-bottom: 2px solid #2b6cb0;
+    padding-bottom: 5px;
+    margin-bottom: 15px;
+    font-size: 18px;
+    font-weight: bold;
 }
-        /* Template 1 - Modern */
-        .template-modern {
-            font-family: 'Arial', sans-serif;
-        }
 
-        .template-modern .resume-header {
-            border-bottom: 3px solid #667eea;
-            padding-bottom: 20px;
-            margin-bottom: 30px;
-        }
-
-        .template-modern .name {
-            font-size: 36px;
-            font-weight: bold;
-            color: #2d3748;
-            margin-bottom: 5px;
-        }
-
-        .template-modern .contact-info {
-            color: #718096;
+.template-corporate .skill-tag {
+    background: #2b6cb0;
+    color: white;
+}
+        
+        .contact-info {
             font-size: 14px;
         }
-
-        /* Template 2 - Creative */
-        .template-creative {
-            font-family: 'Georgia', serif;
-        }
-
-        .template-creative .resume-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 30px;
-            margin: -40px -40px 30px -40px;
-            text-align: center;
-        }
-
-        .template-creative .name {
-            font-size: 42px;
-            margin-bottom: 10px;
-        }
-
-        .template-creative .section-title {
-            color: #667eea;
-            border-bottom: 2px solid #667eea;
-        }
-
-        /* Template 3 - Minimal */
-        .template-minimal {
-            font-family: 'Helvetica', sans-serif;
-        }
-
-        .template-minimal .resume-header {
-            text-align: center;
-            margin-bottom: 40px;
-        }
-
-        .template-minimal .name {
-            font-size: 32px;
-            font-weight: 300;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-            margin-bottom: 15px;
-        }
-
-        .template-minimal .section-title {
-            font-size: 16px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-top: 30px;
-            border-bottom: 1px solid #e2e8f0;
-        }
-
+        
         .resume-section {
             margin-bottom: 25px;
         }
-
-        .resume-section p {
-            line-height: 1.6;
-            color: #4a5568;
+        
+        .resume-section h3 {
+            color: #2d3748;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 5px;
+            margin-bottom: 15px;
         }
-
-        .hide {
-            display: none;
+        
+        .experience-item, .education-item {
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #e2e8f0;
         }
-
+        
+        .job-title, .degree-title {
+            font-weight: bold;
+            color: #2d3748;
+        }
+        
+        .company-info, .institution-info {
+            color: #718096;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+        
+        .skills-category {
+            margin-bottom: 15px;
+        }
+        
+        .skills-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        
+        .skill-tag {
+            background: #667eea;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+        }
+        
         @media (max-width: 768px) {
-            .main-content {
-                grid-template-columns: 1fr;
-            }
-        }
+            .main-content { grid-template-columns: 1fr; }
+            .form-row { grid-template-columns: 1fr; }
+	}
 
-        .loading {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid #667eea;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-left: 10px;
-        }
+	.font-arial { font-family: Arial, sans-serif; }
+        .font-times { font-family: 'Times New Roman', serif; }
+        .font-helvetica { font-family: Helvetica, Arial, sans-serif; }
+        .font-georgia { font-family: Georgia, serif; }
+        .font-calibri { font-family: Calibri, Arial, sans-serif; }
+        .font-verdana { font-family: Verdana, Arial, sans-serif; }
+        .font-tahoma { font-family: Tahoma, Arial, sans-serif; }
+        .font-trebuchet { font-family: 'Trebuchet MS', Arial, sans-serif; }
+        
+.skill-selection-container {
+    margin: 15px 0;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 5px;
+}
 
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
+.skill-checkboxes {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 10px;
+    margin-top: 10px;
+    max-height: 200px;
+    overflow-y: auto;
+    padding: 10px;
+    border: 1px solid #e2e8f0;
+    border-radius: 5px;
+    background: white;
+}
+
+.skill-checkbox-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px;
+}
+
+.skill-checkbox-item input[type="checkbox"] {
+    width: auto;
+    margin: 0;
+}
+
+.skill-checkbox-item label {
+    margin: 0;
+    cursor: pointer;
+    font-weight: normal;
+}
+
+.selected-skills-display {
+    margin-top: 15px;
+}
+
+.selected-skills-display h5 {
+    font-size: 14px;
+    margin-bottom: 8px;
+    color: #4a5568;
+}
+
+.custom-skill-section {
+    margin-top: 20px;
+    padding: 15px;
+    background: #e8f4fd;
+    border-radius: 5px;
+    border: 1px dashed #667eea;
+}
+
+.custom-skill-input-container {
+    display: flex;
+    gap: 10px;
+    margin-top: 8px;
+    align-items: center;
+}
+
+.custom-skill-input {
+    flex: 1;
+    padding: 8px 12px;
+    border: 2px solid #e2e8f0;
+    border-radius: 5px;
+    font-size: 14px;
+}
+
+.custom-skill-input:focus {
+    outline: none;
+    border-color: #667eea;
+}
+
+.custom-skill-item {
+    background: #f0f9ff;
+    border: 1px solid #bae6fd;
+    border-radius: 5px;
+    padding: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.custom-skill-item label {
+    font-style: italic;
+    color: #0369a1;
+}
+
+.custom-skill-item .btn-remove {
+    width: 20px;
+    height: 20px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    line-height: 1;
+}
+
+/* Estilos para el modal de email */
+.email-modal {
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.email-modal-content {
+    background: white;
+    border-radius: 10px;
+    width: 90%;
+    max-width: 500px;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.email-modal-header {
+    padding: 20px;
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.email-modal-header h3 {
+    margin: 0;
+    color: #2d3748;
+}
+
+.email-modal-close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #718096;
+}
+
+.email-modal-body {
+    padding: 20px;
+}
+
+.email-modal-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 20px;
+}
+
+.email-modal .form-group {
+    margin-bottom: 15px;
+}
+
+.email-modal input,
+.email-modal textarea {
+    width: 100%;
+    padding: 10px;
+    border: 2px solid #e2e8f0;
+    border-radius: 5px;
+    font-size: 14px;
+}
+
     </style>
 </head>
 <body>
     <div class="container">
-       <div class="header">
-    <img src="logo blanco.png" alt="logo blanco" style="height: 120px; float: left; margin-right: 20px; margin-top: -30px";>
-    <p style="font-size: 18px; margin-bottom: 5px;">Oficina de Carreras y Colocaciones Recinto de Cupey Decanato de Asuntos Estudiantiles</p>
+        <div class="header">
+    <img src="logo blanco.png" alt="logo blanco" style="height: 120px; float: left; margin-right: 20px; margin-top: -25px";>
+    <p style="font-size: 20px; margin-bottom: 5px;">Oficina de Carreras y Colocaciones Recinto de Cupey</p>
     <h1 id="app-title">Resume Builder Pro</h1>
     <p id="app-subtitle">Crea tu resumé profesional en minutos</p>
-</div>
+        </div>
 
         <div class="controls">
             <select id="language-select">
@@ -357,64 +585,64 @@
                 <option value="modern">Moderno</option>
                 <option value="creative">Creativo</option>
                 <option value="minimal">Minimalista</option>
-		<option value="elegant">Elegante</option>
-		<option value="clean">Clara</option>
-		<option value="corporate">Corporativa</option>
+                <option value="elegant">Elegante</option>
+                <option value="clean">Clara</option>
+                <option value="corporate">Corporativa</option>
             </select>
-            <button class="btn btn-primary" onclick="exportToPDF()" id="pdf-button">
-                <span id="export-pdf">Exportar PDF</span>
-            </button>
-            <button class="btn btn-secondary" onclick="exportToWord()" id="word-button">
-                <span id="export-word">Exportar Word</span>
-            </button>
-            <button class="btn btn-danger" onclick="clearForm()" id="clear-button">
-                <span id="clear-form">Limpiar</span>
-            </button>
+
+	    <select id="font-select">
+    		<option value="arial">Arial</option>
+   		<option value="times">Times New Roman</option>
+    		<option value="helvetica">Helvetica</option>
+    		<option value="georgia">Georgia</option>
+    		<option value="calibri">Calibri</option>
+    		<option value="verdana">Verdana</option>
+    		<option value="tahoma">Tahoma</option>
+    		<option value="trebuchet">Trebuchet MS</option>
+	    </select>
+
+            <button class="btn btn-primary" onclick="exportToPDF()">Exportar PDF</button>
+            <button class="btn btn-primary" onclick="exportToWord()">Exportar Word</button>
+            <button class="btn btn-primary" onclick="clearAll()">Limpiar</button>
+	    <button class="btn btn-primary" onclick="openEmailModal()">📧 Enviar por Email</button>
         </div>
 
         <div class="main-content">
             <div class="form-section">
                 <h2 class="section-title" id="personal-info-title">Información Personal</h2>
                 <div class="form-group">
-                    <label for="name" id="name-label">Nombre Completo</label>
-                    <input type="text" id="name" placeholder="Juan Pérez">
+                    <label id="name-label">Nombre Completo</label>
+                    <input type="text" id="name" placeholder="Juan Pérez" oninput="updatePreview()">
                 </div>
                 <div class="form-group">
-                    <label for="email" id="email-label">Correo Electrónico</label>
-                    <input type="email" id="email" placeholder="juan.perez@email.com">
+                    <label id="email-label">Correo Electrónico</label>
+                    <input type="email" id="email" placeholder="juan.perez@email.com" oninput="updatePreview()">
                 </div>
                 <div class="form-group">
-                    <label for="phone" id="phone-label">Teléfono</label>
-                    <input type="tel" id="phone" placeholder="+1 234 567 8900">
+                    <label id="phone-label">Teléfono</label>
+                    <input type="tel" id="phone" placeholder="+1 234 567 8900" oninput="updatePreview()">
                 </div>
                 <div class="form-group">
-                    <label for="location" id="location-label">Ubicación</label>
-                    <input type="text" id="location" placeholder="Ciudad, País">
+                    <label id="location-label">Ubicación</label>
+                    <input type="text" id="location" placeholder="Ciudad, País" oninput="updatePreview()">
                 </div>
 
-                <h2 class="section-title" id="summary-title">Resumen Profesional</h2>
+                <h2 class="section-title" id="summary-title">Perfil Profesional</h2>
                 <div class="form-group">
-                    <textarea id="summary" placeholder="Profesional altamente motivado con más de 5 años de experiencia en desarrollo de software. Especializado en tecnologías web modernas y metodologías ágiles. Comprometido con la entrega de soluciones innovadoras y de alta calidad que impulsen el éxito empresarial."></textarea>
+                    <textarea id="summary" placeholder="Profesional comprometido, proactivo y orientado a resultados, con habilidades en comunicación, trabajo en equipo y resolución de problemas. Capacidad para adaptarse a distintos 		    entornos laborales, aprender rápidamente y cumplir con metas establecidas." oninput="updatePreview()"></textarea>
                 </div>
 
                 <h2 class="section-title" id="experience-title">Experiencia Laboral</h2>
-                <div class="form-group">
-                    <textarea id="experience" placeholder="Desarrollador Senior | Empresa XYZ | 2020-Presente
-• Lideré el desarrollo de aplicaciones web utilizando React y Node.js
-• Implementé mejoras que aumentaron el rendimiento en un 40%
-• Mentoré a 5 desarrolladores junior"></textarea>
-                </div>
+                <div id="experience-container"></div>
+                <button class="btn btn-add btn-small" onclick="addExperience()" id="add-experience-btn">+ Agregar Experiencia</button>
 
                 <h2 class="section-title" id="education-title">Educación</h2>
-                <div class="form-group">
-                    <textarea id="education" placeholder="Licenciatura en Ciencias de la Computación
-Universidad Nacional | 2015-2019"></textarea>
-                </div>
+                <div id="education-container"></div>
+                <button class="btn btn-add btn-small" onclick="addEducation()" id="add-education-btn">+ Agregar Educación</button>
 
                 <h2 class="section-title" id="skills-title">Habilidades</h2>
-                <div class="form-group">
-                    <textarea id="skills" placeholder="JavaScript, React, Node.js, Python, SQL, Git, Scrum, Liderazgo de equipos"></textarea>
-                </div>
+                <div id="skills-container"></div>
+                <button class="btn btn-add btn-small" onclick="addSkillCategory()" id="add-skill-btn">+ Agregar Categoría</button>
             </div>
 
             <div class="preview-section">
@@ -430,397 +658,1211 @@ Universidad Nacional | 2015-2019"></textarea>
                     </div>
                     
                     <div class="resume-section">
-                        <h2 class="section-title" id="preview-summary-title">Resumen Profesional</h2>
-                        <p id="preview-summary">Tu resumen profesional aparecerá aquí...</p>
+                        <h3 id="preview-summary-title">Perfil Profesional</h3>
+                        <p id="preview-summary">Profesional comprometido, proactivo y orientado a resultados, con habilidades en comunicación, trabajo en equipo y resolución de problemas. Capacidad para adaptarse a distintos entornos 			laborales, aprender rápidamente y cumplir con metas establecidas.</p>
                     </div>
 
                     <div class="resume-section">
-                        <h2 class="section-title" id="preview-experience-title">Experiencia Laboral</h2>
-                        <p id="preview-experience">Tu experiencia laboral aparecerá aquí...</p>
+                        <h3 id="preview-experience-title">Experiencia Laboral</h3>
+                        <div id="preview-experience">Tu experiencia laboral aparecerá aquí...</div>
                     </div>
 
                     <div class="resume-section">
-                        <h2 class="section-title" id="preview-education-title">Educación</h2>
-                        <p id="preview-education">Tu educación aparecerá aquí...</p>
+                        <h3 id="preview-education-title">Educación</h3>
+                        <div id="preview-education">Tu educación aparecerá aquí...</div>
                     </div>
 
                     <div class="resume-section">
-                        <h2 class="section-title" id="preview-skills-title">Habilidades</h2>
-                        <p id="preview-skills">Tus habilidades aparecerán aquí...</p>
+                        <h3 id="preview-skills-title">Habilidades</h3>
+                        <div id="preview-skills">Tus habilidades aparecerán aquí...</div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <script>
-        // Traducciones
-        const translations = {
-            es: {
-                appTitle: "Resume Builder Pro",
-                appSubtitle: "Crea tu currículum profesional en minutos",
-                personalInfoTitle: "Información Personal",
-                nameLabel: "Nombre Completo",
-                emailLabel: "Correo Electrónico",
-                phoneLabel: "Teléfono",
-                locationLabel: "Ubicación",
-                summaryTitle: "Resumen Profesional",
-                experienceTitle: "Experiencia Laboral",
-                educationTitle: "Educación",
-                skillsTitle: "Habilidades",
-                previewTitle: "Vista Previa",
-                exportPdf: "Exportar PDF",
-                exportWord: "Exportar Word",
-                clearForm: "Limpiar",
-                templates: {
-                    modern: "Moderno",
-                    creative: "Creativo",
-                    minimal: "Minimalista",
-		    elegant: "Elegante",
-		    clean: "Clara", 
-		    corporate:"Corporativa"
-			
-                },
-                previewSummaryTitle: "Resumen Profesional",
-                previewExperienceTitle: "Experiencia Laboral",
-                previewEducationTitle: "Educación",
-                previewSkillsTitle: "Habilidades",
-                defaultSummary: "Profesional altamente motivado con más de 5 años de experiencia en desarrollo de software. Especializado en tecnologías web modernas y metodologías ágiles. Comprometido con la entrega de soluciones innovadoras y de alta calidad que impulsen el éxito empresarial.",
-                placeholders: {
-                    name: "Juan Pérez",
-                    email: "juan.perez@email.com",
-                    phone: "+1 234 567 8900",
-                    location: "Ciudad, País",
-                    experience: "Desarrollador Senior | Empresa XYZ | 2020-Presente\n• Lideré el desarrollo de aplicaciones web utilizando React y Node.js\n• Implementé mejoras que aumentaron el rendimiento en un 40%\n• Mentoré a 5 desarrolladores junior",
-                    education: "Licenciatura en Ciencias de la Computación\nUniversidad Nacional | 2015-2019",
-                    skills: "JavaScript, React, Node.js, Python, SQL, Git, Scrum, Liderazgo de equipos"
-                }
-            },
-            en: {
-                appTitle: "Resume Builder Pro",
-                appSubtitle: "Create your professional resume in minutes",
-                personalInfoTitle: "Personal Information",
-                nameLabel: "Full Name",
-                emailLabel: "Email",
-                phoneLabel: "Phone",
-                locationLabel: "Location",
-                summaryTitle: "Professional Summary",
-                experienceTitle: "Work Experience",
-                educationTitle: "Education",
-                skillsTitle: "Skills",
-                previewTitle: "Preview",
-                exportPdf: "Export PDF",
-                exportWord: "Export Word",
-                clearForm: "Clear",
-                templates: {
-                    modern: "Modern",
-                    creative: "Creative",
-                    minimal: "Minimal", 
-		    elegant: "Elegant",
-		    clean: "Clean", 
-		    corporate:"Corporate"
-                },
-                previewSummaryTitle: "Professional Summary",
-                previewExperienceTitle: "Work Experience",
-                previewEducationTitle: "Education",
-                previewSkillsTitle: "Skills",
-                defaultSummary: "Highly motivated professional with over 5 years of experience in software development. Specialized in modern web technologies and agile methodologies. Committed to delivering innovative, high-quality solutions that drive business success.",
-                placeholders: {
-                    name: "John Doe",
-                    email: "john.doe@email.com",
-                    phone: "+1 234 567 8900",
-                    location: "City, Country",
-                    experience: "Senior Developer | XYZ Company | 2020-Present\n• Led web application development using React and Node.js\n• Implemented improvements that increased performance by 40%\n• Mentored 5 junior developers",
-                    education: "Bachelor of Computer Science\nNational University | 2015-2019",
-                    skills: "JavaScript, React, Node.js, Python, SQL, Git, Scrum, Team Leadership"
-                }
-            }
-        };
+<script>
+let currentLang = 'es';
+let expCount = 0;
+let eduCount = 0;
+let skillCount = 0;
 
-        let currentLang = 'es';
+const predefinedSkills = {
+    es: {
+        technical: [
+            'Microsoft Office',
+            'Excel',
+            'PowerPoint',
+            'Word',
+            'Photoshop',
+            'Adobe Creative Suite',
+            'AutoCAD',
+            'SAP',
+            'QuickBooks',
+            'SQL',
+            'Python',
+            'JavaScript',
+            'HTML/CSS',
+            'Redes Sociales',
+            'Marketing Digital',
+            'Análisis de Datos',
+            'Contabilidad',
+            'Administración',
+            'Ventas',
+            'Atención al Cliente'
+        ],
+        soft: [
+            'Trabajo en Equipo',
+            'Liderazgo',
+            'Comunicación Efectiva',
+            'Resolución de Problemas',
+            'Pensamiento Crítico',
+            'Creatividad',
+            'Adaptabilidad',
+            'Organización',
+            'Gestión del Tiempo',
+            'Negociación',
+            'Servicio al Cliente',
+            'Multitarea',
+            'Toma de Decisiones',
+            'Planificación',
+            'Iniciativa',
+            'Responsabilidad',
+            'Puntualidad',
+            'Flexibilidad',
+            'Paciencia',
+            'Empatía'
+        ]
+    },
+    en: {
+        technical: [
+            'Microsoft Office',
+            'Excel',
+            'PowerPoint',
+            'Word',
+            'Photoshop',
+            'Adobe Creative Suite',
+            'AutoCAD',
+            'SAP',
+            'QuickBooks',
+            'SQL',
+            'Python',
+            'JavaScript',
+            'HTML/CSS',
+            'Social Media',
+            'Digital Marketing',
+            'Data Analysis',
+            'Accounting',
+            'Administration',
+            'Sales',
+            'Customer Service'
+        ],
+        soft: [
+            'Teamwork',
+            'Leadership',
+            'Effective Communication',
+            'Problem Solving',
+            'Critical Thinking',
+            'Creativity',
+            'Adaptability',
+            'Organization',
+            'Time Management',
+            'Negotiation',
+            'Customer Service',
+            'Multitasking',
+            'Decision Making',
+            'Planning',
+            'Initiative',
+            'Responsibility',
+            'Punctuality',
+            'Flexibility',
+            'Patience',
+            'Empathy'
+        ]
+    }
+};
 
-        // Cambiar idioma
-        document.getElementById('language-select').addEventListener('change', function(e) {
-            currentLang = e.target.value;
-            updateLanguage();
-            updateTemplateOptions();
-        });
-
-        function updateLanguage() {
-            const t = translations[currentLang];
-            
-            document.getElementById('app-title').textContent = t.appTitle;
-            document.getElementById('app-subtitle').textContent = t.appSubtitle;
-            document.getElementById('personal-info-title').textContent = t.personalInfoTitle;
-            document.getElementById('name-label').textContent = t.nameLabel;
-            document.getElementById('email-label').textContent = t.emailLabel;
-            document.getElementById('phone-label').textContent = t.phoneLabel;
-            document.getElementById('location-label').textContent = t.locationLabel;
-            document.getElementById('summary-title').textContent = t.summaryTitle;
-            document.getElementById('experience-title').textContent = t.experienceTitle;
-            document.getElementById('education-title').textContent = t.educationTitle;
-            document.getElementById('skills-title').textContent = t.skillsTitle;
-            document.getElementById('preview-title').textContent = t.previewTitle;
-            document.getElementById('export-pdf').textContent = t.exportPdf;
-            document.getElementById('export-word').textContent = t.exportWord;
-            document.getElementById('clear-form').textContent = t.clearForm;
-            
-            // Actualizar placeholders
-            document.getElementById('name').placeholder = t.placeholders.name;
-            document.getElementById('email').placeholder = t.placeholders.email;
-            document.getElementById('phone').placeholder = t.placeholders.phone;
-            document.getElementById('location').placeholder = t.placeholders.location;
-            document.getElementById('summary').placeholder = t.defaultSummary;
-            document.getElementById('experience').placeholder = t.placeholders.experience;
-            document.getElementById('education').placeholder = t.placeholders.education;
-            document.getElementById('skills').placeholder = t.placeholders.skills;
-            
-            // Actualizar títulos en preview
-            document.getElementById('preview-summary-title').textContent = t.previewSummaryTitle;
-            document.getElementById('preview-experience-title').textContent = t.previewExperienceTitle;
-            document.getElementById('preview-education-title').textContent = t.previewEducationTitle;
-            document.getElementById('preview-skills-title').textContent = t.previewSkillsTitle;
+const texts = {
+    es: {
+        appTitle: "Resume Builder Pro",
+        appSubtitle: "Crea tu resumé profesional en minutos",
+        personalInfoTitle: "Información Personal",
+        nameLabel: "Nombre Completo",
+        emailLabel: "Correo Electrónico",
+        phoneLabel: "Teléfono",
+        locationLabel: "Ubicación",
+        summaryTitle: "Perfil Profesional",
+        experienceTitle: "Experiencia Laboral",
+        educationTitle: "Educación",
+        skillsTitle: "Habilidades",
+        previewTitle: "Vista Previa",
+        addExperience: "+ Agregar Experiencia",
+        addEducation: "+ Agregar Educación",
+        addSkill: "+ Agregar Categoría",
+        position: "Posición/Cargo",
+        company: "Empresa",
+        startDate: "Fecha Inicio",
+        endDate: "Fecha Fin",
+        current: "Trabajo Actual",
+        tasks: "Tareas y Responsabilidades",
+        degree: "Título/Grado",
+        institution: "Institución",
+        year: "Año",
+        description: "Descripción",
+        skillCategory: "Categoría",
+        skillName: "Habilidad",
+        skillLevel: "Nivel",
+        remove: "Eliminar",
+        addSkillBtn: "+ Agregar Habilidad",
+        levels: {
+            beginner: "Principiante",
+            intermediate: "Intermedio",
+            advanced: "Avanzado",
+            expert: "Experto"
+        },
+        templates: {
+            modern: "Moderno",
+            creative: "Creativo",
+            minimal: "Minimalista",
+            elegant: "Elegante",
+            clean: "Clara",
+            corporate: "Corporativa"
         }
+    },
+    en: {
+        appTitle: "Resume Builder Pro",
+        appSubtitle: "Create your professional resume in minutes",
+        personalInfoTitle: "Personal Information",
+        nameLabel: "Full Name",
+        emailLabel: "Email",
+        phoneLabel: "Phone",
+        locationLabel: "Location",
+        summaryTitle: "Professional Summary",
+        experienceTitle: "Work Experience",
+        educationTitle: "Education",
+        skillsTitle: "Skills",
+        previewTitle: "Preview",
+        addExperience: "+ Add Experience",
+        addEducation: "+ Add Education",
+        addSkill: "+ Add Category",
+        position: "Position/Title",
+        company: "Company",
+        startDate: "Start Date",
+        endDate: "End Date",
+        current: "Current Job",
+        tasks: "Tasks and Responsibilities",
+        degree: "Degree/Title",
+        institution: "Institution",
+        year: "Year",
+        description: "Description",
+        skillCategory: "Category",
+        skillName: "Skill",
+        skillLevel: "Level",
+        remove: "Remove",
+        addSkillBtn: "+ Add Skill",
+        levels: {
+            beginner: "Beginner",
+            intermediate: "Intermediate",
+            advanced: "Advanced",
+            expert: "Expert"
+        },
+        templates: {
+            modern: "Modern",
+            creative: "Creative",
+            minimal: "Minimal",
+            elegant: "Elegant",
+            clean: "Clean",
+            corporate: "Corporate"
+        }
+    }
+};
 
-        function updateTemplateOptions() {
-            const templateSelect = document.getElementById('template-select');
-            const t = translations[currentLang].templates;
-            templateSelect.innerHTML = `
-                <option value="modern">${t.modern}</option>
-                <option value="creative">${t.creative}</option>
-                <option value="minimal">${t.minimal}</option>
-		<option value="elegant">${t.elegant}</option>
-		<option value="clean">${t.clean}</option>
-		<option value="corporate">${t.corporate}</option>
+// Inicializar cuando se carga la página
+window.addEventListener('load', function() {
+    setupEvents();
+    updatePreview();
+});
+
+function setupEvents() {
+    // Cambio de idioma
+    document.getElementById('language-select').onchange = function() {
+        currentLang = this.value;
+        updateLanguage();
+        updateTemplateOptions();
+        updatePreview();
+    };
+
+    // Cambio de plantilla
+    document.getElementById('template-select').onchange = function() {
+        document.getElementById('resume-preview').className = 'resume-preview template-' + this.value + ' ' + getCurrentFontClass();
+    };
+
+    // NUEVO: Cambio de fuente
+    document.getElementById('font-select').onchange = function() {
+        updateFontClass();
+    };
+}
+
+// NUEVA FUNCIÓN: Obtener clase de fuente actual
+function getCurrentFontClass() {
+    const fontSelect = document.getElementById('font-select');
+    return 'font-' + fontSelect.value;
+}
+
+// NUEVA FUNCIÓN: Actualizar clase de fuente
+function updateFontClass() {
+    const previewElement = document.getElementById('resume-preview');
+    const templateSelect = document.getElementById('template-select');
+    const fontClass = getCurrentFontClass();
+    
+    // Mantener la clase de plantilla y añadir la clase de fuente
+    previewElement.className = 'resume-preview template-' + templateSelect.value + ' ' + fontClass;
+}
+
+function updateLanguage() {
+    const t = texts[currentLang];
+    
+    document.getElementById('app-title').textContent = t.appTitle;
+    document.getElementById('app-subtitle').textContent = t.appSubtitle;
+    document.getElementById('personal-info-title').textContent = t.personalInfoTitle;
+    document.getElementById('name-label').textContent = t.nameLabel;
+    document.getElementById('email-label').textContent = t.emailLabel;
+    document.getElementById('phone-label').textContent = t.phoneLabel;
+    document.getElementById('location-label').textContent = t.locationLabel;
+    document.getElementById('summary-title').textContent = t.summaryTitle;
+    document.getElementById('experience-title').textContent = t.experienceTitle;
+    document.getElementById('education-title').textContent = t.educationTitle;
+    document.getElementById('skills-title').textContent = t.skillsTitle;
+    document.getElementById('preview-title').textContent = t.previewTitle;
+    document.getElementById('add-experience-btn').textContent = t.addExperience;
+    document.getElementById('add-education-btn').textContent = t.addEducation;
+    document.getElementById('add-skill-btn').textContent = t.addSkill;
+
+    document.getElementById('preview-summary-title').textContent = t.summaryTitle;
+    document.getElementById('preview-experience-title').textContent = t.experienceTitle;
+    document.getElementById('preview-education-title').textContent = t.educationTitle;
+    document.getElementById('preview-skills-title').textContent = t.skillsTitle;
+    document.getElementById('summary').placeholder = 
+    currentLang === 'es'
+    ? "Profesional comprometido, proactivo y orientado a resultados, con habilidades en comunicación, trabajo en equipo y resolución de problemas. Capacidad para adaptarse a distintos entornos laborales, aprender rápidamente y cumplir con metas establecidas."
+    : "Committed, proactive, and results-oriented professional with strong communication, teamwork, and problem-solving skills. Able to adapt to different work environments, learn quickly, and meet established goals.";
+}
+
+function updateTemplateOptions() {
+    const select = document.getElementById('template-select');
+    const current = select.value;
+    const t = texts[currentLang].templates;
+    
+    select.innerHTML = `
+        <option value="modern">${t.modern}</option>
+        <option value="creative">${t.creative}</option>
+        <option value="minimal">${t.minimal}</option>
+        <option value="elegant">${t.elegant}</option>
+        <option value="clean">${t.clean}</option>
+        <option value="corporate">${t.corporate}</option>
+    `;
+    select.value = current;
+}
+
+function addExperience() {
+    const container = document.getElementById('experience-container');
+    const t = texts[currentLang];
+    const id = expCount++;
+    
+    const html = `
+        <div class="dynamic-section" id="exp-${id}">
+            <button class="btn btn-remove btn-small remove-btn" onclick="removeItem('exp-${id}')">
+                ${t.remove}
+            </button>
+            <h4>${t.experienceTitle} ${id + 1}</h4>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label>${t.position}</label>
+                    <input type="text" class="exp-position" placeholder="Desarrollador Senior" oninput="updatePreview()">
+                </div>
+                <div class="form-group">
+                    <label>${t.company}</label>
+                    <input type="text" class="exp-company" placeholder="Empresa XYZ" oninput="updatePreview()">
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label>${t.startDate}</label>
+                    <input type="text" class="exp-start" placeholder="2020" oninput="updatePreview()">
+                </div>
+                <div class="form-group">
+                    <label>${t.endDate}</label>
+                    <input type="text" class="exp-end" id="exp-end-${id}" placeholder="Presente" oninput="updatePreview()">
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" class="exp-current" id="exp-current-${id}" onchange="toggleCurrentJob(${id})">
+                    ${t.current}
+                </label>
+            </div>
+            
+            <div class="form-group">
+                <label>${t.tasks}</label>
+                <textarea class="exp-tasks" placeholder="• Desarrollo de aplicaciones web" oninput="updatePreview()"></textarea>
+            </div>
+        </div>
+    `;
+    
+    container.insertAdjacentHTML('beforeend', html);
+    updatePreview();
+}
+
+function toggleCurrentJob(expId) {
+    const checkbox = document.getElementById(`exp-current-${expId}`);
+    const endDateInput = document.getElementById(`exp-end-${expId}`);
+    
+    if (checkbox.checked) {
+        endDateInput.value = currentLang === 'es' ? 'Presente' : 'Present';
+        endDateInput.disabled = true;
+        endDateInput.style.backgroundColor = '#f5f5f5';
+        endDateInput.style.color = '#666';
+    } else {
+        endDateInput.value = '';
+        endDateInput.disabled = false;
+        endDateInput.style.backgroundColor = '';
+        endDateInput.style.color = '';
+    }
+    
+    updatePreview();
+}
+
+function addEducation() {
+    const container = document.getElementById('education-container');
+    const t = texts[currentLang];
+    const id = eduCount++;
+    
+    const html = `
+        <div class="dynamic-section" id="edu-${id}">
+            <button class="btn btn-remove btn-small remove-btn" onclick="removeItem('edu-${id}')">
+                ${t.remove}
+            </button>
+            <h4>${t.educationTitle} ${id + 1}</h4>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label>${t.degree}</label>
+                    <input type="text" class="edu-degree" placeholder="Licenciatura en Ciencias" oninput="updatePreview()">
+                </div>
+                <div class="form-group">
+                    <label>${t.institution}</label>
+                    <input type="text" class="edu-institution" placeholder="Universidad Nacional" oninput="updatePreview()">
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>${t.year}</label>
+                <input type="text" class="edu-year" placeholder="2015-2019" oninput="updatePreview()">
+            </div>
+            
+            <div class="form-group">
+                <label>${t.description}</label>
+                <textarea class="edu-description" placeholder="Descripción adicional..." oninput="updatePreview()"></textarea>
+            </div>
+        </div>
+    `;
+    
+    container.insertAdjacentHTML('beforeend', html);
+    updatePreview();
+}
+
+function addSkillCategory() {
+    const container = document.getElementById('skills-container');
+    const t = texts[currentLang];
+    const id = skillCount++;
+    
+    const html = `
+        <div class="dynamic-section" id="skill-cat-${id}">
+            <button class="btn btn-remove btn-small remove-btn" onclick="removeItem('skill-cat-${id}')">
+                ${t.remove}
+            </button>
+            <h4>${t.skillsTitle} ${id + 1}</h4>
+            
+            <div class="form-group">
+                <label>${t.skillCategory}</label>
+                <select class="skill-category-name" onchange="updateSkillOptions(${id})" id="category-select-${id}">
+                    <option value="">${currentLang === 'es' ? 'Seleccionar categoría' : 'Select category'}</option>
+                    <option value="technical">${currentLang === 'es' ? 'Habilidades Técnicas' : 'Technical Skills'}</option>
+                    <option value="soft">${currentLang === 'es' ? 'Habilidades Blandas' : 'Soft Skills'}</option>
+                </select>
+            </div>
+            
+            <div class="skill-selection-container" id="skill-selection-${id}" style="display: none;">
+                <label>${currentLang === 'es' ? 'Seleccionar habilidades:' : 'Select skills:'}</label>
+                <div class="skill-checkboxes" id="skill-checkboxes-${id}"></div>
+                
+                <!-- NUEVA SECCIÓN PARA HABILIDADES PERSONALIZADAS -->
+                <div class="custom-skill-section">
+                    <label>${currentLang === 'es' ? 'Agregar habilidad personalizada:' : 'Add custom skill:'}</label>
+                    <div class="custom-skill-input-container">
+                        <input 
+                            type="text" 
+                            id="custom-skill-input-${id}" 
+                            placeholder="${currentLang === 'es' ? 'Escribir nueva habilidad...' : 'Write new skill...'}"
+                            class="custom-skill-input"
+                        >
+                        <button 
+                            type="button" 
+                            class="btn btn-add btn-small" 
+                            onclick="addCustomSkill(${id})"
+                        >
+                            ${currentLang === 'es' ? 'Agregar' : 'Add'}
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="selected-skills-display" id="selected-skills-${id}">
+                <h5>${currentLang === 'es' ? 'Habilidades seleccionadas:' : 'Selected skills:'}</h5>
+                <div class="skills-list" id="skills-list-${id}"></div>
+            </div>
+        </div>
+    `;
+    
+    container.insertAdjacentHTML('beforeend', html);
+    updatePreview();
+}
+
+function addCustomSkill(categoryId) {
+    const customInput = document.getElementById(`custom-skill-input-${categoryId}`);
+    const skillValue = customInput.value.trim();
+    
+    if (skillValue) {
+        // Crear un checkbox temporal para la habilidad personalizada
+        const skillCheckboxes = document.getElementById(`skill-checkboxes-${categoryId}`);
+        const customSkillId = `custom-skill-${categoryId}-${Date.now()}`;
+        
+        const customSkillHtml = `
+            <div class="skill-checkbox-item custom-skill-item">
+                <input type="checkbox" id="${customSkillId}" value="${skillValue}" checked onchange="updateSelectedSkills(${categoryId})">
+                <label for="${customSkillId}">${skillValue}</label>
+                <button type="button" class="btn btn-remove btn-small" onclick="removeCustomSkill('${customSkillId}', ${categoryId})" style="margin-left: auto;">×</button>
+            </div>
+        `;
+        
+        skillCheckboxes.insertAdjacentHTML('beforeend', customSkillHtml);
+        
+        // Limpiar el input
+        customInput.value = '';
+        
+        // Actualizar la vista previa
+        updateSelectedSkills(categoryId);
+    } else {
+        alert(currentLang === 'es' ? 'Por favor escribe una habilidad' : 'Please write a skill');
+    }
+}
+
+function removeCustomSkill(skillId, categoryId) {
+    const skillElement = document.getElementById(skillId).closest('.skill-checkbox-item');
+    if (skillElement) {
+        skillElement.remove();
+        updateSelectedSkills(categoryId);
+    }
+}
+
+function updateSkillOptions(categoryId) {
+    const categorySelect = document.getElementById(`category-select-${categoryId}`);
+    const skillSelection = document.getElementById(`skill-selection-${categoryId}`);
+    const skillCheckboxes = document.getElementById(`skill-checkboxes-${categoryId}`);
+    
+    const selectedCategory = categorySelect.value;
+    
+    if (selectedCategory) {
+        skillSelection.style.display = 'block';
+        skillCheckboxes.innerHTML = '';
+        
+        const skills = predefinedSkills[currentLang][selectedCategory];
+        
+        skills.forEach((skill, index) => {
+            const checkboxId = `skill-${categoryId}-${index}`;
+            const checkboxHtml = `
+                <div class="skill-checkbox-item">
+                    <input type="checkbox" id="${checkboxId}" value="${skill}" onchange="updateSelectedSkills(${categoryId})">
+                    <label for="${checkboxId}">${skill}</label>
+                </div>
+            `;
+            skillCheckboxes.insertAdjacentHTML('beforeend', checkboxHtml);
+        });
+    } else {
+        skillSelection.style.display = 'none';
+        document.getElementById(`skills-list-${categoryId}`).innerHTML = '';
+        updatePreview();
+    }
+}
+
+function updateSelectedSkills(categoryId) {
+    const checkboxes = document.querySelectorAll(`#skill-checkboxes-${categoryId} input[type="checkbox"]:checked`);
+    const skillsList = document.getElementById(`skills-list-${categoryId}`);
+    
+    skillsList.innerHTML = '';
+    
+    checkboxes.forEach(checkbox => {
+        const skillTag = document.createElement('span');
+        skillTag.className = 'skill-tag';
+        skillTag.textContent = checkbox.value;
+        skillsList.appendChild(skillTag);
+    });
+    
+    updatePreview();
+}
+
+function addSkill(categoryId) {
+    const container = document.getElementById(`skills-list-${categoryId}`);
+    const t = texts[currentLang];
+    const skillId = Date.now();
+    
+    const html = `
+        <div class="skill-item" id="skill-${skillId}">
+            <input type="text" class="skill-name" placeholder="${t.skillName}" oninput="updatePreview()">
+            <select class="skill-level" oninput="updatePreview()">
+                <option value="beginner">${t.levels.beginner}</option>
+                <option value="intermediate">${t.levels.intermediate}</option>
+                <option value="advanced">${t.levels.advanced}</option>
+                <option value="expert">${t.levels.expert}</option>
+            </select>
+            <button class="btn btn-remove btn-small" onclick="removeItem('skill-${skillId}')">
+                ${t.remove}
+            </button>
+        </div>
+    `;
+    
+    container.insertAdjacentHTML('beforeend', html);
+    updatePreview();
+}
+
+function removeItem(id) {
+    const element = document.getElementById(id);
+    if (element) {
+        element.remove();
+        updatePreview();
+    }
+}
+
+function updatePreview() {
+    // Información personal
+    document.getElementById('preview-name').textContent = 
+        document.getElementById('name').value || (currentLang === 'es' ? 'Tu Nombre' : 'Your Name');
+    document.getElementById('preview-email').textContent = 
+        document.getElementById('email').value || 'email@ejemplo.com';
+    document.getElementById('preview-phone').textContent = 
+        document.getElementById('phone').value || '+1 234 567 8900';
+    document.getElementById('preview-location').textContent = 
+        document.getElementById('location').value || (currentLang === 'es' ? 'Ciudad, País' : 'City, Country');
+    
+    // Resumen
+    const summary = document.getElementById('summary').value;
+    document.getElementById('preview-summary').innerHTML = 
+        summary ? summary.replace(/\n/g, '<br>') : 
+        (currentLang === 'es' ? 'Profesional comprometido, proactivo y orientado a resultados, con habilidades en comunicación, trabajo en equipo y resolución de problemas. Capacidad para adaptarse a distintos entornos laborales, 	aprender rápidamente y cumplir con metas establecidas.' : 'Committed, proactive, and results-oriented professional with strong communication, teamwork, and problem-solving skills. Able to adapt to different work environments, 	learn quickly, and meet established goals.');
+    
+    // Experiencias
+    updateExperiencePreview();
+    updateEducationPreview();
+    updateSkillsPreview();
+}
+
+function updateExperiencePreview() {
+    const container = document.getElementById('preview-experience');
+    let html = '';
+    
+    const experiences = document.querySelectorAll('#experience-container .dynamic-section');
+    experiences.forEach((exp) => {
+        const position = exp.querySelector('.exp-position')?.value || '';
+        const company = exp.querySelector('.exp-company')?.value || '';
+        const startDate = exp.querySelector('.exp-start')?.value || '';
+        const endDate = exp.querySelector('.exp-end')?.value || '';
+        const tasks = exp.querySelector('.exp-tasks')?.value || '';
+        
+        if (position || company) {
+            html += `
+                <div class="experience-item">
+                    <div class="job-title">${position}</div>
+                    <div class="company-info">${company} | ${startDate} - ${endDate}</div>
+                    <div class="job-description">${tasks.replace(/\n/g, '<br>')}</div>
+                </div>
             `;
         }
+    });
+    
+    container.innerHTML = html || 
+        (currentLang === 'es' ? 'Tu experiencia laboral aparecerá aquí...' : 'Your work experience will appear here...');
+}
 
-        // Cambiar plantilla
-        document.getElementById('template-select').addEventListener('change', function(e) {
-            const preview = document.getElementById('resume-preview');
-            preview.className = 'resume-preview template-' + e.target.value;
-        });
+function updateEducationPreview() {
+    const container = document.getElementById('preview-education');
+    let html = '';
+    
+    const educations = document.querySelectorAll('#education-container .dynamic-section');
+    educations.forEach((edu) => {
+        const degree = edu.querySelector('.edu-degree')?.value || '';
+        const institution = edu.querySelector('.edu-institution')?.value || '';
+        const year = edu.querySelector('.edu-year')?.value || '';
+        const description = edu.querySelector('.edu-description')?.value || '';
+        
+        if (degree || institution) {
+            html += `
+                <div class="education-item">
+                    <div class="degree-title">${degree}</div>
+                    <div class="institution-info">${institution} | ${year}</div>
+                    ${description ? `<div>${description}</div>` : ''}
+                </div>
+            `;
+        }
+    });
+    
+    container.innerHTML = html || 
+        (currentLang === 'es' ? 'Tu educación aparecerá aquí...' : 'Your education will appear here...');
+}
 
-        // Actualizar vista previa
-        function updatePreview() {
-            document.getElementById('preview-name').textContent = document.getElementById('name').value || 
-                (currentLang === 'es' ? 'Tu Nombre' : 'Your Name');
-            document.getElementById('preview-email').textContent = document.getElementById('email').value || 
-                (currentLang === 'es' ? 'email@ejemplo.com' : 'email@example.com');
-            document.getElementById('preview-phone').textContent = document.getElementById('phone').value || '+1 234 567 8900';
-            document.getElementById('preview-location').textContent = document.getElementById('location').value || 
-                (currentLang === 'es' ? 'Ciudad, País' : 'City, Country');
+function updateSkillsPreview() {
+    const container = document.getElementById('preview-skills');
+    let html = '';
+    
+    const skillCategories = document.querySelectorAll('#skills-container .dynamic-section');
+    skillCategories.forEach((cat) => {
+        const categorySelect = cat.querySelector('.skill-category-name');
+        const categoryName = categorySelect ? categorySelect.selectedOptions[0]?.text : '';
+        
+        // Buscar las habilidades seleccionadas (checkboxes marcados)
+        const selectedSkills = cat.querySelectorAll('.skill-checkboxes input[type="checkbox"]:checked');
+        
+        if (categoryName && categoryName !== (currentLang === 'es' ? 'Seleccionar categoría' : 'Select category') && selectedSkills.length > 0) {
+            html += `<div class="skills-category">`;
+            html += `<h4>${categoryName}</h4>`;
+            html += `<div class="skills-list">`;
             
-            const summary = document.getElementById('summary').value;
-            document.getElementById('preview-summary').innerHTML = summary ? 
-                summary.replace(/\n/g, '<br>') : 
-                (currentLang === 'es' ? 'Tu resumen profesional aparecerá aquí...' : 'Your professional summary will appear here...');
+            selectedSkills.forEach((checkbox) => {
+                const skillName = checkbox.value;
+                if (skillName) {
+                    html += `<span class="skill-tag">${skillName}</span>`;
+                }
+            });
             
-            const experience = document.getElementById('experience').value;
-            document.getElementById('preview-experience').innerHTML = experience ? 
-                experience.replace(/\n/g, '<br>') : 
-                (currentLang === 'es' ? 'Tu experiencia laboral aparecerá aquí...' : 'Your work experience will appear here...');
-            
-            const education = document.getElementById('education').value;
-            document.getElementById('preview-education').innerHTML = education ? 
-                education.replace(/\n/g, '<br>') : 
-                (currentLang === 'es' ? 'Tu educación aparecerá aquí...' : 'Your education will appear here...');
-            
-            const skills = document.getElementById('skills').value;
-            document.getElementById('preview-skills').textContent = skills || 
-                (currentLang === 'es' ? 'Tus habilidades aparecerán aquí...' : 'Your skills will appear here...');
+            html += `</div></div>`;
+        }
+    });
+    
+    container.innerHTML = html || 
+        (currentLang === 'es' ? 'Tus habilidades aparecerán aquí...' : 'Your skills will appear here...');
+}
+function clearAll() {
+    if (confirm(currentLang === 'es' ? '¿Seguro que quieres limpiar todo?' : 'Are you sure you want to clear everything?')) {
+        // Limpiar información personal y resumen
+        document.getElementById('name').value = '';
+        document.getElementById('email').value = '';
+        document.getElementById('phone').value = '';
+        document.getElementById('location').value = '';
+        document.getElementById('summary').value = '';
+        
+        // Limpiar completamente las secciones dinámicas
+        document.getElementById('experience-container').innerHTML = '';
+        document.getElementById('education-container').innerHTML = '';
+        document.getElementById('skills-container').innerHTML = '';
+        
+        // Resetear contadores
+        expCount = 0;
+        eduCount = 0;
+        skillCount = 0;
+        
+        // NO agregar elementos automáticamente - dejar las secciones vacías
+        // addExperience();    ← ELIMINAR O COMENTAR ESTAS LÍNEAS
+        // addEducation();     ← ELIMINAR O COMENTAR ESTAS LÍNEAS  
+        // addSkillCategory(); ← ELIMINAR O COMENTAR ESTAS LÍNEAS
+        
+        updatePreview();
+    }
+}
+
+// Funciones de exportación
+async function exportToPDF() {
+    try {
+        // Verificar si las librerías están cargadas
+        if (typeof window.jspdf === 'undefined' || typeof html2canvas === 'undefined') {
+            alert('Las librerías de PDF no están cargadas. Por favor recarga la página.');
+            return;
         }
 
-        // Event listeners para actualizar la vista previa
-        document.getElementById('name').addEventListener('input', updatePreview);
-        document.getElementById('email').addEventListener('input', updatePreview);
-        document.getElementById('phone').addEventListener('input', updatePreview);
-        document.getElementById('location').addEventListener('input', updatePreview);
-        document.getElementById('summary').addEventListener('input', updatePreview);
-        document.getElementById('experience').addEventListener('input', updatePreview);
-        document.getElementById('education').addEventListener('input', updatePreview);
-        document.getElementById('skills').addEventListener('input', updatePreview);
-
-        // Exportar a PDF
-        async function exportToPDF() {
-            console.log('Iniciando exportación a PDF...');
-            const button = document.getElementById('pdf-button');
-            const originalContent = button.innerHTML;
-            button.innerHTML = '<span class="loading"></span>';
-            button.disabled = true;
-
-            try {
-                // Verificar si las librerías están cargadas
-                if (typeof window.jspdf === 'undefined' || typeof html2canvas === 'undefined') {
-                    throw new Error('Las librerías necesarias no están cargadas');
+        const { jsPDF } = window.jspdf;
+        const element = document.getElementById('resume-preview');
+        
+        // Configuraciones mejoradas para html2canvas
+        const canvas = await html2canvas(element, {
+            scale: 2,
+            useCORS: true,
+            logging: false,
+            backgroundColor: '#ffffff',
+            height: element.scrollHeight,
+            windowWidth: element.scrollWidth,
+            allowTaint: true,
+            removeContainer: true,
+            imageTimeout: 0,
+            onclone: function(clonedDoc) {
+                // Ajustar estilos en el clon para mejor rendering
+                const clonedElement = clonedDoc.getElementById('resume-preview');
+                if (clonedElement) {
+                    clonedElement.style.width = '800px';
+                    clonedElement.style.padding = '40px';
+                    clonedElement.style.boxSizing = 'border-box';
+                    clonedElement.style.fontSize = '14px';
+                    clonedElement.style.lineHeight = '1.4';
+                    
+                    // Prevenir que elementos se corten
+                    const sections = clonedElement.querySelectorAll('.resume-section, .experience-item, .education-item');
+                    sections.forEach(section => {
+                        section.style.breakInside = 'avoid';
+                        section.style.pageBreakInside = 'avoid';
+                    });
                 }
-
-                const { jsPDF } = window.jspdf;
-                const element = document.getElementById('resume-preview');
-                
-                console.log('Generando canvas...');
-                const canvas = await html2canvas(element, {
-                    scale: 2,
-                    useCORS: true,
-                    logging: false,
-                    backgroundColor: '#ffffff'
-                });
-                
-                console.log('Canvas generado, creando PDF...');
-                const imgData = canvas.toDataURL('image/png');
-                const pdf = new jsPDF({
-                    orientation: 'portrait',
-                    unit: 'mm',
-                    format: 'a4'
-                });
-                
-                const imgWidth = 210;
-                const pageHeight = 297;
-                const imgHeight = (canvas.height * imgWidth) / canvas.width;
-                let heightLeft = imgHeight;
-                let position = 0;
-
-                pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-                heightLeft -= pageHeight;
-
-                while (heightLeft >= 0) {
-                    position = heightLeft - imgHeight;
+            }
+        });
+        
+        const imgData = canvas.toDataURL('image/png', 1.0);
+        
+        // Configuración del PDF
+        const pdf = new jsPDF({
+            orientation: 'portrait',
+            unit: 'mm',
+            format: 'a4',
+            compress: true
+        });
+        
+        const pdfWidth = 210; // A4 width in mm
+        const pdfHeight = 297; // A4 height in mm
+        const margin = 10; // Margen de 10mm
+        const contentWidth = pdfWidth - (margin * 2);
+        const contentHeight = pdfHeight - (margin * 2);
+        
+        // Calcular dimensiones de la imagen
+        const imgWidth = contentWidth;
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+        
+        // Si la imagen cabe en una página
+        if (imgHeight <= contentHeight) {
+            pdf.addImage(imgData, 'PNG', margin, margin, imgWidth, imgHeight);
+        } else {
+            // Si necesita múltiples páginas, dividir inteligentemente
+            const totalPages = Math.ceil(imgHeight / contentHeight);
+            
+            for (let page = 0; page < totalPages; page++) {
+                if (page > 0) {
                     pdf.addPage();
-                    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-                    heightLeft -= pageHeight;
                 }
-
-                const fileName = document.getElementById('name').value || 'resume';
-                pdf.save(`${fileName}_resume.pdf`);
-                console.log('PDF guardado exitosamente');
-            } catch (error) {
-                console.error('Error generating PDF:', error);
-                alert(currentLang === 'es' ? 
-                    'Error al generar el PDF. Por favor verifica que las librerías estén cargadas e intenta de nuevo.' : 
-                    'Error generating PDF. Please verify libraries are loaded and try again.');
-            } finally {
-                button.innerHTML = originalContent;
-                button.disabled = false;
+                
+                const yOffset = -(page * contentHeight);
+                const remainingHeight = imgHeight - (page * contentHeight);
+                const currentPageHeight = Math.min(contentHeight, remainingHeight);
+                
+                // Crear un canvas temporal para esta página
+                const pageCanvas = document.createElement('canvas');
+                const pageCtx = pageCanvas.getContext('2d');
+                
+                pageCanvas.width = canvas.width;
+                pageCanvas.height = (currentPageHeight * canvas.width) / imgWidth;
+                
+                // Copiar la porción correspondiente de la imagen original
+                pageCtx.drawImage(
+                    canvas,
+                    0, (page * contentHeight * canvas.width) / imgWidth,
+                    canvas.width, pageCanvas.height,
+                    0, 0,
+                    canvas.width, pageCanvas.height
+                );
+                
+                const pageImgData = pageCanvas.toDataURL('image/png', 1.0);
+                pdf.addImage(pageImgData, 'PNG', margin, margin, imgWidth, currentPageHeight);
             }
         }
+        
+        // Guardar el PDF
+        const fileName = document.getElementById('name').value || 'resume';
+        pdf.save(`${fileName}_resume.pdf`);
+        
+    } catch (error) {
+        console.error('Error generando PDF:', error);
+        alert('Error al generar el PDF. Intenta de nuevo.');
+    }
+}
+function exportToWord() {
+    try {
+        const previewContent = document.getElementById('resume-preview').innerHTML;
+        const template = document.getElementById('template-select').value;
+        
+       // Mapeo de fuentes
+const fontMap = {
+    'arial': 'Arial, sans-serif',
+    'times': '"Times New Roman", serif',
+    'helvetica': 'Helvetica, Arial, sans-serif',
+    'georgia': 'Georgia, serif',
+    'calibri': 'Calibri, Arial, sans-serif',
+    'verdana': 'Verdana, Arial, sans-serif',
+    'tahoma': 'Tahoma, Arial, sans-serif',
+    'trebuchet': '"Trebuchet MS", Arial, sans-serif'
+};
 
-        // Exportar a Word
-        function exportToWord() {
-            console.log('Exportando a Word...');
-            try {
-                const previewContent = document.getElementById('resume-preview').innerHTML;
-                const template = document.getElementById('template-select').value;
-                
-                let styles = `
-                    <style>
-                        body { font-family: Arial, sans-serif; margin: 40px; }
-                        .resume-header { margin-bottom: 30px; }
-                        .name { font-size: 28px; font-weight: bold; margin-bottom: 10px; }
-                        .contact-info { color: #666; margin-bottom: 20px; }
-                        .section-title { font-size: 18px; font-weight: bold; margin-top: 25px; margin-bottom: 10px; border-bottom: 2px solid #667eea; padding-bottom: 5px; }
-                        .resume-section { margin-bottom: 20px; }
-                        p { line-height: 1.6; }
+const selectedFont = document.getElementById('font-select').value;
+
+let styles = `
+    <style>
+        body { 
+            font-family: ${fontMap[selectedFont]}
+                    margin: 40px; 
+                    line-height: 1.6; 
+                    color: #333;
+                }
+                .resume-header { margin-bottom: 30px; }
+                .name { margin-bottom: 10px; }
+                .contact-info { margin-bottom: 20px; }
+                .resume-section { margin-bottom: 20px; }
+                .experience-item, .education-item { 
+                    margin-bottom: 15px; 
+                    padding-bottom: 10px; 
+                    border-bottom: 1px solid #e2e8f0; 
+                }
+                .job-title, .degree-title { 
+                    font-weight: bold; 
+                    font-size: 16px; 
+                    color: #2d3748; 
+                }
+                .company-info, .institution-info { 
+                    color: #718096; 
+                    font-size: 14px; 
+                    margin-bottom: 5px; 
+                }
+                .skills-category { margin-bottom: 15px; }
+                .skills-category h4 { 
+                    font-weight: bold; 
+                    margin-bottom: 8px; 
+                    color: #2d3748; 
+                }
+                .skills-list { 
+                    display: flex; 
+                    flex-wrap: wrap; 
+                    gap: 8px; 
+                }
+                .skill-tag { 
+                    color: white; 
+                    padding: 4px 8px; 
+                    border-radius: 12px; 
+                    font-size: 12px; 
+                    font-weight: 500; 
+                    display: inline-block;
+                }
+        `;
+
+        // Estilos específicos por plantilla
+        switch(template) {
+            case 'modern':
+                styles += `
+                    .name {
+                        font-size: 32px;
+                        color: #2d3748;
+                        font-weight: bold;
+                    }
+                    .resume-header {
+                        border-bottom: 3px solid #667eea;
+                        padding-bottom: 20px;
+                    }
+                    .contact-info {
+                        font-size: 14px;
+                        color: #718096;
+                    }
+                    h3 {
+                        color: #2d3748;
+                        border-bottom: 2px solid #667eea;
+                        padding-bottom: 5px;
+                        margin-bottom: 15px;
+                        font-size: 18px;
+                    }
+                    .skill-tag { background: #667eea; }
                 `;
-
-                if (template === 'creative') {
-                    styles += `
-                        .resume-header { background: #667eea; color: white; padding: 20px; text-align: center; }
-                    `;
-                } else if (template === 'minimal') {
-                    styles += `
-                        .resume-header { text-align: center; }
-                        .name { font-weight: 300; text-transform: uppercase; letter-spacing: 2px; }
-                        .section-title { text-transform: uppercase; letter-spacing: 1px; font-size: 14px; }
-                    `;
-                }
-
-                styles += '</style>';
-
-                const html = `
-                    <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
-                    <head>
-                        <meta charset="utf-8">
-                        <title>Resume</title>
-                        ${styles}
-                    </head>
-                    <body>
-                        ${previewContent}
-                    </body>
-                    </html>
+                break;
+                
+            case 'creative':
+                styles += `
+                    .resume-header {
+                        background-color: #667eea !important;
+                        background: #667eea !important;
+                        color: white;
+                        padding: 30px;
+                        text-align: center;
+                        margin: -40px -40px 30px -40px;
+                    }
+                    .name {
+                        font-size: 32px;
+                        font-weight: bold;
+                        color: white !important;
+                    }
+                    .contact-info {
+                        font-size: 14px;
+                        color: white !important;
+                    }
+                    h3 {
+                        color: #667eea;
+                        border-bottom: 2px solid #667eea;
+                        padding-bottom: 5px;
+                        margin-bottom: 15px;
+                        font-size: 18px;
+                    }
+                    .skill-tag { background: #667eea; }
                 `;
-
-                const blob = new Blob(['\ufeff', html], { 
-                    type: 'application/msword' 
-                });
+                break;
                 
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                const fileName = document.getElementById('name').value || 'resume';
-                a.href = url;
-                a.download = `${fileName}_resume.doc`;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
+            case 'minimal':
+                styles += `
+                    .resume-header {
+                        text-align: center;
+                        border-bottom: 1px solid #e2e8f0;
+                        padding-bottom: 20px;
+                    }
+                    .name {
+                        font-size: 28px;
+                        font-weight: 300;
+                        letter-spacing: 2px;
+                        text-transform: uppercase;
+                        color: #2d3748;
+                    }
+                    .contact-info {
+                        font-size: 14px;
+                        color: #718096;
+                        font-weight: 300;
+                    }
+                    h3 {
+                        color: #2d3748;
+                        border-bottom: 1px solid #e2e8f0;
+                        padding-bottom: 5px;
+                        margin-bottom: 15px;
+                        font-size: 16px;
+                        font-weight: 400;
+                        text-transform: uppercase;
+                        letter-spacing: 1px;
+                    }
+                    .skill-tag { background: #667eea; }
+                `;
+                break;
                 
-                console.log('Word exportado exitosamente');
-            } catch (error) {
-                console.error('Error al exportar Word:', error);
-                alert(currentLang === 'es' ? 'Error al exportar a Word' : 'Error exporting to Word');
-            }
+            case 'elegant':
+                styles += `
+                    .resume-header {
+                        background-color: #1a202c !important;
+                        background: #1a202c !important;
+                        color: white;
+                        padding: 30px;
+                        text-align: center;
+                        margin: -40px -40px 30px -40px;
+                    }
+                    .name {
+                        font-size: 32px;
+                        font-weight: bold;
+                        color: white !important;
+                        font-family: 'Georgia', serif;
+                    }
+                    .contact-info {
+                        font-size: 14px;
+                        color: white !important;
+                        font-style: italic;
+                    }
+                    h3 {
+                        color: #1a202c;
+                        border-bottom: 2px solid #1a202c;
+                        padding-bottom: 5px;
+                        margin-bottom: 15px;
+                        font-size: 18px;
+                        font-family: 'Georgia', serif;
+                    }
+                    .skill-tag { background: #1a202c; }
+                `;
+                break;
+                
+            case 'clean':
+                styles += `
+                    .resume-header {
+                        border-bottom: 3px solid #48bb78;
+                        padding-bottom: 20px;
+                    }
+                    .name {
+                        color: #2f855a;
+                        font-size: 30px;
+                        font-weight: bold;
+                    }
+                    .contact-info {
+                        font-size: 14px;
+                        color: #68d391;
+                    }
+                    h3 {
+                        color: #2f855a;
+                        border-bottom: 2px solid #48bb78;
+                        padding-bottom: 5px;
+                        margin-bottom: 15px;
+                        font-size: 18px;
+                    }
+                    .skill-tag { background: #48bb78; }
+                `;
+                break;
+                
+            case 'corporate':
+                styles += `
+                    .resume-header {
+                        background-color: #2b6cb0 !important;
+                        background: #2b6cb0 !important;
+                        color: white;
+                        padding: 25px;
+                        margin: -40px -40px 30px -40px;
+                    }
+                    .name {
+                        font-size: 30px;
+                        font-weight: bold;
+                        color: white !important;
+                    }
+                    .contact-info {
+                        font-size: 14px;
+                        color: white !important;
+                    }
+                    h3 {
+                        color: #2b6cb0;
+                        border-bottom: 2px solid #2b6cb0;
+                        padding-bottom: 5px;
+                        margin-bottom: 15px;
+                        font-size: 18px;
+                        font-weight: bold;
+                    }
+                    .skill-tag { background: #2b6cb0; }
+                `;
+                break;
         }
 
-        // Limpiar formulario
-        function clearForm() {
-            console.log('Limpiando formulario...');
-            const confirmMessage = currentLang === 'es' ? 
-                '¿Estás seguro de que quieres limpiar todo el formulario?' : 
-                'Are you sure you want to clear the entire form?';
-                
-            if (confirm(confirmMessage)) {
-                document.getElementById('name').value = '';
-                document.getElementById('email').value = '';
-                document.getElementById('phone').value = '';
-                document.getElementById('location').value = '';
-                document.getElementById('summary').value = '';
-                document.getElementById('experience').value = '';
-                document.getElementById('education').value = '';
-                document.getElementById('skills').value = '';
-                updatePreview();
-                console.log('Formulario limpiado');
-            }
-        }
+        styles += '</style>';
 
-        // Inicializar con ejemplo
-        window.addEventListener('load', function() {
-            // Establecer un ejemplo genérico
-            document.getElementById('summary').value = translations[currentLang].defaultSummary;
-            updatePreview();
-            
-            // Verificar que las librerías están cargadas
-            let checkCount = 0;
-            const checkLibraries = setInterval(() => {
-                checkCount++;
-                const jspdfLoaded = typeof window.jspdf !== 'undefined';
-                const html2canvasLoaded = typeof html2canvas !== 'undefined';
-                
-                console.log(`Verificación ${checkCount}: jsPDF=${jspdfLoaded}, html2canvas=${html2canvasLoaded}`);
-                
-                if (jspdfLoaded && html2canvasLoaded) {
-                    console.log('✅ Todas las librerías están cargadas');
-                    clearInterval(checkLibraries);
-                } else if (checkCount > 10) {
-                    console.warn('⚠️ Las librerías no se cargaron después de 10 intentos');
-                    clearInterval(checkLibraries);
-                }
-            }, 1000);
+        const html = `
+            <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
+            <head>
+                <meta charset="utf-8">
+                <title>Resume</title>
+                ${styles}
+            </head>
+            <body>
+                ${previewContent}
+            </body>
+            </html>
+        `;
+
+        const blob = new Blob(['\ufeff', html], { 
+            type: 'application/msword' 
         });
+        
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        const fileName = document.getElementById('name').value || 'resume';
+        a.href = url;
+        a.download = `${fileName}_resume.doc`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        
+    } catch (error) {
+        console.error('Error al exportar Word:', error);
+        alert('Error al exportar a Word');
+    }
+}
 
-        // Agregar event listeners globales para debug
-        window.onerror = function(msg, url, lineNo, columnNo, error) {
-            console.error('Error global:', msg, error);
-            return false;
-        };
-    </script>
+function openEmailModal() {
+    const modal = document.getElementById('email-modal');
+    const userName = document.getElementById('name').value || '';
+    
+    document.getElementById('email-subject').value = currentLang === 'es' 
+        ? `Currículum Vitae - ${userName}` 
+        : `Resume - ${userName}`;
+        
+    document.getElementById('email-message').value = currentLang === 'es'
+        ? `Estimado/a,\n\nAdjunto mi currículum vitae para su consideración.\n\nSaludos cordiales,\n${userName}`
+        : `Dear Sir/Madam,\n\nPlease find attached my resume for your consideration.\n\nBest regards,\n${userName}`;
+    
+    updateEmailModalTexts();
+    modal.style.display = 'flex';
+}
+
+function closeEmailModal() {
+    document.getElementById('email-modal').style.display = 'none';
+}
+
+function updateEmailModalTexts() {
+    if (currentLang === 'es') {
+        document.getElementById('email-modal-title').textContent = 'Enviar Resumé por Email';
+        document.getElementById('recipient-label').textContent = 'Email del destinatario:';
+        document.getElementById('subject-label').textContent = 'Asunto:';
+        document.getElementById('message-label').textContent = 'Mensaje:';
+        document.querySelector('.email-modal-buttons .btn-primary').textContent = 'Enviar Email';
+        document.querySelector('.email-modal-buttons .btn:not(.btn-primary)').textContent = 'Cancelar';
+    } else {
+        document.getElementById('email-modal-title').textContent = 'Send Resume by Email';
+        document.getElementById('recipient-label').textContent = 'Recipient email:';
+        document.getElementById('subject-label').textContent = 'Subject:';
+        document.getElementById('message-label').textContent = 'Message:';
+        document.querySelector('.email-modal-buttons .btn-primary').textContent = 'Send Email';
+        document.querySelector('.email-modal-buttons .btn:not(.btn-primary)').textContent = 'Cancel';
+    }
+}
+
+function sendEmailWithDetails() {
+    const recipientEmail = document.getElementById('recipient-email').value;
+    const subject = document.getElementById('email-subject').value;
+    const message = document.getElementById('email-message').value;
+    
+    if (!recipientEmail) {
+        alert(currentLang === 'es' ? 'Por favor ingresa el email del destinatario' : 'Please enter recipient email');
+        return;
+    }
+    
+    const mailtoLink = `mailto:${recipientEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(message)}`;
+    window.open(mailtoLink);
+    
+    closeEmailModal();
+}
+
+document.addEventListener('click', function(event) {
+    const modal = document.getElementById('email-modal');
+    if (event.target === modal) {
+        closeEmailModal();
+    }
+});
+
+</script>
+
+<div id="email-modal" class="email-modal" style="display: none;">
+    <div class="email-modal-content">
+        <div class="email-modal-header">
+            <h3 id="email-modal-title">Enviar Resumé por Email</h3>
+            <button class="email-modal-close" onclick="closeEmailModal()">&times;</button>
+        </div>
+        <div class="email-modal-body">
+            <div class="form-group">
+                <label id="recipient-label">Email del destinatario:</label>
+                <input type="email" id="recipient-email" placeholder="empresa@ejemplo.com">
+            </div>
+            <div class="form-group">
+                <label id="subject-label">Asunto:</label>
+                <input type="text" id="email-subject" placeholder="Currículum Vitae - [Tu Nombre]">
+            </div>
+            <div class="form-group">
+                <label id="message-label">Mensaje:</label>
+                <textarea id="email-message" rows="4" placeholder="Estimado/a..."></textarea>
+            </div>
+            <div class="email-modal-buttons">
+                <button class="btn btn-primary" onclick="sendEmailWithDetails()">Enviar Email</button>
+                <button class="btn" onclick="closeEmailModal()">Cancelar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
 </body>
 </html>
