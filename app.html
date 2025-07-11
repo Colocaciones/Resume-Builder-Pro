@@ -3,6 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Open+Sans:wght@300;400;600;700&family=Lato:wght@300;400;700&family=Montserrat:wght@300;400;600;700&family=Poppins:wght@300;400;600;700&family=Playfair+Display:wght@400;700&family=Merriweather:wght@300;400;700&family=Source+Sans+Pro:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
@@ -330,6 +335,125 @@
     background: #2b6cb0;
     color: white;
 }
+
+/* PLANTILLA PROFESIONAL */
+.template-professional {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    gap: 40px;
+    padding: 40px;
+}
+
+.template-professional .resume-header {
+    grid-column: 1 / -1;
+    border-bottom: 3px solid #2d3748;
+    padding: 25px 30px 20px 30px;
+    margin: -40px -40px 30px -40px;
+    background: #faf9f7;
+    position: relative;
+}
+
+.template-professional .name {
+    font-size: 36px;
+    font-weight: bold;
+    color: #2d3748;
+    margin-bottom: 20px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.template-professional .contact-info {
+    position: absolute;
+    right: 30px;
+    bottom: 20px;
+    text-align: right;
+    font-size: 14px;
+    color: #4a5568;
+}
+
+.template-professional .contact-info span {
+    display: block;
+    margin-bottom: 5px;
+}
+
+.template-professional .resume-summary {
+    grid-column: 1 / -1;
+    text-align: center;
+    margin-bottom: 30px;
+    padding: 20px;
+    background: #f7fafc;
+    border-radius: 8px;
+}
+
+.template-professional .resume-summary h3 {
+    font-size: 20px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: #2d3748;
+    margin-bottom: 15px;
+    border: none;
+}
+
+.template-professional .left-column {
+    grid-column: 1;
+    border-right: 2px solid #e2e8f0;
+    padding-right: 30px;
+}
+
+.template-professional .right-column {
+    grid-column: 2;
+    padding-left: 10px;
+}
+
+.template-professional .resume-section h3 {
+    color: #2d3748;
+    font-size: 18px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border-bottom: 2px solid #2d3748;
+    padding-bottom: 8px;
+    margin-bottom: 20px;
+}
+
+.template-professional .experience-item,
+.template-professional .education-item {
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.template-professional .job-title,
+.template-professional .degree-title {
+    font-weight: bold;
+    color: #2d3748;
+    font-size: 16px;
+}
+
+.template-professional .company-info,
+.template-professional .institution-info {
+    color: #718096;
+    font-size: 14px;
+    margin-bottom: 8px;
+    font-style: italic;
+}
+
+.template-professional .skills-category h4 {
+    color: #2d3748;
+    font-size: 16px;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.template-professional .skill-tag {
+    background: #2d3748;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    margin-bottom: 8px;
+}
         
         .contact-info {
             font-size: 14px;
@@ -394,6 +518,14 @@
         .font-verdana { font-family: Verdana, Arial, sans-serif; }
         .font-tahoma { font-family: Tahoma, Arial, sans-serif; }
         .font-trebuchet { font-family: 'Trebuchet MS', Arial, sans-serif; }
+	.font-roboto { font-family: 'Roboto', Arial, sans-serif; }
+	.font-opensans { font-family: 'Open Sans', Arial, sans-serif; }
+	.font-lato { font-family: 'Lato', Arial, sans-serif; }
+	.font-montserrat { font-family: 'Montserrat', Arial, sans-serif; }
+	.font-poppins { font-family: 'Poppins', Arial, sans-serif; }
+	.font-playfair { font-family: 'Playfair Display', Georgia, serif; }
+	.font-merriweather { font-family: 'Merriweather', Georgia, serif; }
+	.font-source-sans { font-family: 'Source Sans Pro', Arial, sans-serif; }
         
 .skill-selection-container {
     margin: 15px 0;
@@ -569,12 +701,13 @@
 </head>
 <body>
     <div class="container">
-        <div class="header">
-    <img src="logo blanco.png" alt="logo blanco" style="height: 120px; float: left; margin-right: 20px; margin-top: -25px";>
+       <div class="header" style="position: relative; padding-left: 150px;">
+    <img src="logo blanco.png" alt="logo blanco" style="position: absolute; height: 150px; left: 40px; top: 50%; transform: translateY(-50%);">
+    <p style="font-size: 22px; margin-bottom: 2px;">Universidad Ana G. Méndez</p>
     <p style="font-size: 20px; margin-bottom: 5px;">Oficina de Carreras y Colocaciones Recinto de Cupey</p>
-    <h1 id="app-title">Resume Builder Pro</h1>
+    <h1 id="app-title">UAGM Resume Builder Pro</h1>
     <p id="app-subtitle">Crea tu resumé profesional en minutos</p>
-        </div>
+</div>
 
         <div class="controls">
             <select id="language-select">
@@ -582,13 +715,14 @@
                 <option value="en">English</option>
             </select>
             <select id="template-select">
-                <option value="modern">Moderno</option>
-                <option value="creative">Creativo</option>
-                <option value="minimal">Minimalista</option>
-                <option value="elegant">Elegante</option>
-                <option value="clean">Clara</option>
-                <option value="corporate">Corporativa</option>
-            </select>
+    <option value="modern">Moderno</option>
+    <option value="creative">Creativo</option>
+    <option value="minimal">Minimalista</option>
+    <option value="elegant">Elegante</option>
+    <option value="clean">Clara</option>
+    <option value="corporate">Corporativa</option>
+    <option value="professional">Profesional</option>
+</select>
 
 	    <select id="font-select">
     		<option value="arial">Arial</option>
@@ -599,6 +733,14 @@
     		<option value="verdana">Verdana</option>
     		<option value="tahoma">Tahoma</option>
     		<option value="trebuchet">Trebuchet MS</option>
+		<option value="roboto">Roboto</option>
+    		<option value="opensans">Open Sans</option>
+   		<option value="lato">Lato</option>
+    		<option value="montserrat">Montserrat</option>
+    		<option value="poppins">Poppins</option>
+    		<option value="playfair">Playfair Display</option>
+    		<option value="merriweather">Merriweather</option>
+    		<option value="source-sans">Source Sans Pro</option>
 	    </select>
 
             <button class="btn btn-primary" onclick="exportToPDF()">Exportar PDF</button>
@@ -648,38 +790,39 @@
             <div class="preview-section">
                 <h2 class="section-title" id="preview-title">Vista Previa</h2>
                 <div id="resume-preview" class="resume-preview template-modern">
-                    <div class="resume-header">
-                        <h1 class="name" id="preview-name">Tu Nombre</h1>
-                        <div class="contact-info">
-                            <span id="preview-email">email@ejemplo.com</span> | 
-                            <span id="preview-phone">+1 234 567 8900</span> | 
-                            <span id="preview-location">Ciudad, País</span>
-                        </div>
-                    </div>
-                    
-                    <div class="resume-section">
-                        <h3 id="preview-summary-title">Perfil Profesional</h3>
-                        <p id="preview-summary">Profesional comprometido, proactivo y orientado a resultados, con habilidades en comunicación, trabajo en equipo y resolución de problemas. Capacidad para adaptarse a distintos entornos 			laborales, aprender rápidamente y cumplir con metas establecidas.</p>
-                    </div>
-
-                    <div class="resume-section">
-                        <h3 id="preview-experience-title">Experiencia Laboral</h3>
-                        <div id="preview-experience">Tu experiencia laboral aparecerá aquí...</div>
-                    </div>
-
-                    <div class="resume-section">
-                        <h3 id="preview-education-title">Educación</h3>
-                        <div id="preview-education">Tu educación aparecerá aquí...</div>
-                    </div>
-
-                    <div class="resume-section">
-                        <h3 id="preview-skills-title">Habilidades</h3>
-                        <div id="preview-skills">Tus habilidades aparecerán aquí...</div>
-                    </div>
-                </div>
-            </div>
+    <div class="resume-header">
+        <h1 class="name" id="preview-name">Tu Nombre</h1>
+        <div class="contact-info">
+            <span id="preview-email">email@ejemplo.com</span>
+            <span id="preview-phone">+1 234 567 8900</span>
+            <span id="preview-location">Ciudad, País</span>
         </div>
     </div>
+    
+    <div class="resume-summary resume-section">
+        <h3 id="preview-summary-title">Perfil Profesional</h3>
+        <p id="preview-summary">Profesional comprometido, proactivo y orientado a resultados, con habilidades en comunicación, trabajo en equipo y resolución de problemas. Capacidad para adaptarse a distintos entornos laborales, aprender rápidamente y cumplir con metas establecidas.</p>
+    </div>
+
+    <div class="left-column">
+        <div class="resume-section">
+            <h3 id="preview-education-title">Educación</h3>
+            <div id="preview-education">Tu educación aparecerá aquí...</div>
+        </div>
+
+        <div class="resume-section">
+            <h3 id="preview-skills-title">Habilidades</h3>
+            <div id="preview-skills">Tus habilidades aparecerán aquí...</div>
+        </div>
+    </div>
+
+    <div class="right-column">
+        <div class="resume-section">
+            <h3 id="preview-experience-title">Experiencia Laboral</h3>
+            <div id="preview-experience">Tu experiencia laboral aparecerá aquí...</div>
+        </div>
+    </div>
+</div>
 
 <script>
 let currentLang = 'es';
@@ -826,7 +969,8 @@ const texts = {
             minimal: "Minimalista",
             elegant: "Elegante",
             clean: "Clara",
-            corporate: "Corporativa"
+            corporate: "Corporativa",
+	    professional: "Profesional"
         }
     },
     en: {
@@ -872,7 +1016,8 @@ const texts = {
             minimal: "Minimal",
             elegant: "Elegant",
             clean: "Clean",
-            corporate: "Corporate"
+            corporate: "Corporate",
+	    professional: "Profesional"
         }
     }
 };
@@ -922,7 +1067,7 @@ function updateFontClass() {
 function updateLanguage() {
     const t = texts[currentLang];
     
-    document.getElementById('app-title').textContent = t.appTitle;
+    document.getElementById('app-title').textContent = 'UAGM ' + t.appTitle;
     document.getElementById('app-subtitle').textContent = t.appSubtitle;
     document.getElementById('personal-info-title').textContent = t.personalInfoTitle;
     document.getElementById('name-label').textContent = t.nameLabel;
@@ -960,6 +1105,7 @@ function updateTemplateOptions() {
         <option value="elegant">${t.elegant}</option>
         <option value="clean">${t.clean}</option>
         <option value="corporate">${t.corporate}</option>
+	<option value="professional">${t.professional}</option>
     `;
     select.value = current;
 }
@@ -1504,7 +1650,15 @@ const fontMap = {
     'calibri': 'Calibri, Arial, sans-serif',
     'verdana': 'Verdana, Arial, sans-serif',
     'tahoma': 'Tahoma, Arial, sans-serif',
-    'trebuchet': '"Trebuchet MS", Arial, sans-serif'
+    'trebuchet': '"Trebuchet MS", Arial, sans-serif',
+    'roboto': '"Roboto", Arial, sans-serif',
+    'opensans': '"Open Sans", Arial, sans-serif',
+    'lato': '"Lato", Arial, sans-serif',
+    'montserrat': '"Montserrat", Arial, sans-serif',
+    'poppins': '"Poppins", Arial, sans-serif',
+    'playfair': '"Playfair Display", Georgia, serif',
+    'merriweather': '"Merriweather", Georgia, serif',
+    'source-sans': '"Source Sans Pro", Arial, sans-serif'
 };
 
 const selectedFont = document.getElementById('font-select').value;
@@ -1736,6 +1890,57 @@ let styles = `
                     .skill-tag { background: #2b6cb0; }
                 `;
                 break;
+ case 'professional':
+                styles += `
+                    body {
+                        display: grid;
+                        grid-template-columns: 300px 1fr;
+                        gap: 30px;
+                    }
+                    .resume-header {
+                        grid-column: 1 / -1;
+                        border-bottom: 3px solid #2d3748;
+                        padding-bottom: 20px;
+                        margin-bottom: 30px;
+                        position: relative;
+                    }
+                    .name {
+                        font-size: 32px;
+                        font-weight: bold;
+                        color: #2d3748;
+                        text-transform: uppercase;
+                        letter-spacing: 1px;
+                    }
+                    .contact-info {
+                        position: absolute;
+                        right: 0;
+                        top: 0;
+                        text-align: right;
+                        font-size: 14px;
+                        color: #4a5568;
+                    }
+                    .resume-summary {
+                        grid-column: 1 / -1;
+                        text-align: center;
+                        margin-bottom: 30px;
+                        padding: 20px;
+                        background: #f7fafc;
+                    }
+                    .left-column { grid-column: 1; }
+                    .right-column { grid-column: 2; }
+                    h3 {
+                        color: #2d3748;
+                        font-size: 18px;
+                        text-transform: uppercase;
+                        letter-spacing: 1px;
+                        border-bottom: 2px solid #2d3748;
+                        padding-bottom: 8px;
+                        margin-bottom: 20px;
+                    }
+                    .skill-tag { background: #2d3748; }
+                `;
+                break;
+
         }
 
         styles += '</style>';
