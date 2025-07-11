@@ -1638,6 +1638,17 @@ async function exportToPDF() {
 }
 function exportToWord() {
     try {
+        // Mostrar advertencia sobre limitaciones de Word
+        const confirmExport = confirm(
+            currentLang === 'es' 
+            ? '⚠️ AVISO IMPORTANTE:\n\nAl exportar a Word, algunas plantillas pueden afectarse debido a las limitaciones del formato.\n\nPara mejores resultados, recomendamos usar la exportación PDF.\n\n¿Deseas continuar con la exportación a Word?'
+            : '⚠️ IMPORTANT NOTICE:\n\nWhen exporting to Word, some templates may be affected due to format limitations.\n\nFor best results, we recommend using PDF export.\n\nDo you want to continue with Word export?'
+        );
+        
+        if (!confirmExport) {
+            return; // Si cancela, no exporta
+        }
+
         const previewContent = document.getElementById('resume-preview').innerHTML;
         const template = document.getElementById('template-select').value;
         
