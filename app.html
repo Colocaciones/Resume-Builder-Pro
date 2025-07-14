@@ -2122,14 +2122,12 @@ function updateExitModalTexts() {
     } else {
         document.getElementById('exit-modal-title').textContent = 'Thank you for using UAGM Resume Builder!';
         document.querySelector('#exit-modal .email-modal-body p:last-of-type').textContent = 'We hope your resume helps you get your desired job.';
-    }
+    
 }
 
 function closeApplication() {
-    window.close();
-    // Si no funciona window.close(), redirigir a una página en blanco
-    if (!window.closed) {
-        window.location.href = 'about:blank';
+    window.location.href = 'https://colocaciones.github.io/Resume-Builder-Pro/';
+
     }
 
 }
