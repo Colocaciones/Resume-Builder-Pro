@@ -506,10 +506,50 @@
             font-size: 12px;
         }
         
-        @media (max-width: 768px) {
-            .main-content { grid-template-columns: 1fr; }
-            .form-row { grid-template-columns: 1fr; }
+	@media (max-width: 768px) {
+    	    .container { padding: 10px; }
+    	    .header { padding: 20px; font-size: 14px; }
+    	    .controls { 
+             flex-direction: column; 
+             gap: 10px; 
+    	}
+    	    .controls select, .controls button { 
+             width: 100%; 
+             margin-bottom: 5px; 
+    	}
+    	    .main-content { 
+            grid-template-columns: 1fr; 
+            gap: 20px; 
+   	}
+    	    .form-row { 
+            grid-template-columns: 1fr; 
+    	}
+    	    .form-section, .preview-section { 
+            padding: 15px; 
+            max-height: none; 
+    	}
+    	    .resume-preview { 
+            padding: 20px; 
+            font-size: 12px; 
+    	}
+    	    .template-professional { 
+            grid-template-columns: 1fr; 
+            gap: 20px; 
+    	}
+    	    .template-professional .left-column { 
+            border-right: none; 
+            border-bottom: 1px solid #e2e8f0; 
+            padding-right: 0; 
+            padding-bottom: 20px; 
+    	}
+@media (max-width: 1024px) and (min-width: 769px) {
+    .container { max-width: 100%; }
+    .controls { gap: 8px; }
+    .main-content { gap: 20px; }
+    .template-professional { gap: 20px; }
 	}
+
+}
 
 	.font-arial { font-family: Arial, sans-serif; }
         .font-times { font-family: 'Times New Roman', serif; }
