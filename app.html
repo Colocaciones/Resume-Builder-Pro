@@ -348,7 +348,7 @@
     grid-column: 1 / -1;
     border-bottom: 3px solid #2d3748;
     padding: 25px 30px 20px 30px;
-    margin: -40px -40px 30px -40px;
+    margin: -40px -40px -10px -40px;
     background: #faf9f7;
     position: relative;
 }
@@ -357,18 +357,19 @@
     font-size: 36px;
     font-weight: bold;
     color: #2d3748;
-    margin-bottom: 20px;
+    margin-bottom: 15px;
     text-transform: uppercase;
     letter-spacing: 1px;
 }
 
 .template-professional .contact-info {
-    position: absolute;
-    right: 30px;
-    bottom: 20px;
-    text-align: right;
+    position: static;
+    right: auto;
+    bottom: auto;
+    text-align: left;
     font-size: 14px;
     color: #4a5568;
+    margin-bottom: 0;
 }
 
 .template-professional .contact-info span {
@@ -526,6 +527,16 @@
 	.font-playfair { font-family: 'Playfair Display', Georgia, serif; }
 	.font-merriweather { font-family: 'Merriweather', Georgia, serif; }
 	.font-source-sans { font-family: 'Source Sans Pro', Arial, sans-serif; }
+
+	.font-size-12 { font-size: 12px !important; }
+	.font-size-14 { font-size: 14px !important; }
+	.font-size-16 { font-size: 16px !important; }
+	.font-size-18 { font-size: 18px !important; }
+
+	.font-size-12 .name { font-size: 28px !important; }
+	.font-size-14 .name { font-size: 32px !important; }
+	.font-size-16 .name { font-size: 36px !important; }
+	.font-size-18 .name { font-size: 40px !important; }
         
 .skill-selection-container {
     margin: 15px 0;
@@ -743,10 +754,18 @@
     		<option value="source-sans">Source Sans Pro</option>
 	    </select>
 
+	    <select id="font-size-select">
+    	        <option value="12">Pequeño (12px)</option>
+                <option value="14" selected>Normal (14px)</option>
+                <option value="16">Grande (16px)</option>
+                <option value="18">Extra Grande (18px)</option>
+            </select>
+
             <button class="btn btn-primary" onclick="exportToPDF()">Exportar PDF</button>
             <button class="btn btn-primary" onclick="exportToWord()">Exportar Word</button>
-            <button class="btn btn-primary" onclick="clearAll()">Limpiar</button>
+            <button class="btn btn-primary" onclick="clearAll()">Reiniciar</button>
 	    <button class="btn btn-primary" onclick="openEmailModal()">📧 Enviar por Email</button>
+	    <button class="btn btn-primary" onclick="openExitModal()">🚪 Salir</button>
         </div>
 
         <div class="main-content">
@@ -789,7 +808,7 @@
 
             <div class="preview-section">
                 <h2 class="section-title" id="preview-title">Vista Previa</h2>
-                <div id="resume-preview" class="resume-preview template-modern">
+                <div id="resume-preview" class="resume-preview template-modern font-arial font-size-14">
     <div class="resume-header">
         <h1 class="name" id="preview-name">Tu Nombre</h1>
         <div class="contact-info">
@@ -1039,13 +1058,19 @@ function setupEvents() {
 
     // Cambio de plantilla
     document.getElementById('template-select').onchange = function() {
-        document.getElementById('resume-preview').className = 'resume-preview template-' + this.value + ' ' + getCurrentFontClass();
-    };
+    document.getElementById('resume-preview').className = 'resume-preview template-' + this.value + ' ' + getCurrentFontClass() + ' ' + getCurrentFontSizeClass();
+};
 
     // NUEVO: Cambio de fuente
     document.getElementById('font-select').onchange = function() {
         updateFontClass();
     };
+
+    // Cambio de tamaño de fuente
+    document.getElementById('font-size-select').onchange = function() {
+        updateFontSize();
+    };
+
 }
 
 // NUEVA FUNCIÓN: Obtener clase de fuente actual
@@ -1059,9 +1084,27 @@ function updateFontClass() {
     const previewElement = document.getElementById('resume-preview');
     const templateSelect = document.getElementById('template-select');
     const fontClass = getCurrentFontClass();
+    const fontSizeClass = getCurrentFontSizeClass();
     
-    // Mantener la clase de plantilla y añadir la clase de fuente
-    previewElement.className = 'resume-preview template-' + templateSelect.value + ' ' + fontClass;
+    // Mantener la clase de plantilla, fuente y tamaño
+    previewElement.className = 'resume-preview template-' + templateSelect.value + ' ' + fontClass + ' ' + fontSizeClass;
+}
+
+// Función para obtener clase de tamaño actual
+function getCurrentFontSizeClass() {
+    const fontSizeSelect = document.getElementById('font-size-select');
+    return 'font-size-' + fontSizeSelect.value;
+}
+
+// Función para actualizar tamaño de fuente
+function updateFontSize() {
+    const previewElement = document.getElementById('resume-preview');
+    const templateSelect = document.getElementById('template-select');
+    const fontClass = getCurrentFontClass();
+    const fontSizeClass = getCurrentFontSizeClass();
+    
+    // Mantener la clase de plantilla, fuente y añadir tamaño
+    previewElement.className = 'resume-preview template-' + templateSelect.value + ' ' + fontClass + ' ' + fontSizeClass;
 }
 
 function updateLanguage() {
@@ -1082,6 +1125,7 @@ function updateLanguage() {
     document.getElementById('add-experience-btn').textContent = t.addExperience;
     document.getElementById('add-education-btn').textContent = t.addEducation;
     document.getElementById('add-skill-btn').textContent = t.addSkill;
+    document.querySelector('button[onclick="clearAll()"]').textContent = currentLang === 'es' ? '🔄 Reiniciar' : '🔄 Reset';
 
     document.getElementById('preview-summary-title').textContent = t.summaryTitle;
     document.getElementById('preview-experience-title').textContent = t.experienceTitle;
@@ -1517,6 +1561,18 @@ function clearAll() {
         expCount = 0;
         eduCount = 0;
         skillCount = 0;
+
+	// Resetear todos los selectores a valores originales
+	document.getElementById('language-select').value = 'es';
+	document.getElementById('template-select').value = 'modern';
+	document.getElementById('font-select').value = 'arial';
+	document.getElementById('font-size-select').value = '14';
+
+	// Actualizar el idioma y clases
+	currentLang = 'es';
+	updateLanguage();
+	updateTemplateOptions();
+	updateFontClass();
         
         // NO agregar elementos automáticamente - dejar las secciones vacías
         // addExperience();    ← ELIMINAR O COMENTAR ESTAS LÍNEAS
@@ -1994,11 +2050,11 @@ function openEmailModal() {
     const userName = document.getElementById('name').value || '';
     
     document.getElementById('email-subject').value = currentLang === 'es' 
-        ? `Currículum Vitae - ${userName}` 
+        ? `Resume - ${userName}` 
         : `Resume - ${userName}`;
         
     document.getElementById('email-message').value = currentLang === 'es'
-        ? `Estimado/a,\n\nAdjunto mi currículum vitae para su consideración.\n\nSaludos cordiales,\n${userName}`
+        ? `Estimado/a,\n\nAdjunto mi resume para su consideración.\n\nSaludos cordiales,\n${userName}`
         : `Dear Sir/Madam,\n\nPlease find attached my resume for your consideration.\n\nBest regards,\n${userName}`;
     
     updateEmailModalTexts();
@@ -2050,6 +2106,34 @@ document.addEventListener('click', function(event) {
     }
 });
 
+function openExitModal() {
+    updateExitModalTexts();
+    document.getElementById('exit-modal').style.display = 'flex';
+}
+
+function closeExitModal() {
+    document.getElementById('exit-modal').style.display = 'none';
+}
+
+function updateExitModalTexts() {
+    if (currentLang === 'es') {
+        document.getElementById('exit-modal-title').textContent = '¡Gracias por usar UAGM Resume Builder!';
+        document.querySelector('#exit-modal .email-modal-body p:last-of-type').textContent = 'Esperamos que tu resumé te ayude a conseguir el trabajo deseado.';
+    } else {
+        document.getElementById('exit-modal-title').textContent = 'Thank you for using UAGM Resume Builder!';
+        document.querySelector('#exit-modal .email-modal-body p:last-of-type').textContent = 'We hope your resume helps you get your desired job.';
+    }
+}
+
+function closeApplication() {
+    window.close();
+    // Si no funciona window.close(), redirigir a una página en blanco
+    if (!window.closed) {
+        window.location.href = 'about:blank';
+    }
+
+}
+
 </script>
 
 <div id="email-modal" class="email-modal" style="display: none;">
@@ -2079,6 +2163,22 @@ document.addEventListener('click', function(event) {
     </div>
 </div>
 
+<div id="exit-modal" class="email-modal" style="display: none;">
+    <div class="email-modal-content" style="max-width: 400px; text-align: center;">
+        <div class="email-modal-header">
+            <h3 id="exit-modal-title">¡Gracias por usar UAGM Resume Builder!</h3>
+        </div>
+        <div class="email-modal-body">
+            <img src="logo blanco.png" alt="UAGM Logo" style="height: 80px; margin-bottom: 20px; filter: invert(1);">
+            <p style="margin-bottom: 20px; color: #4a5568;">Universidad Ana G. Méndez<br>Oficina de Carreras y Colocaciones</p>
+            <p style="margin-bottom: 20px; font-size: 14px; color: #718096;">Esperamos que tu resumé te ayude a conseguir el trabajo deseado.</p>
+            <div class="email-modal-buttons">
+                <button class="btn btn-primary" onclick="closeApplication()">Cerrar Aplicación</button>
+                <button class="btn" onclick="closeExitModal()">Continuar</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 </body>
 </html>
