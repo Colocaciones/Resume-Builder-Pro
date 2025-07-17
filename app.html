@@ -455,6 +455,431 @@
     font-weight: 500;
     margin-bottom: 8px;
 }
+
+	/* PLANTILLA BERLIN - ESTILO RESUME.IO */
+.template-berlin {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    gap: 0;
+    padding: 0;
+    background: white;
+}
+
+.template-berlin .resume-header {
+    grid-column: 1 / -1;
+    background: linear-gradient(135deg, #1e3a8a 0%, #0f172a 100%);
+    color: white;
+    padding: 40px;
+    margin: 0;
+    text-align: center;
+}
+
+.template-berlin .name {
+    font-size: 32px;
+    font-weight: 700;
+    margin-bottom: 20px;
+    color: white;
+}
+
+.template-berlin .contact-info {
+    font-size: 16px;
+    color: rgba(255, 255, 255, 0.95);
+    display: flex;
+    gap: 30px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.template-berlin .contact-info span {
+    position: relative;
+    padding-left: 25px;
+}
+
+.template-berlin .contact-info span::before {
+    position: absolute;
+    left: 0;
+    font-size: 16px;
+}
+
+.template-berlin .contact-info span:nth-child(1)::before { content: "📧"; }
+.template-berlin .contact-info span:nth-child(2)::before { content: "📱"; }
+.template-berlin .contact-info span:nth-child(3)::before { content: "📍"; }
+.template-berlin .contact-info span:nth-child(4)::before { content: "🌐"; }
+
+.template-berlin .resume-summary {
+    grid-column: 1 / -1;
+    background: #f8fafc;
+    padding: 30px 40px;
+    margin: 0;
+}
+
+.template-berlin .resume-summary h3 {
+    color: #1e40af;
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 15px;
+    text-transform: uppercase;
+    border-bottom: 3px solid #3b82f6;
+    padding-bottom: 8px;
+}
+
+.template-berlin .left-column {
+    grid-column: 1;
+    background: linear-gradient(135deg, #1e3a8a 0%, #0f172a 100%);
+    color: white;
+    padding: 30px 30px 50px 30px;
+    min-height: 100%;
+}
+
+.template-berlin .left-column .resume-section {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 50px;
+    border-left: 4px solid rgba(255, 255, 255, 0.3);
+}
+
+.template-berlin .left-column .resume-section h3 {
+    color: white;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+    font-size: 18px;
+    margin-bottom: 15px;
+    padding-bottom: 8px;
+}
+
+.template-berlin .left-column .education-item {
+    margin-bottom: 15px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.template-berlin .left-column .degree-title {
+    color: white;
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 5px;
+}
+
+.template-berlin .left-column .institution-info {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 13px;
+}
+
+.template-berlin .left-column .skill-tag {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    margin-right: 8px;
+    margin-bottom: 8px;
+    display: inline-block;
+}
+
+.template-berlin .right-column {
+    grid-column: 2;
+    padding: 40px;
+    background: white;
+}
+
+.template-berlin .right-column .resume-section h3 {
+    color: #1e40af;
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 20px;
+    text-transform: uppercase;
+    border-bottom: 3px solid #3b82f6;
+    padding-bottom: 8px;
+}
+
+.template-berlin .right-column .experience-item {
+    margin-bottom: 20px;
+    padding-left: 20px;
+    border-left: 3px solid #e5e7eb;
+    position: relative;
+}
+
+.template-berlin .right-column .experience-item::before {
+    content: "";
+    position: absolute;
+    left: -8px;
+    top: 5px;
+    width: 13px;
+    height: 13px;
+    background: #3b82f6;
+    border-radius: 50%;
+    border: 3px solid white;
+    box-shadow: 0 0 0 2px #3b82f6;
+}
+
+.template-berlin .right-column .job-title {
+    font-weight: 700;
+    font-size: 18px;
+    color: #1f2937;
+    margin-bottom: 8px;
+}
+
+.template-berlin .right-column .company-info {
+    color: #6b7280;
+    font-size: 14px;
+    margin-bottom: 12px;
+    font-weight: 500;
+}
+
+.template-berlin .right-column .job-description {
+    color: #4b5563;
+    line-height: 1.6;
+    font-size: 14px;
+}
+
+/* PLANTILLA VIENNA - GRIS EJECUTIVO CON DETALLES DORADOS */
+.template-vienna {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    gap: 0;
+    padding: 0;
+    background: white;
+}
+
+.template-vienna .resume-header {
+    grid-column: 1 / -1;
+    background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
+    color: white;
+    padding: 40px;
+    margin: 0;
+    text-align: center;
+    position: relative;
+}
+
+.template-vienna .resume-header::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60px;
+    height: 4px;
+    background: linear-gradient(90deg, #d69e2e, #f6e05e);
+}
+
+.template-vienna .name {
+    font-size: 32px;
+    font-weight: 700;
+    margin-bottom: 20px;
+    color: white;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.template-vienna .contact-info {
+    font-size: 16px;
+    color: rgba(255, 255, 255, 0.9);
+    display: flex;
+    gap: 25px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.template-vienna .contact-info span {
+    position: relative;
+    padding-left: 28px;
+    padding: 8px 8px 8px 28px;
+    background: rgba(214, 158, 46, 0.2);
+    border-radius: 20px;
+    border: 1px solid rgba(214, 158, 46, 0.3);
+}
+
+.template-vienna .contact-info span::before {
+    position: absolute;
+    left: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 14px;
+}
+
+.template-vienna .contact-info span:nth-child(1)::before { content: "📧"; }
+.template-vienna .contact-info span:nth-child(2)::before { content: "📱"; }
+.template-vienna .contact-info span:nth-child(3)::before { content: "📍"; }
+.template-vienna .contact-info span:nth-child(4)::before { content: "🌐"; }
+
+.template-vienna .resume-summary {
+    grid-column: 1 / -1;
+    background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+    padding: 35px 40px;
+    margin: 0;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.template-vienna .resume-summary h3 {
+    color: #2d3748;
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 18px;
+    text-transform: uppercase;
+    border-bottom: 3px solid #d69e2e;
+    padding-bottom: 10px;
+    letter-spacing: 1px;
+}
+
+.template-vienna .resume-summary p {
+    color: #4a5568;
+    line-height: 1.7;
+    font-size: 15px;
+    font-style: italic;
+}
+
+.template-vienna .left-column {
+    grid-column: 1;
+    background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
+    color: white;
+    padding: 30px 30px 60px 30px;
+    min-height: 100%;
+}
+
+.template-vienna .left-column .resume-section {
+    background: rgba(255, 255, 255, 0.08);
+    padding: 25px;
+    border-radius: 12px;
+    margin-bottom: 30px;
+    border: 1px solid rgba(214, 158, 46, 0.3);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.template-vienna .left-column .resume-section:last-child {
+    margin-bottom: 0;
+}
+
+.template-vienna .left-column .resume-section h3 {
+    color: #f6e05e;
+    border-bottom: 2px solid rgba(214, 158, 46, 0.5);
+    font-size: 18px;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 600;
+}
+
+.template-vienna .left-column .education-item {
+    margin-bottom: 20px;
+    padding: 15px;
+    background: rgba(214, 158, 46, 0.1);
+    border-radius: 8px;
+    border-left: 4px solid #d69e2e;
+}
+
+.template-vienna .left-column .degree-title {
+    color: white;
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.template-vienna .left-column .institution-info {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 14px;
+    margin-bottom: 5px;
+}
+
+.template-vienna .left-column .skills-category {
+    margin-bottom: 25px;
+}
+
+.template-vienna .left-column .skills-category h4 {
+    color: #f6e05e;
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 15px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.template-vienna .left-column .skill-tag {
+    background: linear-gradient(135deg, #d69e2e 0%, #f6e05e 100%);
+    color: #2d3748;
+    padding: 8px 14px;
+    border-radius: 25px;
+    font-size: 12px;
+    font-weight: 600;
+    margin-right: 8px;
+    margin-bottom: 10px;
+    display: inline-block;
+    box-shadow: 0 2px 8px rgba(214, 158, 46, 0.3);
+}
+
+.template-vienna .right-column {
+    grid-column: 2;
+    padding: 40px;
+    background: white;
+}
+
+.template-vienna .right-column .resume-section {
+    margin-bottom: 40px;
+    background: #f9f9f9;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    border-left: 5px solid #d69e2e;
+}
+
+.template-vienna .right-column .resume-section h3 {
+    color: #2d3748;
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 25px;
+    text-transform: uppercase;
+    border-bottom: 3px solid #d69e2e;
+    padding-bottom: 10px;
+    letter-spacing: 1px;
+}
+
+.template-vienna .right-column .experience-item {
+    margin-bottom: 25px;
+    padding: 20px;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    border-left: 4px solid #4a5568;
+    position: relative;
+}
+
+.template-vienna .right-column .experience-item::before {
+    content: "";
+    position: absolute;
+    left: -10px;
+    top: 25px;
+    width: 16px;
+    height: 16px;
+    background: linear-gradient(135deg, #d69e2e, #f6e05e);
+    border-radius: 50%;
+    border: 3px solid white;
+    box-shadow: 0 0 0 2px #4a5568;
+}
+
+.template-vienna .right-column .job-title {
+    font-weight: 700;
+    font-size: 18px;
+    color: #2d3748;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.template-vienna .right-column .company-info {
+    color: #d69e2e;
+    font-size: 14px;
+    margin-bottom: 15px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.template-vienna .right-column .job-description {
+    color: #4a5568;
+    line-height: 1.6;
+    font-size: 14px;
+}
         
         .contact-info {
             font-size: 14px;
@@ -758,7 +1183,7 @@
     <p style="font-size: 20px; margin-bottom: 5px;">Oficina de Carreras y Colocaciones Recinto de Cupey</p>
     <h1 id="app-title">UAGM Resume Builder Pro</h1>
     <p id="app-subtitle">Crea tu resumé profesional en minutos</p>
-    <p style="position: absolute; bottom: 10px; right: 20px; font-size: 11px; opacity: 0.7; margin: 0;">Desarrollado por: Braulio A. González Vélez | @ 2025</p>
+    <p style="position: absolute; bottom: 10px; right: 20px; font-size: 11px; opacity: 0.7; margin: 0;">Desarrollado por: Braulio González Vélez | @ 2025</p>
 </div>
 
         <div class="controls">
@@ -774,6 +1199,8 @@
     <option value="clean">Clara</option>
     <option value="corporate">Corporativa</option>
     <option value="professional">Profesional</option>
+    <option value="berlin">Berlin</option>
+    <option value="vienna">Vienna</option>
 </select>
 
 	    <select id="font-select">
@@ -845,6 +1272,14 @@
                 <h2 class="section-title" id="skills-title">Habilidades</h2>
                 <div id="skills-container"></div>
                 <button class="btn btn-add btn-small" onclick="addSkillCategory()" id="add-skill-btn">+ Agregar Categoría</button>
+
+		<h2 class="section-title" id="certifications-title">Certificaciones y Adiestramientos</h2>
+		<div id="certifications-container"></div>
+		<button class="btn btn-add btn-small" onclick="addCertification()" id="add-certification-btn">+ Agregar Certificación</button>
+
+		<h2 class="section-title" id="volunteer-title">Experiencia de Voluntariado e Internados</h2>
+		<div id="volunteer-container"></div>
+		<button class="btn btn-add btn-small" onclick="addVolunteer()" id="add-volunteer-btn">+ Agregar Voluntariado</button>
             </div>
 
             <div class="preview-section">
@@ -877,10 +1312,20 @@
     </div>
 
     <div class="right-column">
-        <div class="resume-section">
+    	<div class="resume-section">
             <h3 id="preview-experience-title">Experiencia Laboral</h3>
             <div id="preview-experience">Tu experiencia laboral aparecerá aquí...</div>
-        </div>
+    </div>
+    
+    	<div class="resume-section">
+             <h3 id="preview-certifications-title">Certificaciones</h3>
+             <div id="preview-certifications">Tus certificaciones aparecerán aquí...</div>
+    </div>
+    
+    	<div class="resume-section">
+             <h3 id="preview-volunteer-title">Voluntariado</h3>
+             <div id="preview-volunteer">Tu experiencia de voluntariado aparecerá aquí...</div>
+    	</div>
     </div>
 </div>
 
@@ -889,6 +1334,8 @@ let currentLang = 'es';
 let expCount = 0;
 let eduCount = 0;
 let skillCount = 0;
+let certCount = 0;
+let volunteerCount = 0;
 
 const predefinedSkills = {
     es: {
@@ -998,10 +1445,22 @@ const texts = {
         experienceTitle: "Experiencia Laboral",
         educationTitle: "Educación",
         skillsTitle: "Habilidades",
+	certificationsTitle: "Certificaciones y Adiestramientos",
+	volunteerTitle: "Voluntariado e Internados",
         previewTitle: "Vista Previa",
         addExperience: "+ Agregar Experiencia",
         addEducation: "+ Agregar Educación",
         addSkill: "+ Agregar Categoría",
+	addCertification: "+ Agregar Certificación",
+	addVolunteer: "+ Agregar Experiencia",
+	volunteerRole: "Rol/Posición",
+	certificationName: "Certificación/Curso",
+	organization: "Organización",
+	date: "Fecha",
+	volunteerRole: "Rol/Posición",
+	volunteerOrg: "Organización",
+	volunteerDuration: "Duración",
+	volunteerDescription: "Descripción de actividades",
         position: "Posición/Cargo",
         company: "Empresa",
         startDate: "Fecha Inicio",
@@ -1030,7 +1489,8 @@ const texts = {
             elegant: "Elegante",
             clean: "Clara",
             corporate: "Corporativa",
-	    professional: "Profesional"
+	    professional: "Profesional",
+	    berlin: "Berlin"
         }
     },
     en: {
@@ -1045,10 +1505,21 @@ const texts = {
         experienceTitle: "Work Experience",
         educationTitle: "Education",
         skillsTitle: "Skills",
+	certificationsTitle: "Certifications & Training",
+	volunteerTitle: "Volunteer & Internships",
         previewTitle: "Preview",
         addExperience: "+ Add Experience",
         addEducation: "+ Add Education",
         addSkill: "+ Add Category",
+	addCertification: "+ Add Certification",
+	addVolunteer: "+ Add Experience",
+	certificationName: "Certification/Course",
+	organization: "Organization",
+	date: "Date",
+	volunteerRole: "Role/Position",
+	volunteerOrg: "Organization",
+	volunteerDuration: "Duration",
+	volunteerDescription: "Activity Description",
         position: "Position/Title",
         company: "Company",
         startDate: "Start Date",
@@ -1077,7 +1548,8 @@ const texts = {
             elegant: "Elegant",
             clean: "Clean",
             corporate: "Corporate",
-	    professional: "Profesional"
+	    professional: "Profesional",
+	    berlin: "Berlin"
         }
     }
 };
@@ -1166,12 +1638,18 @@ function updateLanguage() {
     document.getElementById('add-experience-btn').textContent = t.addExperience;
     document.getElementById('add-education-btn').textContent = t.addEducation;
     document.getElementById('add-skill-btn').textContent = t.addSkill;
+    document.getElementById('certifications-title').textContent = t.certificationsTitle;
+    document.getElementById('volunteer-title').textContent = t.volunteerTitle;
+    document.getElementById('add-certification-btn').textContent = t.addCertification;
+    document.getElementById('add-volunteer-btn').textContent = t.addVolunteer;
     document.querySelector('button[onclick="clearAll()"]').textContent = currentLang === 'es' ? '🔄 Reiniciar' : '🔄 Reset';
 
     document.getElementById('preview-summary-title').textContent = t.summaryTitle;
     document.getElementById('preview-experience-title').textContent = t.experienceTitle;
     document.getElementById('preview-education-title').textContent = t.educationTitle;
     document.getElementById('preview-skills-title').textContent = t.skillsTitle;
+    document.getElementById('preview-certifications-title').textContent = t.certificationsTitle;
+    document.getElementById('preview-volunteer-title').textContent = t.volunteerTitle;
     document.getElementById('summary').placeholder = 
     currentLang === 'es'
     ? "Profesional comprometido, proactivo y orientado a resultados, con habilidades en comunicación, trabajo en equipo y resolución de problemas. Capacidad para adaptarse a distintos entornos laborales, aprender rápidamente y cumplir con metas establecidas."
@@ -1191,6 +1669,7 @@ function updateTemplateOptions() {
         <option value="clean">${t.clean}</option>
         <option value="corporate">${t.corporate}</option>
 	<option value="professional">${t.professional}</option>
+	<option value="berlin">${t.berlin}</option>
     `;
     select.value = current;
 }
@@ -1362,6 +1841,85 @@ function addSkillCategory() {
     updatePreview();
 }
 
+function addCertification() {
+    const container = document.getElementById('certifications-container');
+    const t = texts[currentLang];
+    const id = certCount++;
+    
+    const html = `
+        <div class="dynamic-section" id="cert-${id}">
+            <button class="btn btn-remove btn-small remove-btn" onclick="removeItem('cert-${id}')">
+                ${t.remove}
+            </button>
+            <h4>${t.certificationsTitle} ${id + 1}</h4>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label>${t.certificationName}</label>
+                    <input type="text" class="cert-name" placeholder="AWS Cloud Practitioner" oninput="updatePreview()">
+                </div>
+                <div class="form-group">
+                    <label>${t.organization}</label>
+                    <input type="text" class="cert-org" placeholder="Amazon Web Services" oninput="updatePreview()">
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>${t.date}</label>
+                <input type="text" class="cert-date" placeholder="2023" oninput="updatePreview()">
+            </div>
+            
+            <div class="form-group">
+                <label>${t.description}</label>
+                <textarea class="cert-description" placeholder="Descripción de la certificación..." oninput="updatePreview()"></textarea>
+            </div>
+        </div>
+    `;
+    
+    container.insertAdjacentHTML('beforeend', html);
+    updatePreview();
+}
+
+function addVolunteer() {
+    const container = document.getElementById('volunteer-container');
+    const t = texts[currentLang];
+    const id = volunteerCount++;
+    
+    const html = `
+        <div class="dynamic-section" id="vol-${id}">
+            <button class="btn btn-remove btn-small remove-btn" onclick="removeItem('vol-${id}')">
+                ${t.remove}
+            </button>
+            <h4>${t.volunteerTitle} ${id + 1}</h4>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label>${t.volunteerRole}</label>
+                    <input type="text" class="vol-role" placeholder="Interno de Marketing / Voluntario" oninput="updatePreview()">
+                </div>
+                <div class="form-group">
+                    <label>${t.volunteerOrg}</label>
+                    <input type="text" class="vol-org" placeholder="Empresa ABC / Cruz Roja" oninput="updatePreview()">
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>${t.volunteerDuration}</label>
+                <input type="text" class="vol-duration" placeholder="2022 - 2023" oninput="updatePreview()">
+            </div>
+            
+            <div class="form-group">
+                <label>${t.volunteerDescription}</label>
+               <textarea class="vol-description" placeholder="Descripción de actividades realizadas..." oninput="updatePreview()">
+                </textarea>
+            </div>
+        </div>
+    `;
+    
+    container.insertAdjacentHTML('beforeend', html);
+    updatePreview();
+}
+
 function addCustomSkill(categoryId) {
     const customInput = document.getElementById(`custom-skill-input-${categoryId}`);
     const skillValue = customInput.value.trim();
@@ -1495,9 +2053,11 @@ function updatePreview() {
         (currentLang === 'es' ? 'Profesional comprometido, proactivo y orientado a resultados, con habilidades en comunicación, trabajo en equipo y resolución de problemas. Capacidad para adaptarse a distintos entornos laborales, 	aprender rápidamente y cumplir con metas establecidas.' : 'Committed, proactive, and results-oriented professional with strong communication, teamwork, and problem-solving skills. Able to adapt to different work environments, 	learn quickly, and meet established goals.');
     
     // Experiencias
-    updateExperiencePreview();
-    updateEducationPreview();
-    updateSkillsPreview();
+updateExperiencePreview();
+updateEducationPreview();
+updateSkillsPreview();
+updateCertificationsPreview();
+updateVolunteerPreview();
 }
 
 function updateExperiencePreview() {
@@ -1584,6 +2144,70 @@ function updateSkillsPreview() {
     container.innerHTML = html || 
         (currentLang === 'es' ? 'Tus habilidades aparecerán aquí...' : 'Your skills will appear here...');
 }
+
+function updateCertificationsPreview() {
+    const container = document.getElementById('preview-certifications');
+    const section = container.closest('.resume-section');
+    let html = '';
+    
+    const certifications = document.querySelectorAll('#certifications-container .dynamic-section');
+    certifications.forEach((cert) => {
+        const name = cert.querySelector('.cert-name')?.value || '';
+        const org = cert.querySelector('.cert-org')?.value || '';
+        const date = cert.querySelector('.cert-date')?.value || '';
+        const description = cert.querySelector('.cert-description')?.value || '';
+        
+        if (name || org) {
+            html += `
+                <div class="education-item">
+                    <div class="degree-title">${name}</div>
+                    <div class="institution-info">${org} | ${date}</div>
+                    ${description ? `<div>${description}</div>` : ''}
+                </div>
+            `;
+        }
+    });
+    
+    if (html) {
+        container.innerHTML = html;
+        section.style.display = 'block';
+    } else {
+        container.innerHTML = currentLang === 'es' ? 'Tus certificaciones aparecerán aquí...' : 'Your certifications will appear here...';
+        section.style.display = 'none';
+    }
+}
+
+function updateVolunteerPreview() {
+    const container = document.getElementById('preview-volunteer');
+    const section = container.closest('.resume-section');
+    let html = '';
+    
+    const volunteers = document.querySelectorAll('#volunteer-container .dynamic-section');
+    volunteers.forEach((vol) => {
+        const role = vol.querySelector('.vol-role')?.value || '';
+        const org = vol.querySelector('.vol-org')?.value || '';
+        const duration = vol.querySelector('.vol-duration')?.value || '';
+        const description = vol.querySelector('.vol-description')?.value || '';
+        
+        if (role || org) {
+            html += `
+                <div class="experience-item">
+                    <div class="job-title">${role}</div>
+                    <div class="company-info">${org} | ${duration}</div>
+                    <div class="job-description">${description.replace(/\n/g, '<br>')}</div>
+                </div>
+            `;
+        }
+    });
+    
+    if (html) {
+        container.innerHTML = html;
+        section.style.display = 'block';
+    } else {
+        container.innerHTML = currentLang === 'es' ? 'Tu experiencia de voluntariado aparecerá aquí...' : 'Your volunteer experience will appear here...';
+        section.style.display = 'none';
+    }
+}
 function clearAll() {
     if (confirm(currentLang === 'es' ? '¿Seguro que quieres limpiar todo?' : 'Are you sure you want to clear everything?')) {
         // Limpiar información personal y resumen
@@ -1594,14 +2218,18 @@ function clearAll() {
         document.getElementById('summary').value = '';
         
         // Limpiar completamente las secciones dinámicas
-        document.getElementById('experience-container').innerHTML = '';
-        document.getElementById('education-container').innerHTML = '';
-        document.getElementById('skills-container').innerHTML = '';
-        
-        // Resetear contadores
-        expCount = 0;
-        eduCount = 0;
-        skillCount = 0;
+document.getElementById('experience-container').innerHTML = '';
+document.getElementById('education-container').innerHTML = '';
+document.getElementById('skills-container').innerHTML = '';
+document.getElementById('certifications-container').innerHTML = '';
+document.getElementById('volunteer-container').innerHTML = '';
+
+// Resetear contadores
+expCount = 0;
+eduCount = 0;
+skillCount = 0;
+certCount = 0;
+volunteerCount = 0;
 
 	// Resetear todos los selectores a valores originales
 	document.getElementById('language-select').value = 'es';
