@@ -1258,10 +1258,7 @@
     border-color: #c8102e;
     background: #fef7f7;
 }
-
-}
-
-/* Estilos para el modal de email */
+/* Estilos para el modal de salir */
 .email-modal {
     position: fixed;
     z-index: 1000;
@@ -1282,6 +1279,7 @@
     max-width: 500px;
     max-height: 80vh;
     overflow-y: auto;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
 }
 
 .email-modal-header {
@@ -1290,6 +1288,8 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    background: white;
+    border-radius: 10px 10px 0 0;
 }
 
 .email-modal-header h3 {
@@ -1297,37 +1297,21 @@
     color: #2d3748;
 }
 
-.email-modal-close {
-    background: none;
-    border: none;
-    font-size: 24px;
-    cursor: pointer;
-    color: #718096;
-}
-
 .email-modal-body {
     padding: 20px;
+    background: white;
+    border-radius: 0 0 10px 10px;
 }
 
 .email-modal-buttons {
     display: flex;
     gap: 10px;
-    justify-content: flex-end;
+    justify-content: center;
     margin-top: 20px;
 }
 
-.email-modal .form-group {
-    margin-bottom: 15px;
 }
 
-.email-modal input,
-.email-modal textarea {
-    width: 100%;
-    padding: 10px;
-    border: 2px solid #e2e8f0;
-    border-radius: 5px;
-    font-size: 14px;
-}
 
     </style>
 </head>
@@ -1388,7 +1372,6 @@
             <button class="btn btn-primary" onclick="exportToPDF()">Exportar PDF</button>
             <button class="btn btn-primary" onclick="exportToWord()">Exportar Word</button>
             <button class="btn btn-primary" onclick="clearAll()">Reiniciar</button>
-	    <button class="btn btn-primary" onclick="openEmailModal()">📧 Enviar por Email</button>
 	    <button class="btn btn-primary" onclick="openExitModal()">🚪 Salir</button>
         </div>
 
@@ -2363,6 +2346,8 @@ function updateVolunteerPreview() {
         container.innerHTML = currentLang === 'es' ? 'Tu experiencia de voluntariado aparecerá aquí...' : 'Your volunteer experience will appear here...';
         section.style.display = 'none';
     }
+ cleanPreviewFromModalContent();	
+
 }
 function clearAll() {
     if (confirm(currentLang === 'es' ? '¿Seguro que quieres limpiar todo?' : 'Are you sure you want to clear everything?')) {
@@ -2883,66 +2868,24 @@ document.body.removeChild(a);
     }      
 }
 
-function openEmailModal() {
-    const modal = document.getElementById('email-modal');
-    const userName = document.getElementById('name').value || '';
+function cleanPreviewFromModalContent() {
+    const resumePreview = document.getElementById('resume-preview');
+    // Eliminar cualquier contenido del modal que aparezca en la vista previa
+    const modalSelectors = [
+        '[id*="email-modal"]',
+        '[id*="recipient-"]', 
+        '[id*="subject-"]',
+        '[id*="message-"]',
+        '.email-modal-header',
+        '.email-modal-body',
+        '.email-modal-content'
+    ];
     
-    document.getElementById('email-subject').value = currentLang === 'es' 
-        ? `Resume - ${userName}` 
-        : `Resume - ${userName}`;
-        
-    document.getElementById('email-message').value = currentLang === 'es'
-        ? `Estimado/a,\n\nAdjunto mi resume para su consideración.\n\nSaludos cordiales,\n${userName}`
-        : `Dear Sir/Madam,\n\nPlease find attached my resume for your consideration.\n\nBest regards,\n${userName}`;
-    
-    updateEmailModalTexts();
-    modal.style.display = 'flex';
+    modalSelectors.forEach(selector => {
+        const elements = resumePreview.querySelectorAll(selector);
+        elements.forEach(el => el.remove());
+    });
 }
-
-function closeEmailModal() {
-    document.getElementById('email-modal').style.display = 'none';
-}
-
-function updateEmailModalTexts() {
-    if (currentLang === 'es') {
-        document.getElementById('email-modal-title').textContent = 'Enviar Resumé por Email';
-        document.getElementById('recipient-label').textContent = 'Email del destinatario:';
-        document.getElementById('subject-label').textContent = 'Asunto:';
-        document.getElementById('message-label').textContent = 'Mensaje:';
-        document.querySelector('.email-modal-buttons .btn-primary').textContent = 'Enviar Email';
-        document.querySelector('.email-modal-buttons .btn:not(.btn-primary)').textContent = 'Cancelar';
-    } else {
-        document.getElementById('email-modal-title').textContent = 'Send Resume by Email';
-        document.getElementById('recipient-label').textContent = 'Recipient email:';
-        document.getElementById('subject-label').textContent = 'Subject:';
-        document.getElementById('message-label').textContent = 'Message:';
-        document.querySelector('.email-modal-buttons .btn-primary').textContent = 'Send Email';
-        document.querySelector('.email-modal-buttons .btn:not(.btn-primary)').textContent = 'Cancel';
-    }
-}
-
-function sendEmailWithDetails() {
-    const recipientEmail = document.getElementById('recipient-email').value;
-    const subject = document.getElementById('email-subject').value;
-    const message = document.getElementById('email-message').value;
-    
-    if (!recipientEmail) {
-        alert(currentLang === 'es' ? 'Por favor ingresa el email del destinatario' : 'Please enter recipient email');
-        return;
-    }
-    
-    const mailtoLink = `mailto:${recipientEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(message)}`;
-    window.open(mailtoLink);
-    
-    closeEmailModal();
-}
-
-document.addEventListener('click', function(event) {
-    const modal = document.getElementById('email-modal');
-    if (event.target === modal) {
-        closeEmailModal();
-    }
-});
 
 function openExitModal() {
     showFinalExitModal();
@@ -3179,33 +3122,6 @@ function closeApplication() {
 }
 
 </script>
-
-<div id="email-modal" class="email-modal" style="display: none;">
-    <div class="email-modal-content">
-        <div class="email-modal-header">
-            <h3 id="email-modal-title">Enviar Resumé por Email</h3>
-            <button class="email-modal-close" onclick="closeEmailModal()">&times;</button>
-        </div>
-        <div class="email-modal-body">
-            <div class="form-group">
-                <label id="recipient-label">Email del destinatario:</label>
-                <input type="email" id="recipient-email" placeholder="empresa@ejemplo.com">
-            </div>
-            <div class="form-group">
-                <label id="subject-label">Asunto:</label>
-                <input type="text" id="email-subject" placeholder="Currículum Vitae - [Tu Nombre]">
-            </div>
-            <div class="form-group">
-                <label id="message-label">Mensaje:</label>
-                <textarea id="email-message" rows="4" placeholder="Estimado/a..."></textarea>
-            </div>
-            <div class="email-modal-buttons">
-                <button class="btn btn-primary" onclick="sendEmailWithDetails()">Enviar Email</button>
-                <button class="btn" onclick="closeEmailModal()">Cancelar</button>
-            </div>
-        </div>
-    </div>
-</div>
 
 <div id="exit-modal" class="email-modal" style="display: none;">
     <div class="email-modal-content" style="max-width: 400px; text-align: center;">
