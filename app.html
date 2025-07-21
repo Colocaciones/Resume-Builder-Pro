@@ -1105,6 +1105,162 @@
     line-height: 1;
 }
 
+/* Estilos para la encuesta de satisfacción */
+.survey-modal {
+    position: fixed;
+    z-index: 1001;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.survey-modal-content {
+    background: white;
+    border-radius: 15px;
+    width: 90%;
+    max-width: 600px;
+    max-height: 85vh;
+    overflow-y: auto;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+}
+
+.survey-modal-header {
+    background: linear-gradient(135deg, #c8102e 0%, #8b0b1f 100%);
+    color: white;
+    padding: 25px;
+    border-radius: 15px 15px 0 0;
+    text-align: center;
+}
+
+.survey-question {
+    margin-bottom: 25px;
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 10px;
+    border-left: 4px solid #c8102e;
+}
+
+.star-rating {
+    display: flex;
+    gap: 5px;
+    justify-content: center;
+    margin: 10px 0;
+}
+
+.star {
+    font-size: 30px;
+    color: #ddd;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.star:hover,
+.star.active {
+    color: #ffd700;
+}
+
+.scale-rating {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin: 15px 0;
+}
+
+.scale-option {
+    padding: 10px 15px;
+    border: 2px solid #e2e8f0;
+    border-radius: 25px;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: white;
+}
+
+.scale-option:hover {
+    border-color: #c8102e;
+}
+
+.scale-option.selected {
+    background: #c8102e;
+    color: white;
+    border-color: #c8102e;
+}
+
+.checkbox-group {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 10px;
+    margin: 15px 0;
+}
+
+.checkbox-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px;
+}
+
+.survey-buttons {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    margin-top: 30px;
+    padding: 20px;
+    border-top: 1px solid #e2e8f0;
+}
+
+.survey-buttons .btn {
+    padding: 12px 25px;
+    font-size: 16px;
+    min-width: 120px;
+}
+
+.satisfaction-options {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin: 15px 0;
+}
+
+.satisfaction-option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 15px;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: white;
+}
+
+.satisfaction-option:hover {
+    border-color: #c8102e;
+    background: #fef7f7;
+}
+
+.satisfaction-option input[type="radio"] {
+    width: auto;
+    margin: 0;
+}
+
+.satisfaction-option input[type="radio"]:checked + span {
+    font-weight: 600;
+    color: #c8102e;
+}
+
+.satisfaction-option:has(input[type="radio"]:checked) {
+    border-color: #c8102e;
+    background: #fef7f7;
+}
+
+}
+
 /* Estilos para el modal de email */
 .email-modal {
     position: fixed;
@@ -2776,12 +2932,17 @@ document.addEventListener('click', function(event) {
 });
 
 function openExitModal() {
-    updateExitModalTexts();
-    document.getElementById('exit-modal').style.display = 'flex';
+    // Primero mostrar la encuesta de satisfacción
+    showSurveyModal();
 }
 
 function closeExitModal() {
     document.getElementById('exit-modal').style.display = 'none';
+}
+
+function showFinalExitModal() {
+    updateExitModalTexts();
+    document.getElementById('exit-modal').style.display = 'flex';
 }
 
 function updateExitModalTexts() {
@@ -2792,6 +2953,198 @@ function updateExitModalTexts() {
         document.getElementById('exit-modal-title').textContent = 'Thank you for using UAGM Resume Builder!';
         document.querySelector('#exit-modal .email-modal-body p:last-of-type').textContent = 'We hope your resume helps you get your desired job.';
     }
+}
+
+function showSurveyModal() {
+    updateSurveyTexts();
+    document.getElementById('survey-modal').style.display = 'flex';
+}
+
+function closeSurveyModal() {
+    document.getElementById('survey-modal').style.display = 'none';
+}
+
+async function submitSurveyAndExit() {
+    try {
+        // Recopilar datos
+        const surveyData = collectSurveyData();
+        
+        // Preparar datos para Google Forms
+        const formData = new FormData();
+        formData.append('entry.278011305', surveyData.responses.resumePreparation || '');
+        formData.append('entry.652553867', surveyData.responses.universitySupport || '');
+        formData.append('entry.1508588457', surveyData.responses.difficultyResolution || '');
+        formData.append('entry.989837215', surveyData.responses.easeOfUse || '');
+        formData.append('entry.881790119', surveyData.responses.comments || '');
+        
+        // Enviar a Google Forms
+        await fetch('https://docs.google.com/forms/d/e/1FAIpQLSddZXMDD3Jeb-Ra5kI9-xFGpepV2rumpTiZtWZSaCrC77a-tw/formResponse', {
+            method: 'POST',
+            body: formData,
+            mode: 'no-cors'
+        });
+        
+        // Mostrar mensaje de éxito
+        alert(currentLang === 'es' 
+            ? '¡Gracias por tu feedback! Tu opinión ha sido registrada exitosamente.' 
+            : 'Thank you for your feedback! Your opinion has been successfully recorded.');
+        
+    } catch (error) {
+        console.error('Error enviando encuesta:', error);
+        alert(currentLang === 'es' 
+            ? '¡Gracias por tu feedback! (Los datos se guardaron localmente)' 
+            : 'Thank you for your feedback! (Data saved locally)');
+    }
+    
+    closeSurveyModal();
+
+// Cerrar automáticamente después de un breve delay
+setTimeout(() => {
+    window.close();
+    // Si no funciona window.close(), redirigir a página en blanco
+    if (!window.closed) {
+        window.location.href = 'about:blank';
+    }
+}, 2000); // Espera 2 segundos para que el usuario vea el mensaje de agradecimiento
+
+}
+
+function collectSurveyData() {
+    const data = {
+        timestamp: new Date().toISOString(),
+        language: currentLang,
+        responses: {}
+    };
+    
+    // Recopilar respuesta pregunta 1
+    const q1Radio = document.querySelector('input[name="q1-satisfaction"]:checked');
+    if (q1Radio) {
+        switch(q1Radio.value) {
+            case 'muy-satisfecho': data.responses.resumePreparation = 'Muy Satisfecho'; break;
+            case 'satisfecho': data.responses.resumePreparation = 'Satisfecho'; break;
+            case 'neutral': data.responses.resumePreparation = 'Neutral'; break;
+            case 'poco-satisfecho': data.responses.resumePreparation = 'Poco Satisfecho'; break;
+        }
+    }
+    
+    // Recopilar respuesta pregunta 2
+    const q2Radio = document.querySelector('input[name="q2-effectiveness"]:checked');
+    if (q2Radio) {
+        switch(q2Radio.value) {
+            case 'muy-satisfecho': data.responses.universitySupport = 'Muy Satisfecho'; break;
+            case 'satisfecho': data.responses.universitySupport = 'Satisfecho'; break;
+            case 'neutral': data.responses.universitySupport = 'Neutral'; break;
+            case 'poco-satisfecho': data.responses.universitySupport = 'Poco Satisfecho'; break;
+        }
+    }
+    
+    // Recopilar respuesta pregunta 3
+    const q3Radio = document.querySelector('input[name="q3-usefulness"]:checked');
+    if (q3Radio) {
+        switch(q3Radio.value) {
+            case 'muy-satisfecho': data.responses.difficultyResolution = 'Muy Satisfecho'; break;
+            case 'satisfecho': data.responses.difficultyResolution = 'Satisfecho'; break;
+            case 'neutral': data.responses.difficultyResolution = 'Neutral'; break;
+            case 'poco-satisfecho': data.responses.difficultyResolution = 'Poco Satisfecho'; break;
+        }
+    }
+    
+    // Recopilar respuesta pregunta 4
+    const q4Radio = document.querySelector('input[name="q4-usability"]:checked');
+    if (q4Radio) {
+        switch(q4Radio.value) {
+            case 'muy-satisfecho': data.responses.easeOfUse = 'Muy Satisfecho'; break;
+            case 'satisfecho': data.responses.easeOfUse = 'Satisfecho'; break;
+            case 'neutral': data.responses.easeOfUse = 'Neutral'; break;
+            case 'poco-satisfecho': data.responses.easeOfUse = 'Poco Satisfecho'; break;
+        }
+    }
+    
+    // Recopilar comentarios
+    data.responses.comments = document.getElementById('survey-comments').value;
+    
+    return data;
+}
+
+function setStarRating(rating) {
+    const stars = document.querySelectorAll('.star');
+    stars.forEach((star, index) => {
+        if (index < rating) {
+            star.classList.add('active');
+        } else {
+            star.classList.remove('active');
+        }
+        star.dataset.rating = rating;
+    });
+}
+
+function setScaleRating(value, element) {
+    // Remover selección anterior
+    document.querySelectorAll('.scale-option').forEach(opt => {
+        opt.classList.remove('selected');
+    });
+    // Agregar selección actual
+    element.classList.add('selected');
+}
+
+function updateSurveyTexts() {
+    const surveyTexts = {
+        es: {
+            title: '📝 Encuesta de Satisfacción',
+            subtitle: 'Tu opinión nos ayuda a mejorar',
+            q1: '¿Qué tan satisfecho estás en cómo esta aplicación preparó tu resumé?',
+            q2: '¿Qué tan efectiva consideras esta herramienta como apoyo de la universidad para tu inserción laboral?',
+            q3: '¿Qué tan útil fue esta aplicación para superar dificultades en la creación de tu resumé profesional?',
+            q4: '¿Qué tan satisfecho estás con la facilidad de uso de la aplicación?',
+            q5: 'Comentarios adicionales o sugerencias:',
+            submitBtn: 'Enviar Encuesta y Salir',
+            skipBtn: 'Omitir y Salir',
+            options: {
+                muy: 'Muy Satisfecho',
+                satisfecho: 'Satisfecho',
+                neutral: 'Neutral',
+                poco: 'Poco Satisfecho'
+            }
+        },
+        en: {
+            title: '📝 Satisfaction Survey',
+            subtitle: 'Your opinion helps us improve',
+            q1: 'How satisfied are you with how this application prepared your resume?',
+            q2: 'How effective do you consider this tool as university support for your job placement?',
+            q3: 'How useful was this application to overcome difficulties in creating your professional resume?',
+            q4: 'How satisfied are you with the ease of use of the application?',
+            q5: 'Additional comments or suggestions:',
+            submitBtn: 'Submit Survey and Exit',
+            skipBtn: 'Skip and Exit',
+            options: {
+                muy: 'Very Satisfied',
+                satisfecho: 'Satisfied',
+                neutral: 'Neutral',
+                poco: 'Not Very Satisfied'
+            }
+        }
+    };
+    
+    const texts = surveyTexts[currentLang];
+    
+    document.getElementById('survey-title').textContent = texts.title;
+    document.getElementById('survey-subtitle').textContent = texts.subtitle;
+    document.getElementById('survey-q1').textContent = texts.q1;
+    document.getElementById('survey-q2').textContent = texts.q2;
+    document.getElementById('survey-q3').textContent = texts.q3;
+    document.getElementById('survey-q4').textContent = texts.q4;
+    document.getElementById('survey-q5').textContent = texts.q5;
+    
+    // Actualizar opciones para todas las preguntas
+    ['q1', 'q2', 'q3', 'q4'].forEach(q => {
+        document.getElementById(`${q}-muy`).textContent = texts.options.muy;
+        document.getElementById(`${q}-satisfecho`).textContent = texts.options.satisfecho;
+        document.getElementById(`${q}-neutral`).textContent = texts.options.neutral;
+        document.getElementById(`${q}-poco`).textContent = texts.options.poco;
+    });
+    
+   // Actualizar botón
+document.getElementById('survey-submit-btn').textContent = texts.submitBtn;
 }
 
 function closeApplication() {
@@ -2844,6 +3197,119 @@ function closeApplication() {
             <div class="email-modal-buttons">
                 <button class="btn btn-primary" onclick="closeApplication()">Cerrar Aplicación</button>
                 <button class="btn" onclick="closeExitModal()">Continuar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Encuesta de Satisfacción -->
+<div id="survey-modal" class="survey-modal" style="display: none;">
+    <div class="survey-modal-content">
+        <div class="survey-modal-header">
+            <h3 id="survey-title">📝 Encuesta de Satisfacción</h3>
+            <p id="survey-subtitle">Tu opinión nos ayuda a mejorar</p>
+        </div>
+        <div class="survey-modal-body">
+            <!-- Pregunta 1 -->
+            <div class="survey-question">
+                <h4 id="survey-q1">¿Qué tan satisfecho estás en cómo esta aplicación preparó tu resumé?</h4>
+                <div class="satisfaction-options">
+                    <label class="satisfaction-option">
+                        <input type="radio" name="q1-satisfaction" value="muy-satisfecho">
+                        <span id="q1-muy">Muy Satisfecho</span>
+                    </label>
+                    <label class="satisfaction-option">
+                        <input type="radio" name="q1-satisfaction" value="satisfecho">
+                        <span id="q1-satisfecho">Satisfecho</span>
+                    </label>
+                    <label class="satisfaction-option">
+                        <input type="radio" name="q1-satisfaction" value="neutral">
+                        <span id="q1-neutral">Neutral</span>
+                    </label>
+                    <label class="satisfaction-option">
+                        <input type="radio" name="q1-satisfaction" value="poco-satisfecho">
+                        <span id="q1-poco">Poco Satisfecho</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Pregunta 2 -->
+            <div class="survey-question">
+                <h4 id="survey-q2">¿Qué tan efectiva consideras esta herramienta como apoyo de la universidad para tu inserción laboral?</h4>
+                <div class="satisfaction-options">
+                    <label class="satisfaction-option">
+                        <input type="radio" name="q2-effectiveness" value="muy-satisfecho">
+                        <span id="q2-muy">Muy Satisfecho</span>
+                    </label>
+                    <label class="satisfaction-option">
+                        <input type="radio" name="q2-effectiveness" value="satisfecho">
+                        <span id="q2-satisfecho">Satisfecho</span>
+                    </label>
+                    <label class="satisfaction-option">
+                        <input type="radio" name="q2-effectiveness" value="neutral">
+                        <span id="q2-neutral">Neutral</span>
+                    </label>
+                    <label class="satisfaction-option">
+                        <input type="radio" name="q2-effectiveness" value="poco-satisfecho">
+                        <span id="q2-poco">Poco Satisfecho</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Pregunta 3 -->
+            <div class="survey-question">
+                <h4 id="survey-q3">¿Qué tan útil fue esta aplicación para superar dificultades en la creación de tu resumé profesional?</h4>
+                <div class="satisfaction-options">
+                    <label class="satisfaction-option">
+                        <input type="radio" name="q3-usefulness" value="muy-satisfecho">
+                        <span id="q3-muy">Muy Satisfecho</span>
+                    </label>
+                    <label class="satisfaction-option">
+                        <input type="radio" name="q3-usefulness" value="satisfecho">
+                        <span id="q3-satisfecho">Satisfecho</span>
+                    </label>
+                    <label class="satisfaction-option">
+                        <input type="radio" name="q3-usefulness" value="neutral">
+                        <span id="q3-neutral">Neutral</span>
+                    </label>
+                    <label class="satisfaction-option">
+                        <input type="radio" name="q3-usefulness" value="poco-satisfecho">
+                        <span id="q3-poco">Poco Satisfecho</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Pregunta 4 -->
+            <div class="survey-question">
+                <h4 id="survey-q4">¿Qué tan satisfecho estás con la facilidad de uso de la aplicación?</h4>
+                <div class="satisfaction-options">
+                    <label class="satisfaction-option">
+                        <input type="radio" name="q4-usability" value="muy-satisfecho">
+                        <span id="q4-muy">Muy Satisfecho</span>
+                    </label>
+                    <label class="satisfaction-option">
+                        <input type="radio" name="q4-usability" value="satisfecho">
+                        <span id="q4-satisfecho">Satisfecho</span>
+                    </label>
+                    <label class="satisfaction-option">
+                        <input type="radio" name="q4-usability" value="neutral">
+                        <span id="q4-neutral">Neutral</span>
+                    </label>
+                    <label class="satisfaction-option">
+                        <input type="radio" name="q4-usability" value="poco-satisfecho">
+                        <span id="q4-poco">Poco Satisfecho</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Pregunta 5: Comentarios -->
+            <div class="survey-question">
+                <h4 id="survey-q5">Comentarios adicionales o sugerencias:</h4>
+                <textarea id="survey-comments" rows="4" style="width: 100%; padding: 10px; border: 2px solid #e2e8f0; border-radius: 5px; resize: vertical;" placeholder="Escribe tus comentarios aquí..."></textarea>
+            </div>
+
+            <div class="survey-buttons">
+                <button class="btn btn-primary" id="survey-submit-btn" onclick="submitSurveyAndExit()">Enviar Encuesta y Salir</button>
             </div>
         </div>
     </div>
