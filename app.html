@@ -2511,12 +2511,18 @@ async function exportToPDF() {
         // Guardar el PDF
         const fileName = document.getElementById('name').value || 'resume';
         pdf.save(`${fileName}_resume.pdf`);
+
+// Mostrar encuesta después de exportar exitosamente
+        setTimeout(() => {
+            showSuccessAndSurvey('PDF');
+        }, 500); // Pequeña pausa para que termine la descarga
         
     } catch (error) {
         console.error('Error generando PDF:', error);
         alert('Error al generar el PDF. Intenta de nuevo.');
     }
 }
+
 function exportToWord() {
     try {
         // Mostrar advertencia sobre limitaciones de Word
@@ -2861,13 +2867,20 @@ let styles = `
         a.download = `${fileName}_resume.doc`;
         document.body.appendChild(a);
         a.click();
-        document.body.removeChild(a);
+        
+document.body.removeChild(a);
         URL.revokeObjectURL(url);
+        
+        // AGREGAR ESTAS LÍNEAS:
+        // Mostrar encuesta después de exportar exitosamente
+        setTimeout(() => {
+            showSuccessAndSurvey('Word');
+        }, 500);
         
     } catch (error) {
         console.error('Error al exportar Word:', error);
         alert('Error al exportar a Word');
-    }
+    }      
 }
 
 function openEmailModal() {
@@ -2932,8 +2945,7 @@ document.addEventListener('click', function(event) {
 });
 
 function openExitModal() {
-    // Primero mostrar la encuesta de satisfacción
-    showSurveyModal();
+    showFinalExitModal();
 }
 
 function closeExitModal() {
@@ -2941,20 +2953,30 @@ function closeExitModal() {
 }
 
 function showFinalExitModal() {
-    updateExitModalTexts();
-    document.getElementById('exit-modal').style.display = 'flex';
+    const modal = document.getElementById('exit-modal');
+    if (modal) {
+        modal.style.display = 'flex';
+        modal.style.position = 'fixed';
+        modal.style.top = '0';
+        modal.style.left = '0';
+        modal.style.width = '100%';
+        modal.style.height = '100%';
+        modal.style.zIndex = '99999';
+        modal.style.backgroundColor = 'rgba(0,0,0,0.5)';
+        modal.style.justifyContent = 'center';
+        modal.style.alignItems = 'center';
+    }
 }
 
 function updateExitModalTexts() {
     if (currentLang === 'es') {
         document.getElementById('exit-modal-title').textContent = '¡Gracias por usar UAGM Resume Builder!';
-        document.querySelector('#exit-modal .email-modal-body p:last-of-type').textContent = 'Esperamos que tu resumé te ayude a conseguir el trabajo deseado.';
+        // No intentar cambiar el párrafo que no existe - ya está bien en el HTML
     } else {
         document.getElementById('exit-modal-title').textContent = 'Thank you for using UAGM Resume Builder!';
-        document.querySelector('#exit-modal .email-modal-body p:last-of-type').textContent = 'We hope your resume helps you get your desired job.';
+        // No intentar cambiar el párrafo que no existe - ya está bien en el HTML
     }
 }
-
 function showSurveyModal() {
     updateSurveyTexts();
     document.getElementById('survey-modal').style.display = 'flex';
@@ -2962,6 +2984,16 @@ function showSurveyModal() {
 
 function closeSurveyModal() {
     document.getElementById('survey-modal').style.display = 'none';
+}
+
+function showSuccessAndSurvey(exportType) {
+    const message = currentLang === 'es' 
+        ? `¡Genial! Tu resumé en ${exportType} está listo. 🎉\n\n¿Podrías ayudarnos con una encuesta rápida sobre tu experiencia?` 
+        : `Great! Your ${exportType} resume is ready! 🎉\n\nCould you help us with a quick survey about your experience?`;
+    
+    if (confirm(message)) {
+        showSurveyModal();
+    }
 }
 
 async function submitSurveyAndExit() {
@@ -2997,16 +3029,6 @@ async function submitSurveyAndExit() {
     }
     
     closeSurveyModal();
-
-// Cerrar automáticamente después de un breve delay
-setTimeout(() => {
-    window.close();
-    // Si no funciona window.close(), redirigir a página en blanco
-    if (!window.closed) {
-        window.location.href = 'about:blank';
-    }
-}, 2000); // Espera 2 segundos para que el usuario vea el mensaje de agradecimiento
-
 }
 
 function collectSurveyData() {
