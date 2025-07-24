@@ -40,8 +40,13 @@
             border-radius: 10px;
             margin-bottom: 30px;
             display: flex;
-            gap: 15px;
-            flex-wrap: wrap;
+            gap: 10px;
+            flex-wrap: nowrap;
+        }
+        .controls .btn,
+        .controls select {
+           white-space: nowrap;
+           flex-shrink: 0;
         }
         
         .btn {
@@ -53,7 +58,7 @@
         }
         
         .btn-primary { background: #667eea; color: white; }
-        .btn-add { background: #38a169; color: white; margin-top: 10px; }
+        .btn-add { background: #38a169; color: white; margin-top: 10px; margin-bottom: 25px; }
         .btn-remove { background: #e53e3e; color: white; }
         .btn-small { padding: 6px 12px; font-size: 12px; }
         
@@ -1258,6 +1263,87 @@
     border-color: #c8102e;
     background: #fef7f7;
 }
+
+/* Modal de Carta de Presentación Profesional */
+.professional-letter-modal {
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5);
+    display: none;
+    justify-content: center;
+    align-items: center;
+}
+
+.professional-letter-content {
+    background: white;
+    border-radius: 15px;
+    width: 95%;
+    max-width: 1200px;
+    height: 90vh;
+    display: grid;
+    grid-template-columns: 400px 1fr;
+    gap: 20px;
+    overflow: hidden;
+}
+
+.letter-form-section {
+    padding: 20px;
+    overflow-y: auto;
+    border-right: 1px solid #e2e8f0;
+}
+
+.letter-preview-section {
+    padding: 20px;
+    overflow-y: auto;
+    background: #f9f9f9;
+}
+
+.letter-header {
+    background: linear-gradient(135deg, #c8102e 0%, #8b0b1f 100%);
+    color: white;
+    padding: 20px;
+    text-align: center;
+    grid-column: 1 / -1;
+    margin: 0;
+}
+
+.letter-preview-content {
+    background: white;
+    padding: 40px;
+    font-family: 'Times New Roman', serif;
+    font-size: 12pt;
+    line-height: 1.6;
+    color: #000;
+    min-height: 800px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.letter-buttons {
+    grid-column: 1 / -1;
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    padding: 15px;
+    border-top: 1px solid #e2e8f0;
+    background: white;
+}
+
+@media (max-width: 1000px) {
+    .professional-letter-content {
+        grid-template-columns: 1fr;
+        height: 95vh;
+    }
+    
+    .letter-form-section {
+        border-right: none;
+        border-bottom: 1px solid #e2e8f0;
+    }
+}
+
 /* Estilos para el modal de salir */
 .email-modal {
     position: fixed;
@@ -1372,6 +1458,7 @@
             <button class="btn btn-primary" onclick="exportToPDF()">Exportar PDF</button>
             <button class="btn btn-primary" onclick="exportToWord()">Exportar Word</button>
             <button class="btn btn-primary" onclick="clearAll()">Reiniciar</button>
+            <button class="btn btn-primary" onclick="openProfessionalCoverLetter()">📝 Crear Carta de Presentación</button>
 	    <button class="btn btn-primary" onclick="openExitModal()">🚪 Salir</button>
         </div>
 
@@ -2497,11 +2584,9 @@ async function exportToPDF() {
         const fileName = document.getElementById('name').value || 'resume';
         pdf.save(`${fileName}_resume.pdf`);
 
-// Mostrar encuesta después de exportar exitosamente
-        setTimeout(() => {
-            showSuccessAndSurvey('PDF');
-        }, 500); // Pequeña pausa para que termine la descarga
-        
+// MOSTRAR MENSAJE INFORMATIVO
+showCareerOfficeInfo();
+
     } catch (error) {
         console.error('Error generando PDF:', error);
         alert('Error al generar el PDF. Intenta de nuevo.');
@@ -2857,10 +2942,8 @@ document.body.removeChild(a);
         URL.revokeObjectURL(url);
         
         // AGREGAR ESTAS LÍNEAS:
-        // Mostrar encuesta después de exportar exitosamente
-        setTimeout(() => {
-            showSuccessAndSurvey('Word');
-        }, 500);
+        // MOSTRAR MENSAJE INFORMATIVO  
+showCareerOfficeWordInfo();
         
     } catch (error) {
         console.error('Error al exportar Word:', error);
@@ -3121,7 +3204,360 @@ function closeApplication() {
 
 }
 
+function showCareerOfficeInfo() {
+    const message = currentLang === 'es' 
+        ? `✅ ¡Tu resumé PDF está listo!\n\n📧 ¿Te interesa compartir tu resumé con la Oficina de Carreras y Colocaciones?\n\nPuedes enviarlo directamente a:\n• brgonzalez@uagm.edu\n\nLa Oficina de Carreras te puede ayudar con:\n• Revisión y mejoras de tu resumé\n• Oportunidades laborales\n• Consejos de entrevistas\n• Networking profesional\n\n¡No dudes en contactarnos!`
+        : `✅ Your PDF resume is ready!\n\n📧 Would you like to share your resume with the Career Services Office?\n\nYou can send it directly to:\n• brgonzalez@uagm.edu\n\nCareer Services can help you with:\n• Resume review and improvements\n• Job opportunities\n• Interview tips\n• Professional networking\n\nDon't hesitate to contact us!`;
+    
+    alert(message);
+    
+    setTimeout(() => {
+        showSuccessAndSurvey('PDF');
+    }, 500);
+}
+
+function showCareerOfficeWordInfo() {
+    const message = currentLang === 'es' 
+        ? `✅ ¡Tu resumé Word está listo!\n\n📧 ¿Te interesa compartir tu resumé con la Oficina de Carreras y Colocaciones?\n\nPuedes enviarlo directamente a:\n• brgonzalez@uagm.edu\n\nLa Oficina de Carreras te puede ayudar con:\n• Revisión y mejoras de tu resumé\n• Oportunidades laborales\n• Consejos de entrevistas\n• Networking profesional\n\n¡No dudes en contactarnos!`
+        : `✅ Your Word resume is ready!\n\n📧 Would you like to share your resume with the Career Services Office?\n\nYou can send it directly to:\n• brgonzalez@uagm.edu\n\nCareer Services can help you with:\n• Resume review and improvements\n• Job opportunities\n• Interview tips\n• Professional networking\n\nDon't hesitate to contact us!`;
+    
+    alert(message);
+    
+    setTimeout(() => {
+        showSuccessAndSurvey('Word');
+    }, 500);
+}
+
+function openProfessionalCoverLetter() {
+    updateProfessionalLetterTexts();
+    fillResumeDataToLetter();
+    updateLetterPreview();
+    document.getElementById('professional-letter-modal').style.display = 'flex';
+}
+
+function closeProfessionalLetter() {
+    document.getElementById('professional-letter-modal').style.display = 'none';
+}
+
+function toggleResumeData() {
+    const useData = document.getElementById('use-resume-data').checked;
+    if (useData) {
+        fillResumeDataToLetter();
+    }
+    updateLetterPreview();
+}
+
+function fillResumeDataToLetter() {
+    const useData = document.getElementById('use-resume-data').checked;
+    
+    if (useData) {
+        document.getElementById('sender-name').value = document.getElementById('name').value || '';
+        document.getElementById('sender-address').value = document.getElementById('location').value || '';
+        document.getElementById('sender-phone').value = document.getElementById('phone').value || '';
+        document.getElementById('sender-email').value = document.getElementById('email').value || '';
+    }
+}
+
+function updateProfessionalLetterTexts() {
+    if (currentLang === 'es') {
+        document.getElementById('prof-letter-title').textContent = '📝 Carta de Presentación Profesional';
+        document.getElementById('prof-letter-subtitle').textContent = 'Formato basado en estándares profesionales';
+        document.getElementById('sender-info-title').textContent = 'Tu Información';
+        document.getElementById('use-resume-label').textContent = 'Usar datos del resumé';
+        document.getElementById('sender-name-label').textContent = 'Nombre Completo:';
+        document.getElementById('sender-address-label').textContent = 'Dirección:';
+        document.getElementById('sender-phone-label').textContent = 'Teléfono:';
+        document.getElementById('sender-email-label').textContent = 'Email:';
+        document.getElementById('company-info-title').textContent = 'Información de la Empresa';
+        document.getElementById('company-name-label').textContent = 'Nombre de la Empresa:';
+        document.getElementById('company-address-label').textContent = 'Dirección de la Empresa:';
+        document.getElementById('department-label').textContent = 'Departamento/Área:';
+        document.getElementById('position-info-title').textContent = 'Información del Puesto';
+        document.getElementById('position-title-label').textContent = 'Título del Puesto:';
+        document.getElementById('job-source-label').textContent = 'Donde viste la oferta:';
+        document.getElementById('content-title').textContent = 'Contenido Personalizado';
+        document.getElementById('expertise-area-label').textContent = 'Tu área de expertise:';
+        document.getElementById('additional-info-label').textContent = 'Información adicional (opcional):';
+        document.getElementById('prof-download-pdf').textContent = '📄 Descargar PDF';
+        document.getElementById('prof-download-word').textContent = '📄 Descargar Word';
+        document.getElementById('prof-close').textContent = 'Cerrar';
+    }
+}
+
+function updateLetterPreview() {
+    const senderName = document.getElementById('sender-name').value || '[Tu Nombre]';
+    const senderAddress = document.getElementById('sender-address').value || '[Tu Dirección]';
+    const senderPhone = document.getElementById('sender-phone').value || '[Tu Teléfono]';
+    const senderEmail = document.getElementById('sender-email').value || '[Tu Email]';
+    
+    const companyName = document.getElementById('company-name').value || '[Nombre de la Empresa]';
+    const companyAddress = document.getElementById('company-address').value || '[Dirección de la Empresa]';
+    const department = document.getElementById('department').value || '[Departamento]';
+    
+    const positionTitle = document.getElementById('position-title').value || '[Título del Puesto]';
+    const jobSource = document.getElementById('job-source').value || '[donde viste la oferta]';
+    const expertiseArea = document.getElementById('expertise-area').value || '[tu área de expertise]';
+    const additionalInfo = document.getElementById('additional-info').value || '';
+    
+    // Fecha actual
+    const today = new Date();
+    const dateString = today.toLocaleDateString('es-ES', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+    });
+    
+    // Generar contenido de la carta basado en tu formato
+    const letterHTML = `
+        <div style="margin-bottom: 30px;">
+            <div style="font-weight: bold; font-size: 14pt; margin-bottom: 5px;">${senderName}</div>
+            <div style="margin-bottom: 3px;">${senderAddress}</div>
+            <div style="margin-bottom: 3px;">${senderPhone}</div>
+            <div style="margin-bottom: 20px;">${senderEmail}</div>
+        </div>
+
+        <div style="margin-bottom: 30px;">
+            <div style="margin-bottom: 20px;">${dateString}</div>
+        </div>
+
+        <div style="margin-bottom: 30px;">
+            <div style="font-weight: bold; margin-bottom: 5px;">${companyName}</div>
+            <div style="white-space: pre-line; margin-bottom: 15px;">${companyAddress}</div>
+            <div style="margin-bottom: 20px;"><strong>${department}:</strong></div>
+        </div>
+
+        <div style="margin-bottom: 20px;">
+            Con referencia al puesto de <strong>${positionTitle}</strong>, publicado en ${jobSource}; adjunto para su consideración mi resumé con las habilidades y experiencias que se relacionan con el puesto.
+        </div>
+
+        <div style="margin-bottom: 20px;">
+            Considero que mi preparación profesional, así como mi desarrollo en el área de ${expertiseArea} me capacita como candidato idóneo para realizar con eficiencia las responsabilidades que conlleva la posición solicitada. Estoy interesado(a) en formar parte de su organización para contribuir al logro de objetivos que redunden en el crecimiento de la empresa.
+        </div>
+
+        ${additionalInfo ? `<div style="margin-bottom: 20px;">${additionalInfo}</div>` : ''}
+
+        <div style="margin-bottom: 20px;">
+            Agradecería la oportunidad de entrevistarme, para ampliar la información que estime necesaria.
+        </div>
+
+        <div style="margin-bottom: 40px;">
+            Gracias por la atención prestada.
+        </div>
+
+        <div>
+            <div style="margin-bottom: 40px;">Atentamente,</div>
+            <div style="font-weight: bold;">${senderName}</div>
+        </div>
+    `;
+    
+    document.getElementById('letter-preview').innerHTML = letterHTML;
+}
+
+function downloadProfessionalLetter(format) {
+    // Validar que hay contenido
+    const senderName = document.getElementById('sender-name').value;
+    const companyName = document.getElementById('company-name').value;
+    
+    if (!senderName || !companyName) {
+        alert(currentLang === 'es' ? 
+            'Por favor completa al menos tu nombre y el nombre de la empresa.' : 
+            'Please fill in at least your name and company name.');
+        return;
+    }
+    
+    const filename = `${senderName.replace(/\s+/g, '_')}_carta_presentacion`;
+    
+    if (format === 'pdf') {
+        downloadLetterAsPDF(filename);
+    } else {
+        downloadLetterAsWord(filename);
+    }
+    
+    // Mostrar mensaje sobre envío a oficina de carreras
+    setTimeout(() => {
+        const message = currentLang === 'es' 
+            ? `✅ ¡Tu carta de presentación está lista!\n\n📧 ¿Te interesa enviar tu carta junto con tu resumé a la Oficina de Carreras y Colocaciones?\n\nPuedes enviarlos a:\nbrgonzalez@uagm.edu\n\n¡Te pueden ayudar a mejorar ambos documentos!`
+            : `✅ Your cover letter is ready!\n\n📧 Would you like to send your letter along with your resume to the Career Services Office?\n\nYou can send them to:\nbrgonzalez@uagm.edu\n\nThey can help you improve both documents!`;
+        
+        alert(message);
+    }, 1000);
+}
+
+function downloadLetterAsPDF(filename) {
+    try {
+        const { jsPDF } = window.jspdf;
+        const letterContent = document.getElementById('letter-preview');
+        
+        const pdf = new jsPDF('portrait', 'mm', 'a4');
+        pdf.setFont('times', 'normal');
+        pdf.setFontSize(12);
+        
+        // Obtener el texto plano de la carta
+        const textContent = letterContent.innerText || letterContent.textContent;
+        const lines = textContent.split('\n').filter(line => line.trim() !== '');
+        
+        let yPosition = 20;
+        const lineHeight = 6;
+        const pageHeight = 280;
+        
+        lines.forEach((line, index) => {
+            if (yPosition > pageHeight) {
+                pdf.addPage();
+                yPosition = 20;
+            }
+            
+            const wrappedLines = pdf.splitTextToSize(line, 170);
+            pdf.text(wrappedLines, 20, yPosition);
+            yPosition += wrappedLines.length * lineHeight + 3;
+        });
+        
+        pdf.save(`${filename}.pdf`);
+        alert(currentLang === 'es' ? '¡Carta PDF descargada exitosamente!' : 'PDF letter downloaded successfully!');
+        
+    } catch (error) {
+        console.error('Error generating PDF:', error);
+        alert(currentLang === 'es' ? 'Error al generar PDF' : 'Error generating PDF');
+    }
+}
+
+function downloadLetterAsWord(filename) {
+    try {
+        const letterContent = document.getElementById('letter-preview');
+        const textContent = letterContent.innerText || letterContent.textContent;
+        
+        const html = `
+            <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word">
+            <head>
+                <meta charset="utf-8">
+                <title>Carta de Presentación</title>
+                <style>
+                    body { 
+                        font-family: 'Times New Roman', serif; 
+                        font-size: 12pt; 
+                        line-height: 1.6; 
+                        margin: 40px;
+                        color: #000;
+                    }
+                </style>
+            </head>
+            <body>
+                <div style="white-space: pre-line;">${textContent}</div>
+            </body>
+            </html>
+        `;
+        
+        const blob = new Blob(['\ufeff', html], { type: 'application/msword' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${filename}.doc`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        
+        alert(currentLang === 'es' ? '¡Carta Word descargada exitosamente!' : 'Word letter downloaded successfully!');
+        
+    } catch (error) {
+        console.error('Error generating Word:', error);
+        alert(currentLang === 'es' ? 'Error al generar Word' : 'Error generating Word');
+    }
+}
+
 </script>
+
+<!-- Modal de Carta de Presentación Profesional -->
+<div id="professional-letter-modal" class="professional-letter-modal">
+    <div class="professional-letter-content">
+        <div class="letter-header">
+            <h2 id="prof-letter-title">📝 Carta de Presentación Profesional</h2>
+            <p id="prof-letter-subtitle">Formato basado en estándares profesionales</p>
+        </div>
+
+        <div class="letter-form-section">
+            <h3 class="section-title" id="sender-info-title">Tu Información</h3>
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" id="use-resume-data" checked onchange="toggleResumeData()">
+                    <span id="use-resume-label">Usar datos del resumé</span>
+                </label>
+            </div>
+            
+            <div class="form-group">
+                <label id="sender-name-label">Nombre Completo:</label>
+                <input type="text" id="sender-name" oninput="updateLetterPreview()">
+            </div>
+            
+            <div class="form-group">
+                <label id="sender-address-label">Dirección:</label>
+                <input type="text" id="sender-address" oninput="updateLetterPreview()">
+            </div>
+            
+            <div class="form-group">
+                <label id="sender-phone-label">Teléfono:</label>
+                <input type="text" id="sender-phone" oninput="updateLetterPreview()">
+            </div>
+            
+            <div class="form-group">
+                <label id="sender-email-label">Email:</label>
+                <input type="email" id="sender-email" oninput="updateLetterPreview()">
+            </div>
+
+            <h3 class="section-title" id="company-info-title">Información de la Empresa</h3>
+            
+            <div class="form-group">
+                <label id="company-name-label">Nombre de la Empresa:</label>
+                <input type="text" id="company-name" placeholder="Universidad Ana G. Méndez" oninput="updateLetterPreview()">
+            </div>
+            
+            <div class="form-group">
+                <label id="company-address-label">Dirección de la Empresa:</label>
+                <textarea id="company-address" rows="3" placeholder="Carretera 176&#10;Avenida Ana G. Méndez&#10;Km 0.3, San Juan, P.R. 00928" oninput="updateLetterPreview()"></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label id="department-label">Departamento/Área:</label>
+                <input type="text" id="department" placeholder="Oficina de Recursos Humanos" oninput="updateLetterPreview()">
+            </div>
+
+            <h3 class="section-title" id="position-info-title">Información del Puesto</h3>
+            
+            <div class="form-group">
+                <label id="position-title-label">Título del Puesto:</label>
+                <input type="text" id="position-title" placeholder="Director(a) Asociado(a) de Colocaciones" oninput="updateLetterPreview()">
+            </div>
+            
+            <div class="form-group">
+                <label id="job-source-label">Donde viste la oferta:</label>
+                <input type="text" id="job-source" placeholder="página web de su institución" oninput="updateLetterPreview()">
+            </div>
+
+            <h3 class="section-title" id="content-title">Contenido Personalizado</h3>
+            
+            <div class="form-group">
+                <label id="expertise-area-label">Tu área de expertise:</label>
+                <input type="text" id="expertise-area" placeholder="reclutamiento, colocaciones y asuntos académicos" oninput="updateLetterPreview()">
+            </div>
+            
+            <div class="form-group">
+                <label id="additional-info-label">Información adicional (opcional):</label>
+                <textarea id="additional-info" rows="3" placeholder="Cualquier información extra que quieras agregar..." oninput="updateLetterPreview()"></textarea>
+            </div>
+        </div>
+
+        <div class="letter-preview-section">
+            <div class="letter-preview-content" id="letter-preview">
+                <!-- El contenido se genera dinámicamente -->
+            </div>
+        </div>
+
+        <div class="letter-buttons">
+            <button class="btn btn-primary" onclick="downloadProfessionalLetter('pdf')" id="prof-download-pdf">📄 Descargar PDF</button>
+            <button class="btn btn-primary" onclick="downloadProfessionalLetter('word')" id="prof-download-word">📄 Descargar Word</button>
+            <button class="btn" onclick="closeProfessionalLetter()" id="prof-close">Cerrar</button>
+        </div>
+    </div>
+</div>
 
 <div id="exit-modal" class="email-modal" style="display: none;">
     <div class="email-modal-content" style="max-width: 400px; text-align: center;">
