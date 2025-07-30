@@ -287,8 +287,273 @@
                 grid-template-columns: 1fr;
             }
         }
+
+/* Modal de Registro */
+.registration-modal {
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.6);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    overflow-y: auto;
+}
+
+.registration-modal-content {
+    background: white;
+    border-radius: 15px;
+    width: 90%;
+    max-width: 600px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    animation: modalSlideIn 0.3s ease;
+}
+
+.registration-modal-header {
+    background: linear-gradient(135deg, #c8102e 0%, #8b0b1f 100%);
+    color: white;
+    padding: 25px;
+    border-radius: 15px 15px 0 0;
+    text-align: center;
+}
+
+.registration-modal-body {
+    padding: 30px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #2d3748;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 14px;
+    transition: border-color 0.3s ease;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: #c8102e;
+}
+
+.conditional-fields {
+    display: none;
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    margin-top: 15px;
+    border-left: 4px solid #c8102e;
+}
+
+.checkbox-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.checkbox-group input[type="checkbox"] {
+    width: auto;
+    margin: 0;
+}
+
+.modal-buttons {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid #e2e8f0;
+}
+
+.btn-submit {
+    background: linear-gradient(135deg, #c8102e, #8b0b1f);
+    color: white;
+    padding: 12px 30px;
+    border: none;
+    border-radius: 25px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: transform 0.3s ease;
+}
+
+.btn-submit:hover {
+    transform: translateY(-2px);
+}
+
+.btn-cancel {
+    background: #6c757d;
+    color: white;
+    padding: 12px 30px;
+    border: none;
+    border-radius: 25px;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+@keyframes modalSlideIn {
+    from { transform: translateY(-50px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
     </style>
 </head>
+
+<script>
+function openRegistrationModal() {
+    document.getElementById('registration-modal').style.display = 'flex';
+}
+
+function closeRegistrationModal() {
+    document.getElementById('registration-modal').style.display = 'none';
+}
+
+function toggleStudentFields() {
+    const tipoUsuario = document.getElementById('tipo-usuario').value;
+    const studentFields = document.getElementById('student-fields');
+    
+    if (tipoUsuario === 'Estudiante') {
+        studentFields.style.display = 'block';
+    } else {
+        studentFields.style.display = 'none';
+    }
+}
+
+function submitRegistration() {
+    console.log('=== INICIO DEBUG ===');
+    
+    // Verificar tipo de usuario
+    const tipoUsuario = document.getElementById('tipo-usuario').value;
+    console.log('Tipo de usuario:', tipoUsuario);
+    
+    console.log('Antes de validar...');
+    
+    // Validar campos obligatorios
+    if (!validateForm()) {
+        console.log('VALIDACIÓN FALLÓ');
+        return;
+    }
+    
+    console.log('VALIDACIÓN PASÓ - enviando datos...');
+    
+    // Recopilar datos
+    const formData = collectFormData();
+    console.log('Datos recopilados:', formData);
+    
+    // Enviar a Google Forms
+    sendToGoogleForms(formData);
+}
+function validateForm() {
+    const requiredFields = ['tipo-participante', 'nombre', 'apellidos', 'telefono', 'email', 'pueblo', 'tipo-usuario', 'grado-academico'];
+    
+    for (let field of requiredFields) {
+        const element = document.getElementById(field);
+        if (!element.value.trim()) {
+            alert(`Por favor completa el campo: ${element.previousElementSibling.textContent}`);
+            element.focus();
+            return false;
+        }
+    }
+    
+    return true;
+}
+function collectFormData() {
+    const today = new Date();
+    
+    const data = {
+        'entry.1074346405_year': today.getFullYear(),
+        'entry.1074346405_month': today.getMonth() + 1,
+        'entry.1074346405_day': today.getDate(),
+        'entry.197550554': document.getElementById('tipo-participante').value,
+        'entry.567871006': document.getElementById('nombre').value,
+        'entry.294478372': document.getElementById('apellidos').value,
+        'entry.1199542402': document.getElementById('telefono').value,
+        'entry.822768235': document.getElementById('email').value,
+        'entry.908289735': document.getElementById('pueblo').value,
+        'entry.1594573126': document.getElementById('tipo-usuario').value,
+        'entry.252216177': document.getElementById('grado-academico').value,
+        'entry.143403103': 'Redacción de Resumé'
+    };
+    
+    // Agregar campos de estudiante (EXCEPTO candidato-graduacion)
+    const tipoUsuario = document.getElementById('tipo-usuario').value;
+    if (tipoUsuario === 'Estudiante') {
+        const recinto = document.getElementById('recinto').value;
+        const idEstudiante = document.getElementById('id-estudiante').value;
+        const horario = document.getElementById('horario').value;
+        const anosEstudios = document.getElementById('anos-estudios').value;
+        const divisionAcademica = document.getElementById('division-academica').value;
+        const concentracion = document.getElementById('concentracion').value;
+        
+        if (recinto) data['entry.1416823813'] = recinto;
+        if (idEstudiante) data['entry.116228697'] = idEstudiante;
+        if (horario) data['entry.1549341664'] = horario;
+        if (anosEstudios) data['entry.325485168'] = anosEstudios;
+        if (divisionAcademica) data['entry.1608125740'] = divisionAcademica;
+        if (concentracion) data['entry.687301913'] = concentracion;
+    }
+    
+    return data;
+}
+function sendToGoogleForms(data) {
+    const formURL = 'https://docs.google.com/forms/u/0/d/e/1FAIpQLSeebcRfFJkR25oUw9PVhj9ixQB5WGmxip7qhulxKdXGZx5xWA/formResponse';
+    
+    const formData = new FormData();
+    
+    // Agregar todos los datos al FormData
+    Object.keys(data).forEach(key => {
+        if (data[key]) {
+            formData.append(key, data[key]);
+        }
+    });
+    
+    // Enviar datos
+    fetch(formURL, {
+        method: 'POST',
+        body: formData,
+        mode: 'no-cors'
+    }).then(() => {
+        alert('¡Registro exitoso! Serás redirigido a la aplicación.');
+        closeRegistrationModal();
+        
+        // Aquí puedes redirigir a tu Resume Builder
+        window.open('https://colocaciones.github.io/Resume-Builder-Pro/app.html', '_blank');
+        
+    }).catch(error => {
+        console.error('Error:', error);
+        alert('¡Registro completado! Gracias por registrarte.');
+        closeRegistrationModal();
+    });
+}
+
+// Cerrar modal al hacer clic fuera
+window.onclick = function(event) {
+    const modal = document.getElementById('registration-modal');
+    if (event.target == modal) {
+        closeRegistrationModal();
+    }
+}
+</script>
+
+
 <body>
     <div class="container">
         <header class="header">
@@ -304,21 +569,21 @@
             <section class="hero-section">
                 <h2>¡Destaca en el Mercado Laboral!</h2>
                 <p>Nuestra herramienta gratuita te permite crear un resume profesional con plantillas modernas, múltiples fuentes y exportación a PDF y Word.</p>
-                <a href="https://www.cognitoforms.com/CentroDeEmpleo1/RegistroUAGMResumeBuilderProRecintoDeCupey" target="_blank" class="cta-button">🚀 Registrate y Crea tu Resume</a>
+               <a href="javascript:void(0)" onclick="openRegistrationModal()" class="cta-button">🚀 Registrate y Crea tu Resume</a>
             </section>
 
             <section class="features-grid">
                 <div class="feature-card">
                     <span class="feature-icon">🎨</span>
-                    <h3>6 Plantillas Profesionales</h3>
-                    <p>Desde moderna y creativa hasta minimalista y corporativa. Encuentra el estilo perfecto para tu carrera.</p>
+                    <h3>Variedad de Plantillas Profesionales</h3>
+                    <p>Encuentra el estilo perfecto para tu carrera.</p>
                 </div>
 
                 <div class="feature-card">
-                    <span class="feature-icon">🔤</span>
-                    <h3>8 Fuentes Elegantes</h3>
-                    <p>Personaliza la tipografía con fuentes como Arial, Times New Roman, Georgia y más.</p>
-                </div>
+    <span class="feature-icon">📝</span>
+    <h3>Generador de Cartas</h3>
+    <p>Crea cartas de presentación profesionales que complementen perfectamente tu resumé.</p>
+</div>
 
                 <div class="feature-card">
                     <span class="feature-icon">🏷️</span>
@@ -397,7 +662,7 @@
         <footer class="footer-cta">
             <h2>¡Comienza Hoy Mismo!</h2>
             <p>No esperes más para crear el resumé que te abra las puertas al éxito profesional.</p>
-            <a href="https://www.cognitoforms.com/CentroDeEmpleo1/RegistroUAGMResumeBuilderProRecintoDeCupey" target="_blank" class="cta-button">💼 Registrate y Accede</a>
+           <a href="javascript:void(0)" onclick="openRegistrationModal()" class="cta-button">💼 Registrate y Accede</a>
             
             <div class="contact-info">
                 <h3>📞 ¿Necesitas Ayuda?</h3>
@@ -408,5 +673,157 @@
             </div>
         </footer>
     </div>
+<!-- Modal de Registro -->
+<div id="registration-modal" class="registration-modal">
+    <div class="registration-modal-content">
+        <div class="registration-modal-header">
+            <h2>📝 Registro - UAGM Resume Builder Pro</h2>
+            <p>Completa tu información para acceder</p>
+        </div>
+        
+        <div class="registration-modal-body">
+            <div id="registration-form">
+                <div class="form-group">
+                    <label>Tipo de participante:</label>
+                    <select id="tipo-participante" required>
+                        <option value="">Seleccionar...</option>
+                        <option value="Nuevo">Nuevo</option>
+                        <option value="Participante de Seguimiento (He recibido los servicios anteriormente)">Participante de Seguimiento (He recibido los servicios anteriormente)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Nombre:</label>
+                    <input type="text" id="nombre" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Apellidos:</label>
+                    <input type="text" id="apellidos" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Teléfono:</label>
+                    <input type="tel" id="telefono" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Correo electrónico:</label>
+                    <input type="email" id="email" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Pueblo al que pertenece:</label>
+                    <input type="text" id="pueblo" required>
+                </div>
+
+                <div class="form-group">
+                    <label>¿Eres Estudiante, Exalumno de UAGM o Comunidad?</label>
+                    <select id="tipo-usuario" onchange="toggleStudentFields()" required>
+                        <option value="">Seleccionar...</option>
+                        <option value="Estudiante">Estudiante</option>
+                        <option value="Exalumno">Exalumno</option>
+                        <option value="Comunidad">Comunidad</option>
+                    </select>
+                </div>
+
+                <!-- Campos condicionales para estudiantes -->
+                <div id="student-fields" class="conditional-fields">
+                    <div class="form-group">
+        <label>Recinto o Centro Universitario al que pertenece:</label>
+        <select id="recinto">
+            <option value="">Seleccionar...</option>
+            <option value="Recinto de Cupey">Recinto de Cupey</option>
+            <option value="Centro Universitario de Bayamón">Centro Universitario de Bayamón</option>
+            <option value="Centro Universitario de Aguadilla">Centro Universitario de Aguadilla</option>
+        </select>
+    </div>
+
+                    <div class="form-group">
+                        <label>ID Estudiante (S0...):</label>
+                        <input type="text" id="id-estudiante" placeholder="S0...">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Horario de Estudios:</label>
+                        <select id="horario">
+                            <option value="">Seleccionar...</option>
+                            <option value="Diurno">Diurno</option>
+                            <option value="Nocturno">Nocturno</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Años de estudios:</label>
+                        <select id="anos-estudios">
+                            <option value="">Seleccionar...</option>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                            <option value="6">6</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>División Académica o Departamento Académico al que pertenece:</label>
+                        <select id="division-academica">
+                            <option value="">Seleccionar...</option>
+                            <option value="Negocios, Turismo y Emprendimiento">Negocios, Turismo y Emprendimiento</option>
+                            <option value="Ciencias de la Salud">Ciencias de la Salud</option>
+                            <option value="Artes Liberales">Artes Liberales</option>
+                            <option value="Ciencias y Tecnología">Ciencias y Tecnología</option>
+                            <option value="Programas Técnicos">Programas Técnicos</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>¿Eres candidato a graduación para este año?</label>
+                        <select id="candidato-graduacion">
+                            <option value="">Seleccionar...</option>
+                            <option value="Sí">Sí</option>
+                            <option value="No">No</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Concentración:</label>
+                    <input type="text" id="concentracion">
+                </div>
+
+                <div class="form-group">
+                    <label>Grado Académico obtenido o en curso:</label>
+                    <select id="grado-academico" required>
+                        <option value="">Seleccionar...</option>
+                        <option value="11mo ó menos">11mo ó menos</option>
+                        <option value="Cuarto Año">Cuarto Año</option>
+                        <option value="Certificado">Certificado</option>
+                        <option value="Grado Asociado">Grado Asociado</option>
+                        <option value="Bachillerato">Bachillerato</option>
+                        <option value="Maestría">Maestría</option>
+                        <option value="Doctorado">Doctorado</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Tipo de servicio solicitado:</label>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="servicio-resume" checked>
+                        <label for="servicio-resume">Redacción de Resumé</label>
+                    </div>
+                </div>
+
+                <div class="modal-buttons">
+                    <button type="button" class="btn-submit" onclick="submitRegistration()">Registrarse</button>
+                    <button type="button" class="btn-cancel" onclick="closeRegistrationModal()">Cancelar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
 </body>
 </html>
