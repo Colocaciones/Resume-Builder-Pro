@@ -429,6 +429,7 @@ function openRegistrationModal() {
 
 function closeRegistrationModal() {
     document.getElementById('registration-modal').style.display = 'none';
+    clearForm();
 }
 
 function toggleStudentFields() {
@@ -518,6 +519,29 @@ function collectFormData() {
     
     return data;
 }
+
+function clearForm() {
+    document.getElementById('tipo-participante').value = '';
+    document.getElementById('nombre').value = '';
+    document.getElementById('apellidos').value = '';
+    document.getElementById('telefono').value = '';
+    document.getElementById('email').value = '';
+    document.getElementById('pueblo').value = '';
+    document.getElementById('tipo-usuario').value = '';
+    document.getElementById('recinto').value = '';
+    document.getElementById('id-estudiante').value = '';
+    document.getElementById('horario').value = '';
+    document.getElementById('anos-estudios').value = '';
+    document.getElementById('division-academica').value = '';
+    document.getElementById('concentracion').value = '';
+    document.getElementById('candidato-graduacion').value = '';
+    document.getElementById('grado-academico').value = '';
+    document.getElementById('servicio-resume').checked = true;
+    
+    // Ocultar campos de estudiante
+    document.getElementById('student-fields').style.display = 'none';
+}
+
 function sendToGoogleForms(data) {
     const formURL = 'https://docs.google.com/forms/u/0/d/e/1FAIpQLSeebcRfFJkR25oUw9PVhj9ixQB5WGmxip7qhulxKdXGZx5xWA/formResponse';
     
@@ -546,6 +570,7 @@ function sendToGoogleForms(data) {
         console.error('Error:', error);
         alert('¡Registro completado! Gracias por registrarte.');
         closeRegistrationModal();
+        clearForm();
     });
 }
 
