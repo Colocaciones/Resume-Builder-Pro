@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal de Empleos - UAGM</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            padding: 40px;
+            max-width: 900px;
+            width: 90%;
+            text-align: center;
+        }
+        
+        .header {
+            margin-bottom: 40px;
+        }
+        
+        .logo {
+            height: 100px;
+            margin-bottom: 20px;
+        }
+        
+        .title {
+            font-size: 32px;
+            color: #c8102e;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            font-size: 18px;
+            color: #6c757d;
+            margin-bottom: 30px;
+        }
+        
+        .cards-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+            margin-top: 40px;
+        }
+        
+        .access-card {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 15px;
+            padding: 30px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: 2px solid transparent;
+        }
+        
+        .access-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+            border-color: #c8102e;
+        }
+        
+        .card-icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+            color: #c8102e;
+        }
+        
+        .card-title {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2d3748;
+            margin-bottom: 10px;
+        }
+        
+        .card-description {
+            font-size: 14px;
+            color: #6c757d;
+            line-height: 1.5;
+        }
+        
+        .admin-card {
+            background: linear-gradient(135deg, #c8102e 0%, #8b0b1f 100%);
+            color: white;
+        }
+        
+        .admin-card .card-icon,
+        .admin-card .card-title {
+            color: white;
+        }
+        
+        .admin-card .card-description {
+            color: rgba(255,255,255,0.9);
+        }
+        
+        .modal {
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+        }
+        
+        .modal-header {
+            margin-bottom: 20px;
+        }
+        
+        .modal-title {
+            font-size: 24px;
+            color: #c8102e;
+            margin-bottom: 10px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #495057;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            border-color: #c8102e;
+        }
+        
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 5px;
+        }
+        
+        .btn-primary {
+            background: #c8102e;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #a00d26;
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+        
+        .close {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            color: #aaa;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        
+        .close:hover {
+            color: #000;
+        }
+        
+        .footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #e2e8f0;
+            font-size: 12px;
+            color: #6c757d;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+                margin: 20px;
+            }
+            
+            .cards-container {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .title {
+                font-size: 24px;
+            }
+            
+            .subtitle {
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <img src="logo blanco.png" alt="UAGM Logo" class="logo">
+            <h1 class="title">Portal de Empleos UAGM</h1>
+            <p class="subtitle">Universidad Ana G. Méndez - Oficina de Carreras y Colocaciones</p>
+        </div>
+
+        <div class="cards-container">
+            <!-- Tarjeta Participantes -->
+            <div class="access-card" onclick="goToParticipantes()">
+                <div class="card-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <h3 class="card-title">Participantes</h3>
+                <p class="card-description">
+                    Regístrate para acceder a ofertas de empleo exclusivas y gestionar tu perfil profesional
+                </p>
+            </div>
+
+            <!-- Tarjeta Patronos -->
+            <div class="access-card" onclick="goToPatronos()">
+                <div class="card-icon">
+                    <i class="fas fa-building"></i>
+                </div>
+                <h3 class="card-title">Patronos</h3>
+                <p class="card-description">
+                    Publica tus ofertas de empleo y conecta con talento calificado de nuestra universidad
+                </p>
+            </div>
+
+            <!-- Tarjeta Admin -->
+            <div class="access-card admin-card" onclick="openAdminLogin()">
+                <div class="card-icon">
+                    <i class="fas fa-cog"></i>
+                </div>
+                <h3 class="card-title">Administración</h3>
+                <p class="card-description">
+                    Panel de control para gestionar ofertas, participantes y generar reportes
+                </p>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>© 2025 Universidad Ana G. Méndez - Desarrollado por: Braulio González Vélez</p>
+        </div>
+    </div>
+
+    <!-- Modal Login Admin -->
+    <div id="adminModal" class="modal">
+        <div class="modal-content" style="position: relative;">
+            <span class="close" onclick="closeAdminLogin()">&times;</span>
+            <div class="modal-header">
+                <h3 class="modal-title">
+                    <i class="fas fa-shield-alt"></i> Acceso Administrativo
+                </h3>
+                <p style="color: #6c757d; font-size: 14px;">Ingresa tus credenciales para continuar</p>
+            </div>
+            
+            <form id="adminLoginForm">
+                <div class="form-group">
+                    <label for="adminEmail">Email:</label>
+                    <input type="email" id="adminEmail" required placeholder="admin@uagm.edu">
+                </div>
+                
+                <div class="form-group">
+                    <label for="adminPassword">Contraseña:</label>
+                    <input type="password" id="adminPassword" required placeholder="••••••••">
+                </div>
+                
+                <div style="margin-top: 25px;">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-sign-in-alt"></i> Iniciar Sesión
+                    </button>
+                    <button type="button" class="btn btn-secondary" onclick="closeAdminLogin()">
+                        Cancelar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+ <!-- Scripts Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+
+    <script>
+        // Configuración Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyBFgSuKNJMUoVcKgHjsqOsInArSPBsb32A",
+            authDomain: "uagm-portal-de-empleo-17aed.firebaseapp.com",
+            projectId: "uagm-portal-de-empleo-17aed",
+            storageBucket: "uagm-portal-de-empleo-17aed.firebasestorage.app",
+            messagingSenderId: "582147767835",
+            appId: "1:582147767835:web:546ab8f2557b6da6ccc2be"
+        };
+
+        // Variables globales Firebase
+        let app, db, auth, storage;
+
+        function initializeFirebase() {
+            try {
+                app = firebase.initializeApp(firebaseConfig);
+                db = firebase.firestore();
+                auth = firebase.auth();
+                storage = firebase.storage();
+                console.log('Firebase inicializado correctamente');
+                return true;
+            } catch (error) {
+                console.error('Error inicializando Firebase:', error);
+                return false;
+            }
+        }
+
+        const FirebaseHelper = {
+            async saveDoc(collection, data) {
+                try {
+                    const docRef = await db.collection(collection).add(data);
+                    return { success: true, id: docRef.id };
+                } catch (error) {
+                    return { success: false, error };
+                }
+            },
+            
+            async getDocs(collection) {
+                try {
+                    const snapshot = await db.collection(collection).get();
+                    const docs = [];
+                    snapshot.forEach(doc => {
+                        docs.push({ id: doc.id, ...doc.data() });
+                    });
+                    return { success: true, docs };
+                } catch (error) {
+                    return { success: false, error };
+                }
+            },
+            
+            async signIn(email, password) {
+                try {
+                    const result = await auth.signInWithEmailAndPassword(email, password);
+                    return { success: true, user: result.user };
+                } catch (error) {
+                    return { success: false, error };
+                }
+            }
+        };
+
+        // Variables globales
+        let isFirebaseInitialized = false;
+
+        // Inicializar cuando se carga la página
+        document.addEventListener('DOMContentLoaded', function() {
+            isFirebaseInitialized = initializeFirebase();
+            console.log('Portal de Empleos UAGM cargado correctamente');
+        });
+
+        // Navegación a participantes
+        function goToParticipantes() {
+            window.location.href = 'portal para participantes.html';
+        }
+
+        // Navegación a patronos
+        function goToPatronos() {
+            window.location.href = 'portal para patronos.html';
+        }
+
+        // Abrir modal de login admin
+        function openAdminLogin() {
+            document.getElementById('adminModal').style.display = 'flex';
+        }
+
+        // Cerrar modal de login admin
+        function closeAdminLogin() {
+            document.getElementById('adminModal').style.display = 'none';
+            document.getElementById('adminLoginForm').reset();
+        }
+
+        // Manejar login de admin
+        document.getElementById('adminLoginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('adminEmail').value;
+            const password = document.getElementById('adminPassword').value;
+
+            // Intentar con Firebase si está inicializado
+            if (isFirebaseInitialized) {
+                const result = await FirebaseHelper.signIn(email, password);
+                if (result.success) {
+                    showNotification('¡Bienvenido Administrador!', 'success');
+                    setTimeout(() => {
+                        window.location.href = 'dashboard.html';
+                    }, 1000);
+                    return;
+                }
+            }
+            
+            // Fallback local para testing
+            if (email === 'brgonzalez@uagm.edu' && password === 'umetempleo') {
+                showNotification('¡Bienvenido Administrador!', 'success');
+                setTimeout(() => {
+                    window.location.href = 'dashboard.html';
+                }, 1000);
+            } else {
+                showNotification('Credenciales incorrectas', 'error');
+            }
+        });
+
+        // Sistema de notificaciones
+        function showNotification(message, type = 'info') {
+            const existingNotification = document.querySelector('.notification');
+            if (existingNotification) {
+                existingNotification.remove();
+            }
+
+            const notification = document.createElement('div');
+            notification.className = 'notification';
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 15px 20px;
+                border-radius: 10px;
+                color: white;
+                font-weight: 600;
+                z-index: 10000;
+                animation: slideIn 0.3s ease;
+                max-width: 300px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            `;
+            
+            const colors = {
+                success: '#28a745',
+                error: '#dc3545',
+                warning: '#ffc107',
+                info: '#17a2b8'
+            };
+            
+            notification.style.backgroundColor = colors[type] || colors.info;
+            
+            const icons = {
+                success: 'fas fa-check-circle',
+                error: 'fas fa-exclamation-circle',
+                warning: 'fas fa-exclamation-triangle',
+                info: 'fas fa-info-circle'
+            };
+            
+            notification.innerHTML = `
+                <i class="${icons[type] || icons.info}" style="margin-right: 10px;"></i>
+                ${message}
+            `;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.style.animation = 'slideOut 0.3s ease';
+                    setTimeout(() => {
+                        if (notification.parentNode) {
+                            notification.remove();
+                        }
+                    }, 300);
+                }
+            }, 4000);
+        }
+
+        // Cerrar modal al hacer clic fuera
+        window.onclick = function(event) {
+            const modal = document.getElementById('adminModal');
+            if (event.target === modal) {
+                closeAdminLogin();
+            }
+        }
+
+        // Manejar tecla Escape
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closeAdminLogin();
+            }
+        });
+
+        // Animaciones CSS
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideIn {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+            @keyframes slideOut {
+                from { transform: translateX(0); opacity: 1; }
+                to { transform: translateX(100%); opacity: 0; }
+            }
+            .access-card { position: relative; overflow: hidden; }
+            .access-card::before {
+                content: '';
+                position: absolute;
+                top: 0; left: -100%;
+                width: 100%; height: 100%;
+                background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+                transition: left 0.5s;
+            }
+            .access-card:hover::before { left: 100%; }
+            .modal { backdrop-filter: blur(5px); }
+            .modal-content { animation: modalAppear 0.3s ease; }
+            @keyframes modalAppear {
+                from { opacity: 0; transform: scale(0.7); }
+                to { opacity: 1; transform: scale(1); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
