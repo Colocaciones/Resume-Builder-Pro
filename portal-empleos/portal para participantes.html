@@ -1,0 +1,1302 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal Participantes - UAGM</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+<!-- Scripts Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #c8102e 0%, #8b0b1f 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            position: relative;
+        }
+        
+        .header img {
+            position: absolute;
+            height: 80px;
+            left: 30px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+        
+        .header-content {
+            padding-left: 100px;
+        }
+        
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .back-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+        
+        .main-content {
+            padding: 40px;
+        }
+        
+        .welcome-section {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .welcome-section h2 {
+            color: #2d3748;
+            margin-bottom: 15px;
+        }
+        
+        .welcome-section p {
+            color: #6c757d;
+            font-size: 16px;
+        }
+        
+        .tabs {
+            display: flex;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        
+        .tab {
+            flex: 1;
+            padding: 15px 20px;
+            background: none;
+            border: none;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-bottom: 3px solid transparent;
+        }
+        
+        .tab.active {
+            color: #c8102e;
+            border-bottom-color: #c8102e;
+            background: rgba(200, 16, 46, 0.05);
+        }
+        
+        .tab:hover {
+            background: rgba(200, 16, 46, 0.05);
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .section-title {
+            font-size: 20px;
+            color: #c8102e;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #c8102e;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #495057;
+        }
+        
+        .required {
+            color: #dc3545;
+        }
+        
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #c8102e;
+            box-shadow: 0 0 0 3px rgba(200, 16, 46, 0.1);
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .file-upload {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+        }
+        
+        .file-upload input[type="file"] {
+            position: absolute;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+        
+        .file-upload-label {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 20px;
+            border: 2px dashed #c8102e;
+            border-radius: 8px;
+            background: rgba(200, 16, 46, 0.05);
+            color: #c8102e;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .file-upload-label:hover {
+            background: rgba(200, 16, 46, 0.1);
+        }
+        
+        .file-upload.has-file .file-upload-label {
+            background: #d1ecf1;
+            border-color: #17a2b8;
+            color: #0c5460;
+        }
+        
+        .btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .btn-primary {
+            background: #c8102e;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #a00d26;
+            transform: translateY(-2px);
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+        
+        .offers-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 25px;
+            margin-top: 20px;
+        }
+        
+        .offer-card {
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 15px;
+            padding: 25px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .offer-card:hover {
+            border-color: #c8102e;
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        
+        .offer-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+        
+        .company-name {
+            font-size: 18px;
+            font-weight: bold;
+            color: #2d3748;
+            margin-bottom: 5px;
+        }
+        
+        .position-title {
+            font-size: 16px;
+            color: #c8102e;
+            font-weight: 600;
+        }
+        
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .status-active {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+        
+        .status-expiring {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .offer-details {
+            margin: 15px 0;
+        }
+        
+        .offer-detail {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: #6c757d;
+        }
+        
+        .offer-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .btn-small {
+            padding: 8px 16px;
+            font-size: 14px;
+        }
+        
+        .modal {
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+        }
+        
+        .modal-header {
+            padding: 25px;
+            border-bottom: 1px solid #e2e8f0;
+            background: #f8f9fa;
+            border-radius: 15px 15px 0 0;
+        }
+        
+        .modal-body {
+            padding: 25px;
+        }
+        
+        .modal-footer {
+            padding: 20px 25px;
+            border-top: 1px solid #e2e8f0;
+            background: #f8f9fa;
+            border-radius: 0 0 15px 15px;
+            display: flex;
+            justify-content: end;
+            gap: 10px;
+        }
+        
+        .close {
+            position: absolute;
+            top: 20px;
+            right: 25px;
+            color: #aaa;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        
+        .close:hover {
+            color: #000;
+        }
+        
+        .success-message {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            margin-bottom: 20px;
+            display: none;
+        }
+        
+        .no-offers {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6c757d;
+        }
+        
+        .no-offers i {
+            font-size: 64px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                border-radius: 15px;
+            }
+            
+            .header {
+                padding: 20px;
+            }
+            
+            .header img {
+                display: none;
+            }
+            
+            .header-content {
+                padding-left: 0;
+            }
+            
+            .main-content {
+                padding: 20px;
+            }
+            
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .offers-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .tabs {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <button class="back-btn" onclick="goBack()">
+                <i class="fas fa-arrow-left"></i> Volver
+            </button>
+            <img src="logo blanco.png" alt="UAGM Logo">
+            <div class="header-content">
+                <h1><i class="fas fa-users"></i> Portal para Participantes</h1>
+                <p>Regístrate y accede a ofertas de empleo exclusivas</p>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="welcome-section">
+                <h2>Bienvenido al Portal de Empleos</h2>
+                <p>Regístrate para acceder a oportunidades laborales exclusivas de la Universidad Ana G. Méndez</p>
+            </div>
+
+            <div class="success-message" id="successMessage">
+                <i class="fas fa-check-circle" style="font-size: 24px; margin-bottom: 10px;"></i>
+                <h3>¡Registro Completado Exitosamente!</h3>
+                <p>Ya puedes explorar las ofertas de empleo disponibles.</p>
+            </div>
+
+            <div class="tabs">
+                <button class="tab active" onclick="switchTab('register')">
+                    <i class="fas fa-user-plus"></i> Registro
+                </button>
+                <button class="tab" onclick="switchTab('offers')" id="offersTab">
+                    <i class="fas fa-briefcase"></i> Ofertas de Empleo
+                </button>
+            </div>
+
+            <!-- Tab Registro -->
+            <div class="tab-content active" id="registerContent">
+                <form id="registrationForm">
+                    <!-- Información Personal -->
+                    <div class="section-title">
+                        <i class="fas fa-user"></i>
+                        Información Personal
+                    </div>
+
+                    <div class="form-group">
+                        <label>Tipo de participante <span class="required">*</span></label>
+                        <select id="participantType" required>
+                            <option value="">Seleccionar...</option>
+                            <option value="new">Nuevo</option>
+                            <option value="returning">Participante de Seguimiento (He recibido los servicios anteriormente)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Nombre <span class="required">*</span></label>
+                            <input type="text" id="firstName" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Apellidos <span class="required">*</span></label>
+                            <input type="text" id="lastName" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Teléfono <span class="required">*</span></label>
+                            <input type="tel" id="phone" required placeholder="787-555-1234">
+                        </div>
+                        <div class="form-group">
+                            <label>Correo electrónico <span class="required">*</span></label>
+                            <input type="email" id="email" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Pueblo al que pertenece <span class="required">*</span></label>
+                        <input type="text" id="city" required placeholder="Ej: San Juan">
+                    </div>
+
+                    <!-- Información Académica -->
+                    <div class="section-title">
+                        <i class="fas fa-graduation-cap"></i>
+                        Información Académica
+                    </div>
+
+                    <div class="form-group">
+                        <label>¿Eres Estudiante, Exalumno de UAGM o Comunidad? <span class="required">*</span></label>
+                        <select id="studentType" required>
+                            <option value="">Seleccionar...</option>
+                            <option value="student">Estudiante</option>
+                            <option value="alumni">Exalumno</option>
+                            <option value="community">Comunidad</option>
+                        </select>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Recinto o Centro Universitario al que pertenece <span class="required">*</span></label>
+                            <select id="campus" required>
+                                <option value="">Seleccionar...</option>
+                                <option value="cupey">Recinto de Cupey</option>
+                                <option value="bayamon">Centro Universitario de Bayamón</option>
+                                <option value="aguadilla">Centro Universitario de Aguadilla</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>ID Estudiante (S0...) <span class="required">*</span></label>
+                            <input type="text" id="studentId" required placeholder="S0123456789">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Horario de Estudios <span class="required">*</span></label>
+                            <select id="schedule" required>
+                                <option value="">Seleccionar...</option>
+                                <option value="diurno">Diurno</option>
+                                <option value="nocturno">Nocturno</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Año de estudios <span class="required">*</span></label>
+                            <select id="studyYear" required>
+                                <option value="">Seleccionar...</option>
+                                <option value="1">1</option>
+                                <option value="2">2</option>
+                                <option value="3">3</option>
+                                <option value="4">4</option>
+                                <option value="5">5</option>
+                                <option value="6">6</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Concentración <span class="required">*</span></label>
+                        <input type="text" id="concentration" required placeholder="Ej: Administración de Empresas">
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>¿Eres candidato a graduación para este año? <span class="required">*</span></label>
+                            <select id="graduationCandidate" required>
+                                <option value="">Seleccionar...</option>
+                                <option value="yes">Sí</option>
+                                <option value="no">No</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Grado Académico obtenido o en curso <span class="required">*</span></label>
+                            <select id="academicDegree" required>
+                                <option value="">Seleccionar...</option>
+                                <option value="11mo">11mo ó menos</option>
+                                <option value="cuarto">Cuarto Año</option>
+                                <option value="certificado">Certificado</option>
+                                <option value="asociado">Grado Asociado</option>
+                                <option value="bachillerato">Bachillerato</option>
+                                <option value="maestria">Maestría</option>
+                                <option value="doctorado">Doctorado</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>División Académica <span class="required">*</span></label>
+                        <select id="academicDivision" required>
+                            <option value="">Seleccionar...</option>
+                            <option value="negocios">Negocios, Turismo y Emprendimiento</option>
+                            <option value="salud">Ciencias de la Salud</option>
+                            <option value="liberales">Artes Liberales</option>
+                            <option value="tecnologia">Ciencias y Tecnología</option>
+                            <option value="tecnicos">Programas Técnicos</option>
+                        </select>
+                    </div>
+
+                    <!-- Resumé -->
+                    <div class="section-title">
+                        <i class="fas fa-file-upload"></i>
+                        Resumé
+                    </div>
+
+                    <div class="form-group">
+                        <label>Subir Resumé (PDF recomendado) <span class="required">*</span></label>
+                        <div class="file-upload" id="resumeUpload">
+                            <input type="file" id="resume" accept=".pdf,.doc,.docx" required>
+                            <div class="file-upload-label">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <span>Haz clic para seleccionar tu resumé</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="text-align: center; margin-top: 40px;">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-user-check"></i> Completar Registro
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Tab Ofertas -->
+            <div class="tab-content" id="offersContent">
+                <div class="section-title">
+                    <i class="fas fa-search"></i>
+                    Ofertas de Empleo Disponibles
+                </div>
+
+                <div id="offersContainer">
+                    <div class="no-offers">
+                        <i class="fas fa-info-circle"></i>
+                        <h3>Regístrate para ver ofertas</h3>
+                        <p>Completa tu registro para acceder a las ofertas de empleo disponibles</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Detalles de Oferta -->
+    <div id="offerModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">Detalles de la Oferta</h3>
+                <span class="close" onclick="closeOfferModal()">&times;</span>
+            </div>
+            <div class="modal-body" id="modalBody">
+                <!-- Contenido dinámico -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeOfferModal()">Cerrar</button>
+                <button class="btn btn-primary" onclick="applyToOffer()" id="applyBtn">
+                    <i class="fas fa-paper-plane"></i> Aplicar a esta Oferta
+                </button>
+            </div>
+        </div>
+    </div>
+<script>
+        // Configuración Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyBFgSuKNJMUoVcKgHjsqOsInArSPBsb32A",
+            authDomain: "uagm-portal-de-empleo-17aed.firebaseapp.com",
+            projectId: "uagm-portal-de-empleo-17aed",
+            storageBucket: "uagm-portal-de-empleo-17aed.firebasestorage.app",
+            messagingSenderId: "582147767835",
+            appId: "1:582147767835:web:546ab8f2557b6da6ccc2be"
+        };
+
+        // Variables globales Firebase
+        let app, db, auth, storage;
+        let isFirebaseInitialized = false;
+
+        // Variables globales
+        let currentUser = null;
+        let currentOffer = null;
+        let offers = [];
+
+function initializeFirebase() {
+            try {
+                app = firebase.initializeApp(firebaseConfig);
+                db = firebase.firestore();
+                auth = firebase.auth();
+                storage = firebase.storage();
+                console.log('Firebase inicializado correctamente');
+                return true;
+            } catch (error) {
+                console.error('Error inicializando Firebase:', error);
+                return false;
+            }
+        }
+
+        const FirebaseHelper = {
+            async saveDoc(collection, data) {
+                try {
+                    const docRef = await db.collection(collection).add(data);
+                    return { success: true, id: docRef.id };
+                } catch (error) {
+                    console.error('Error guardando documento:', error);
+                    return { success: false, error };
+                }
+            },
+            
+            async getDocs(collection) {
+                try {
+                    const snapshot = await db.collection(collection).get();
+                    const docs = [];
+                    snapshot.forEach(doc => {
+                        docs.push({ id: doc.id, ...doc.data() });
+                    });
+                    return { success: true, docs };
+                } catch (error) {
+                    console.error('Error obteniendo documentos:', error);
+                    return { success: false, error };
+                }
+            }
+        };
+
+        // Inicializar cuando se carga la página
+         document.addEventListener('DOMContentLoaded', async function() {
+            isFirebaseInitialized = initializeFirebase();
+            await loadOffers();
+            setupFileUpload();
+            setupConditionalFields();
+            
+            // Verificar si hay usuario registrado
+            const userData = localStorage.getItem('currentUser');
+            if (userData) {
+                currentUser = JSON.parse(userData);
+                document.getElementById('offersTab').style.display = 'flex';
+                switchTab('offers');
+            }
+            
+            console.log('Portal Participantes cargado correctamente');
+        });
+
+        // Volver a página principal
+        function goBack() {
+            window.location.href = 'Portal pagina principal.html';
+        }
+
+        // Cambiar entre tabs
+        function switchTab(tabName) {
+            // Actualizar tabs
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            if (tabName === 'register') {
+                document.querySelector('.tab').classList.add('active');
+                document.getElementById('registerContent').classList.add('active');
+            } else if (tabName === 'offers') {
+                document.querySelectorAll('.tab')[1].classList.add('active');
+                document.getElementById('offersContent').classList.add('active');
+                loadOffersDisplay();
+            }
+        }
+
+// Controlar campos condicionales según tipo de estudiante
+        function toggleStudentFields() {
+            const studentType = document.getElementById('studentType').value;
+            const studentOnlyFields = [
+                'campus',
+                'studentId', 
+                'schedule',
+                'studyYear',
+                'academicDivision',
+                'graduationCandidate'
+            ];
+
+            if (studentType === 'student') {
+                // Mostrar campos para estudiantes
+                studentOnlyFields.forEach(fieldId => {
+                    const field = document.getElementById(fieldId);
+                    const formGroup = field.closest('.form-group');
+                    formGroup.style.display = 'block';
+                    field.required = true;
+                });
+            } else if (studentType === 'alumni' || studentType === 'community') {
+                // Ocultar campos para exalumnos y comunidad
+                studentOnlyFields.forEach(fieldId => {
+                    const field = document.getElementById(fieldId);
+                    const formGroup = field.closest('.form-group');
+                    formGroup.style.display = 'none';
+                    field.required = false;
+                    field.value = ''; // Limpiar valor
+                });
+            }
+        }
+
+        // Configurar upload de archivos
+        function setupFileUpload() {
+            const fileInput = document.getElementById('resume');
+            const uploadContainer = document.getElementById('resumeUpload');
+            const label = uploadContainer.querySelector('.file-upload-label span');
+
+            fileInput.addEventListener('change', function() {
+                if (this.files.length > 0) {
+                    const file = this.files[0];
+                    const fileName = file.name;
+                    const fileSize = (file.size / 1024 / 1024).toFixed(2);
+                    
+                    label.textContent = `${fileName} (${fileSize} MB)`;
+                    uploadContainer.classList.add('has-file');
+                    
+                    showNotification(`Archivo seleccionado: ${fileName}`, 'success');
+                } else {
+                    label.textContent = 'Haz clic para seleccionar tu resumé';
+                    uploadContainer.classList.remove('has-file');
+                }
+            });
+        }
+
+// Configurar eventos para campos condicionales
+        function setupConditionalFields() {
+            const studentTypeSelect = document.getElementById('studentType');
+            
+            // Agregar evento cuando cambie la selección
+            studentTypeSelect.addEventListener('change', toggleStudentFields);
+            
+            // Ejecutar al cargar la página para estado inicial
+            toggleStudentFields();
+        }
+
+        // Manejar registro
+        document.getElementById('registrationForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            if (!validateRegistrationForm()) {
+                return;
+            }
+
+            submitRegistration();
+        });
+
+        // Validar formulario de registro
+        function validateRegistrationForm() {
+            const studentType = document.getElementById('studentType').value;
+            let requiredFields = [
+                'participantType', 'firstName', 'lastName', 'phone', 'email', 'city',
+                'studentType', 'concentration', 'academicDegree'
+            ];
+
+            // Agregar campos adicionales solo si es estudiante
+            if (studentType === 'student') {
+                requiredFields = requiredFields.concat([
+                    'campus', 'studentId', 'schedule', 'studyYear', 
+                    'academicDivision', 'graduationCandidate'
+                ]);
+            }
+
+            for (let fieldId of requiredFields) {
+                const field = document.getElementById(fieldId);
+                if (!field.value.trim()) {
+                    field.focus();
+                    showNotification(`Por favor completa: ${field.previousElementSibling.textContent}`, 'error');
+                    return false;
+                }
+            }
+
+            // Validar email
+            const email = document.getElementById('email').value;
+            if (!isValidEmail(email)) {
+                document.getElementById('email').focus();
+                showNotification('Por favor ingresa un email válido', 'error');
+                return false;
+            }
+
+            // Validar archivo
+            const fileInput = document.getElementById('resume');
+            if (!fileInput.files.length) {
+                showNotification('Por favor selecciona tu resumé', 'error');
+                return false;
+            }
+
+           // Validar ID estudiante solo si es estudiante
+            if (studentType === 'student') {
+                const studentId = document.getElementById('studentId').value;
+                if (!studentId.toLowerCase().startsWith('s0')) {
+                    document.getElementById('studentId').focus();
+                    showNotification('El ID debe comenzar con S0', 'error');
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        // Validar email
+        function isValidEmail(email) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return emailRegex.test(email);
+        }
+
+        // Enviar registro
+        async function submitRegistration() {
+            const formData = {
+                id: Date.now().toString(),
+                participantType: document.getElementById('participantType').value,
+                firstName: document.getElementById('firstName').value,
+                lastName: document.getElementById('lastName').value,
+                phone: document.getElementById('phone').value,
+                email: document.getElementById('email').value,
+                city: document.getElementById('city').value,
+                studentType: document.getElementById('studentType').value,
+                campus: document.getElementById('campus').value,
+                studentId: document.getElementById('studentId').value,
+                schedule: document.getElementById('schedule').value,
+                studyYear: document.getElementById('studyYear').value,
+                concentration: document.getElementById('concentration').value,
+                graduationCandidate: document.getElementById('graduationCandidate').value,
+                academicDegree: document.getElementById('academicDegree').value,
+                academicDivision: document.getElementById('academicDivision').value,
+                resume: 'uploading...', // Se actualizará después de subir
+                registeredAt: new Date().toISOString()
+            };
+
+            try {
+                // Subir archivo de resumé a Storage
+                const resumeFile = document.getElementById('resume').files[0];
+                if (resumeFile) {
+                    const storageRef = storage.ref(`resumes/${formData.id}_${resumeFile.name}`);
+                    const uploadTask = await storageRef.put(resumeFile);
+                    const downloadURL = await uploadTask.ref.getDownloadURL();
+                    formData.resume = downloadURL;
+                    formData.resumeFileName = resumeFile.name;
+                    console.log('Resumé subido a Storage:', downloadURL);
+                }
+
+                // Intentar guardar en Firebase
+                if (isFirebaseInitialized) {
+                    const result = await FirebaseHelper.saveDoc('participants', formData);
+                    if (result.success) {
+                        console.log('Participante guardado en Firebase:', result.id);
+                        showNotification('¡Registro y resumé guardados en Firebase!', 'success');
+                    } else {
+                        throw new Error('Error de Firebase');
+                    }
+                } else {
+                    throw new Error('Firebase no inicializado');
+                }
+            } catch (error) {
+                console.error('Error con Firebase, usando localStorage:', error);
+                showNotification('Guardado localmente (Firebase falló)', 'warning');
+            }
+
+            // Guardar también en localStorage como respaldo
+            localStorage.setItem('currentUser', JSON.stringify(formData));
+            let participants = JSON.parse(localStorage.getItem('participants')) || [];
+            participants.push(formData);
+            localStorage.setItem('participants', JSON.stringify(participants));
+
+            currentUser = formData;
+
+            // Mostrar mensaje de éxito
+            document.getElementById('successMessage').style.display = 'block';
+            document.getElementById('offersTab').style.display = 'flex';
+            
+            showNotification('¡Registro completado exitosamente!', 'success');
+
+            // Cambiar a tab de ofertas después de 2 segundos
+            setTimeout(() => {
+                switchTab('offers');
+            }, 2000);
+        }
+
+       // Cargar ofertas desde Firebase
+        async function loadOffers() {
+            try {
+                if (isFirebaseInitialized) {
+                    const result = await FirebaseHelper.getDocs('jobOffers');
+                    if (result.success) {
+                        offers = result.docs;
+                        console.log('Ofertas cargadas desde Firebase:', offers.length);
+                    } else {
+                        throw new Error('Error cargando desde Firebase');
+                    }
+                } else {
+                    throw new Error('Firebase no inicializado');
+                }
+            } catch (error) {
+                console.error('Error cargando ofertas desde Firebase, usando localStorage:', error);
+                offers = JSON.parse(localStorage.getItem('jobOffers')) || [];
+            }
+        }
+
+        // Mostrar ofertas
+        function loadOffersDisplay() {
+            const container = document.getElementById('offersContainer');
+            
+            if (!currentUser) {
+                container.innerHTML = `
+                    <div class="no-offers">
+                        <i class="fas fa-info-circle"></i>
+                        <h3>Regístrate para ver ofertas</h3>
+                        <p>Completa tu registro para acceder a las ofertas de empleo disponibles</p>
+                    </div>
+                `;
+                return;
+            }
+
+            if (offers.length === 0) {
+                container.innerHTML = `
+                    <div class="no-offers">
+                        <i class="fas fa-briefcase"></i>
+                        <h3>No hay ofertas disponibles</h3>
+                        <p>Pronto habrá nuevas oportunidades laborales disponibles</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = '<div class="offers-grid">';
+            
+            offers.forEach(offer => {
+                const status = getOfferStatus(offer.deadline);
+                const statusClass = status === 'expired' ? 'status-expired' : 
+                                  status === 'expiring' ? 'status-expiring' : 'status-active';
+                const statusText = status === 'expired' ? 'Vencida' : 
+                                 status === 'expiring' ? 'Vence Pronto' : 'Activa';
+
+                // Solo mostrar ofertas activas
+                if (status !== 'expired') {
+                    html += `
+                        <div class="offer-card" onclick="viewOfferDetails('${offer.id}')">
+                            <div class="offer-header">
+                                <div>
+                                    <div class="company-name">${offer.companyName}</div>
+                                    <div class="position-title">${offer.position}</div>
+                                </div>
+                                <span class="status-badge ${statusClass}">${statusText}</span>
+                            </div>
+                            
+                            <div class="offer-details">
+                                <div class="offer-detail">
+                                    <i class="fas fa-map-marker-alt"></i>
+                                    <span>${offer.location}</span>
+                                </div>
+                                <div class="offer-detail">
+                                    <i class="fas fa-dollar-sign"></i>
+                                    <span>${offer.salary}</span>
+                                </div>
+                                <div class="offer-detail">
+                                    <i class="fas fa-clock"></i>
+                                    <span>${getTypeLabel(offer.positionType)}</span>
+                                </div>
+                                <div class="offer-detail">
+                                    <i class="fas fa-calendar-alt"></i>
+                                    <span>Vence: ${new Date(offer.deadline).toLocaleDateString()}</span>
+                                </div>
+                            </div>
+                            
+                            <div class="offer-actions">
+                                <button class="btn btn-primary btn-small" onclick="event.stopPropagation(); viewOfferDetails('${offer.id}')">
+                                    <i class="fas fa-eye"></i> Ver Detalles
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }
+            });
+            
+            html += '</div>';
+            container.innerHTML = html;
+        }
+
+        // Obtener estado de oferta
+        function getOfferStatus(deadline) {
+            const today = new Date();
+            const deadlineDate = new Date(deadline);
+            const diffTime = deadlineDate - today;
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+            if (diffDays < 0) return 'expired';
+            if (diffDays <= 7) return 'expiring';
+            return 'active';
+        }
+
+        // Obtener etiqueta de tipo
+        function getTypeLabel(type) {
+            const labels = {
+                'part-time': 'Part-Time',
+                'full-time': 'Full-Time',
+                'regular': 'Regular',
+                'temporary': 'Temporero'
+            };
+            return labels[type] || type;
+        }
+
+        // Ver detalles de oferta
+        function viewOfferDetails(offerId) {
+            const offer = offers.find(o => o.id === offerId);
+            if (!offer) return;
+
+            currentOffer = offer;
+
+            const activities = offer.activities ? offer.activities.map(act => {
+                const labels = {
+                    'feria': 'Ferias de Empleo',
+                    'mesas': 'Mesas de reclutamiento',
+                    'talleres': 'Ofrecimiento de Talleres',
+                    'no': 'No participan en actividades'
+                };
+                return labels[act] || act;
+            }).join(', ') : 'No especificadas';
+
+            document.getElementById('modalTitle').textContent = `${offer.position} - ${offer.companyName}`;
+            document.getElementById('modalBody').innerHTML = `
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 20px;">
+                    <div>
+                        <h4 style="color: #c8102e; margin-bottom: 15px;">Información de la Empresa</h4>
+                        <p><strong>Empresa:</strong> ${offer.companyName}</p>
+                        <p><strong>Contacto:</strong> ${offer.contactPerson}</p>
+                        <p><strong>Teléfono:</strong> ${offer.phone}</p>
+                        <p><strong>Email:</strong> ${offer.email}</p>
+                    </div>
+                    <div>
+                        <h4 style="color: #c8102e; margin-bottom: 15px;">Detalles del Puesto</h4>
+                        <p><strong>Posición:</strong> ${offer.position}</p>
+                        <p><strong>Tipo:</strong> ${getTypeLabel(offer.positionType)}</p>
+                        <p><strong>Salario:</strong> ${offer.salary}</p>
+                        <p><strong>Ubicación:</strong> ${offer.location}</p>
+                        <p><strong>Fecha Límite:</strong> ${new Date(offer.deadline).toLocaleDateString()}</p>
+                    </div>
+                </div>
+                
+                ${offer.jobDescription ? `
+                <div style="margin-bottom: 20px;">
+                    <h4 style="color: #c8102e; margin-bottom: 10px;">Descripción del Puesto</h4>
+                    <p style="background: #f8f9fa; padding: 15px; border-radius: 6px;">${offer.jobDescription}</p>
+                </div>
+                ` : ''}
+                
+                <div style="margin-bottom: 20px;">
+                    <h4 style="color: #c8102e; margin-bottom: 10px;">Requisitos</h4>
+                    <p style="background: #f8f9fa; padding: 15px; border-radius: 6px;">${offer.requirements}</p>
+                </div>
+                
+                ${offer.schedule ? `
+                <div style="margin-bottom: 20px;">
+                    <h4 style="color: #c8102e; margin-bottom: 10px;">Horarios</h4>
+                    <p style="background: #f8f9fa; padding: 15px; border-radius: 6px;">${offer.schedule}</p>
+                </div>
+                ` : ''}
+            `;
+
+            document.getElementById('offerModal').style.display = 'flex';
+        }
+
+        // Cerrar modal
+        function closeOfferModal() {
+            document.getElementById('offerModal').style.display = 'none';
+            currentOffer = null;
+        }
+
+        // Aplicar a oferta
+        async function applyToOffer() {
+            if (!currentOffer || !currentUser) return;
+
+            // Crear aplicación
+            const application = {
+                id: Date.now().toString(),
+                offerId: currentOffer.id,
+                participantId: currentUser.id,
+                participantName: `${currentUser.firstName} ${currentUser.lastName}`,
+                participantEmail: currentUser.email,
+                participantPhone: currentUser.phone,
+                offerTitle: currentOffer.position,
+                companyName: currentOffer.companyName,
+                appliedAt: new Date().toISOString(),
+                status: 'pending'
+            };
+
+            try {
+                // Intentar guardar en Firebase
+                if (isFirebaseInitialized) {
+                    const result = await FirebaseHelper.saveDoc('applications', application);
+                    if (result.success) {
+                        console.log('Aplicación guardada en Firebase:', result.id);
+                        showNotification('¡Aplicación enviada a Firebase!', 'success');
+                    } else {
+                        throw new Error('Error de Firebase');
+                    }
+                } else {
+                    throw new Error('Firebase no inicializado');
+                }
+            } catch (error) {
+                console.error('Error con Firebase, usando localStorage:', error);
+                showNotification('Aplicación enviada (guardada localmente)', 'warning');
+            }
+
+            // Guardar también en localStorage como respaldo
+            let applications = JSON.parse(localStorage.getItem('applications')) || [];
+            applications.push(application);
+            localStorage.setItem('applications', JSON.stringify(applications));
+
+            closeOfferModal();
+        }
+
+        // Sistema de notificaciones
+        function showNotification(message, type = 'info') {
+            const existingNotification = document.querySelector('.notification');
+            if (existingNotification) {
+                existingNotification.remove();
+            }
+
+            const notification = document.createElement('div');
+            notification.className = 'notification';
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 15px 20px;
+                border-radius: 10px;
+                color: white;
+                font-weight: 600;
+                z-index: 10000;
+                animation: slideIn 0.3s ease;
+                max-width: 350px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            `;
+            
+            const colors = {
+                success: '#28a745',
+                error: '#dc3545',
+                warning: '#ffc107',
+                info: '#17a2b8'
+            };
+            
+            notification.style.backgroundColor = colors[type] || colors.info;
+            
+            const icons = {
+                success: 'fas fa-check-circle',
+                error: 'fas fa-exclamation-circle',
+                warning: 'fas fa-exclamation-triangle',
+                info: 'fas fa-info-circle'
+            };
+            
+            notification.innerHTML = `
+                <i class="${icons[type] || icons.info}" style="margin-right: 10px;"></i>
+                ${message}
+            `;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.style.animation = 'slideOut 0.3s ease';
+                    setTimeout(() => {
+                        if (notification.parentNode) {
+                            notification.remove();
+                        }
+                    }, 300);
+                }
+            }, 4000);
+        }
+
+        // Cerrar modal al hacer clic fuera
+        window.onclick = function(event) {
+            const modal = document.getElementById('offerModal');
+            if (event.target === modal) {
+                closeOfferModal();
+            }
+        }
+
+        // Agregar animaciones CSS
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideIn {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+            
+            @keyframes slideOut {
+                from { transform: translateX(0); opacity: 1; }
+                to { transform: translateX(100%); opacity: 0; }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
