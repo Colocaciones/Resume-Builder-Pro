@@ -1,0 +1,2138 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Administrativo - UAGM</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+<!-- Scripts Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f8f9fa;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #c8102e 0%, #8b0b1f 100%);
+            color: white;
+            padding: 20px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .header-left img {
+            height: 60px;
+        }
+        
+        .header-title {
+            font-size: 24px;
+            font-weight: bold;
+        }
+        
+        .header-subtitle {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .user-info {
+            text-align: right;
+        }
+        
+        .logout-btn {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .logout-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 30px;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .stat-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+        
+        .stat-card.offers .stat-icon { color: #17a2b8; }
+        .stat-card.participants .stat-icon { color: #28a745; }
+        .stat-card.applications .stat-icon { color: #ffc107; }
+        .stat-card.companies .stat-icon { color: #6f42c1; }
+        
+        .stat-number {
+            font-size: 36px;
+            font-weight: bold;
+            color: #2d3748;
+            display: block;
+        }
+        
+        .stat-label {
+            font-size: 16px;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+        
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 30px;
+        }
+        
+        .section {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+        
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        
+        .section-title {
+            font-size: 24px;
+            color: #2d3748;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .section-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-primary { background: #c8102e; color: white; }
+        .btn-primary:hover { background: #a00d26; }
+        .btn-success { background: #28a745; color: white; }
+        .btn-success:hover { background: #218838; }
+        .btn-info { background: #17a2b8; color: white; }
+        .btn-info:hover { background: #138496; }
+        .btn-warning { background: #ffc107; color: #212529; }
+        .btn-warning:hover { background: #e0a800; }
+        .btn-secondary { background: #6c757d; color: white; }
+        .btn-secondary:hover { background: #5a6268; }
+        .btn-danger { background: #dc3545; color: white; }
+        .btn-danger:hover { background: #c82333; }
+        
+        .tabs {
+            display: flex;
+            margin-bottom: 25px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        
+        .tab {
+            flex: 1;
+            padding: 15px 20px;
+            background: none;
+            border: none;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-bottom: 3px solid transparent;
+        }
+        
+        .tab.active {
+            color: #c8102e;
+            border-bottom-color: #c8102e;
+            background: rgba(200, 16, 46, 0.05);
+        }
+        
+        .tab:hover {
+            background: rgba(200, 16, 46, 0.05);
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        
+        .data-table th,
+        .data-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .data-table th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #495057;
+            position: sticky;
+            top: 0;
+        }
+        
+        .data-table tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .status-active { background: #d1ecf1; color: #0c5460; }
+        .status-expired { background: #f8d7da; color: #721c24; }
+        .status-expiring { background: #fff3cd; color: #856404; }
+        .status-pending { background: #e2e3e5; color: #383d41; }
+        .status-approved { background: #d4edda; color: #155724; }
+        
+        .actions {
+            display: flex;
+            gap: 5px;
+        }
+        
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 12px;
+            border-radius: 6px;
+        }
+        
+        .search-filter-bar {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        
+        .search-input {
+            flex: 1;
+            min-width: 250px;
+            padding: 10px 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        
+        .filter-select {
+            padding: 10px 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            background: white;
+        }
+        
+        .modal {
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 900px;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+        }
+        
+        .modal-header {
+            padding: 25px;
+            border-bottom: 1px solid #e2e8f0;
+            background: #f8f9fa;
+            border-radius: 15px 15px 0 0;
+        }
+        
+        .modal-body {
+            padding: 25px;
+        }
+        
+        .modal-footer {
+            padding: 20px 25px;
+            border-top: 1px solid #e2e8f0;
+            background: #f8f9fa;
+            border-radius: 0 0 15px 15px;
+            display: flex;
+            justify-content: end;
+            gap: 10px;
+        }
+        
+        .close {
+            position: absolute;
+            top: 20px;
+            right: 25px;
+            color: #aaa;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        
+        .close:hover {
+            color: #000;
+        }
+        
+        .no-data {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6c757d;
+        }
+        
+        .no-data i {
+            font-size: 64px;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+        
+        .quick-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        
+        .quick-stat {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            border-left: 4px solid #c8102e;
+        }
+        
+        .quick-stat-number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #c8102e;
+        }
+        
+        .quick-stat-label {
+            font-size: 12px;
+            color: #6c757d;
+            text-transform: uppercase;
+        }
+        
+        @media (max-width: 1024px) {
+            .container {
+                padding: 20px;
+            }
+            
+            .header {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+            
+            .search-filter-bar {
+                flex-direction: column;
+            }
+            
+            .search-input {
+                min-width: 100%;
+            }
+            
+            .tabs {
+                flex-direction: column;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .data-table {
+                font-size: 12px;
+            }
+            
+            .data-table th,
+            .data-table td {
+                padding: 8px 4px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-left">
+            <img src="logo blanco.png" alt="UAGM Logo">
+            <div>
+                <div class="header-title">Dashboard Administrativo</div>
+                <div class="header-subtitle">Portal de Empleos UAGM</div>
+            </div>
+        </div>
+        <div class="header-right">
+            <div class="user-info">
+                <div style="font-weight: 600;">Administrador</div>
+                <div style="font-size: 12px; opacity: 0.8;">Oficina de Carreras y Colocaciones</div>
+            </div>
+            <button class="logout-btn" onclick="logout()">
+                <i class="fas fa-sign-out-alt"></i> Salir
+            </button>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Estadísticas Principales -->
+        <div class="stats-grid">
+            <div class="stat-card offers">
+                <div class="stat-icon">
+                    <i class="fas fa-briefcase"></i>
+                </div>
+                <span class="stat-number" id="totalOffers">0</span>
+                <div class="stat-label">Ofertas Totales</div>
+            </div>
+            
+            <div class="stat-card participants">
+                <div class="stat-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <span class="stat-number" id="totalParticipants">0</span>
+                <div class="stat-label">Participantes Registrados</div>
+            </div>
+            
+            <div class="stat-card applications">
+                <div class="stat-icon">
+                    <i class="fas fa-paper-plane"></i>
+                </div>
+                <span class="stat-number" id="totalApplications">0</span>
+                <div class="stat-label">Solicitudes Pendientes</div>
+            </div>
+            
+            <div class="stat-card companies">
+                <div class="stat-icon">
+                    <i class="fas fa-building"></i>
+                </div>
+                <span class="stat-number" id="totalCompanies">0</span>
+                <div class="stat-label">Empresas Activas</div>
+            </div>
+        </div>
+
+        <!-- Contenido Principal -->
+        <div class="main-content">
+            <div class="section">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <i class="fas fa-chart-line"></i>
+                        Panel de Control
+                    </h2>
+                    <div class="section-actions">
+                        <button class="btn btn-success" onclick="exportAllData()">
+                            <i class="fas fa-download"></i> Exportar Todo
+                        </button>
+                        <button class="btn btn-info" onclick="refreshData()">
+                            <i class="fas fa-sync-alt"></i> Actualizar
+                        </button>
+                    </div>
+                </div>
+
+                <div class="tabs">
+                    <button class="tab active" onclick="switchTab('offers')">
+                        <i class="fas fa-briefcase"></i> Ofertas de Empleo
+                    </button>
+                    <button class="tab" onclick="switchTab('participants')">
+                        <i class="fas fa-users"></i> Participantes
+                    </button>
+                    <button class="tab" onclick="switchTab('applications')">
+                        <i class="fas fa-paper-plane"></i> Solicitudes
+                    </button>
+                    <button class="tab" onclick="switchTab('reports')">
+                        <i class="fas fa-chart-bar"></i> Reportes
+                    </button>
+                </div>
+
+                <!-- Tab Ofertas -->
+                <div class="tab-content active" id="offersContent">
+                    <div class="quick-stats">
+                        <div class="quick-stat">
+                            <div class="quick-stat-number" id="activeOffers">0</div>
+                            <div class="quick-stat-label">Ofertas Activas</div>
+                        </div>
+                        <div class="quick-stat">
+                            <div class="quick-stat-number" id="expiringSoon">0</div>
+                            <div class="quick-stat-label">Vencen Pronto</div>
+                        </div>
+                        <div class="quick-stat">
+                            <div class="quick-stat-number" id="expiredOffers">0</div>
+                            <div class="quick-stat-label">Vencidas</div>
+                        </div>
+                        <div class="quick-stat">
+                            <div class="quick-stat-number" id="newThisMonth">0</div>
+                            <div class="quick-stat-label">Nuevas Este Mes</div>
+                        </div>
+                    </div>
+
+                    <div class="search-filter-bar">
+                        <input type="text" class="search-input" id="offersSearch" placeholder="🔍 Buscar ofertas..." oninput="filterOffers()">
+                        <select class="filter-select" id="offersStatusFilter" onchange="filterOffers()">
+                            <option value="">Todos los Estados</option>
+                            <option value="active">Activas</option>
+                            <option value="expiring">Vencen Pronto</option>
+                            <option value="expired">Vencidas</option>
+                        </select>
+                        <button class="btn btn-primary" onclick="exportOffersData()">
+                            <i class="fas fa-file-excel"></i> Exportar
+                        </button>
+                    </div>
+
+                    <div id="offersTableContainer">
+                        <!-- Tabla se genera dinámicamente -->
+                    </div>
+                </div>
+
+                <!-- Tab Participantes -->
+                <div class="tab-content" id="participantsContent">
+                    <div class="quick-stats">
+                        <div class="quick-stat">
+                            <div class="quick-stat-number" id="newParticipants">0</div>
+                            <div class="quick-stat-label">Nuevos Participantes</div>
+                        </div>
+                        <div class="quick-stat">
+                            <div class="quick-stat-number" id="returningParticipants">0</div>
+                            <div class="quick-stat-label">Participantes de Seguimiento</div>
+                        </div>
+                        <div class="quick-stat">
+                            <div class="quick-stat-number" id="graduationCandidates">0</div>
+                            <div class="quick-stat-label">Candidatos a Graduación</div>
+                        </div>
+                    </div>
+
+                    <div class="search-filter-bar">
+                        <input type="text" class="search-input" id="participantsSearch" placeholder="🔍 Buscar participantes..." oninput="filterParticipants()">
+                        <select class="filter-select" id="participantsCampusFilter" onchange="filterParticipants()">
+                            <option value="">Todos los Recintos</option>
+                            <option value="cupey">Recinto de Cupey</option>
+                            <option value="bayamon">Centro Universitario de Bayamón</option>
+                            <option value="aguadilla">Centro Universitario de Aguadilla</option>
+                        </select>
+                        <select class="filter-select" id="participantsTypeFilter" onchange="filterParticipants()">
+                            <option value="">Todos los Tipos</option>
+                            <option value="new">Nuevos</option>
+                            <option value="returning">Seguimiento</option>
+                        </select>
+                        <button class="btn btn-primary" onclick="exportParticipantsData()">
+                            <i class="fas fa-file-excel"></i> Exportar
+                        </button>
+                    </div>
+
+                    <div id="participantsTableContainer">
+                        <!-- Tabla se genera dinámicamente -->
+                    </div>
+                </div>
+
+                <!-- Tab Solicitudes -->
+                <div class="tab-content" id="applicationsContent">
+                    <div class="quick-stats">
+                        <div class="quick-stat">
+                            <div class="quick-stat-number" id="pendingApplications">0</div>
+                            <div class="quick-stat-label">Pendientes</div>
+                        </div>
+                        <div class="quick-stat">
+                            <div class="quick-stat-number" id="processedApplications">0</div>
+                            <div class="quick-stat-label">Procesadas</div>
+                        </div>
+                        <div class="quick-stat">
+                            <div class="quick-stat-number" id="todayApplications">0</div>
+                            <div class="quick-stat-label">Hoy</div>
+                        </div>
+                    </div>
+
+                    <div class="search-filter-bar">
+                        <input type="text" class="search-input" id="applicationsSearch" placeholder="🔍 Buscar solicitudes..." oninput="filterApplications()">
+                        <select class="filter-select" id="applicationsStatusFilter" onchange="filterApplications()">
+                            <option value="">Todos los Estados</option>
+                            <option value="pending">Pendientes</option>
+                            <option value="processed">Procesadas</option>
+                            <option value="referred">Referidas</option>
+                        </select>
+                        <button class="btn btn-primary" onclick="exportApplicationsData()">
+                            <i class="fas fa-file-excel"></i> Exportar
+                        </button>
+                    </div>
+
+                    <div id="applicationsTableContainer">
+                        <!-- Tabla se genera dinámicamente -->
+                    </div>
+                </div>
+
+                <!-- Tab Reportes -->
+                <div class="tab-content" id="reportsContent">
+                    <div class="quick-stats">
+                        <div class="quick-stat">
+                            <div class="quick-stat-number" id="placementRate">0%</div>
+                            <div class="quick-stat-label">Tasa de Colocación</div>
+                        </div>
+                        <div class="quick-stat">
+                            <div class="quick-stat-number" id="avgApplications">0</div>
+                            <div class="quick-stat-label">Promedio Solicitudes</div>
+                        </div>
+                        <div class="quick-stat">
+                            <div class="quick-stat-number" id="activeCompanies">0</div>
+                            <div class="quick-stat-label">Empresas Activas</div>
+                        </div>
+                    </div>
+
+                    <div class="search-filter-bar">
+                        <select class="filter-select" id="reportsDateFilter" onchange="updateReports()">
+                            <option value="month">Este Mes</option>
+                            <option value="quarter">Este Trimestre</option>
+                            <option value="year">Este Año</option>
+                            <option value="all">Todo el Tiempo</option>
+                        </select>
+                        <button class="btn btn-success" onclick="generateMonthlyReport()">
+                            <i class="fas fa-file-pdf"></i> Reporte Mensual
+                        </button>
+                        <button class="btn btn-info" onclick="generateDetailedReport()">
+                            <i class="fas fa-chart-pie"></i> Reporte Detallado
+                        </button>
+                    </div>
+
+                    <div id="reportsContainer">
+                        <div class="no-data">
+                            <i class="fas fa-chart-bar"></i>
+                            <h3>Reportes y Estadísticas</h3>
+                            <p>Selecciona un período para generar reportes detallados</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para Ver Detalles -->
+    <div id="detailsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">Detalles</h3>
+                <span class="close" onclick="closeDetailsModal()">&times;</span>
+            </div>
+            <div class="modal-body" id="modalBody">
+                <!-- Contenido dinámico -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeDetailsModal()">Cerrar</button>
+                <button class="btn btn-primary" id="modalAction" style="display: none;">
+                    Acción
+                </button>
+            </div>
+        </div>
+    </div>
+<script>
+        // Configuración Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyBFgSuKNJMUoVcKgHjsqOsInArSPBsb32A",
+            authDomain: "uagm-portal-de-empleo-17aed.firebaseapp.com",
+            projectId: "uagm-portal-de-empleo-17aed",
+            storageBucket: "uagm-portal-de-empleo-17aed.firebasestorage.app",
+            messagingSenderId: "582147767835",
+            appId: "1:582147767835:web:546ab8f2557b6da6ccc2be"
+        };
+
+        // Variables globales Firebase
+        let app, db, auth, storage;
+        let isFirebaseInitialized = false;
+
+        function initializeFirebase() {
+            try {
+                app = firebase.initializeApp(firebaseConfig);
+                db = firebase.firestore();
+                auth = firebase.auth();
+                storage = firebase.storage();
+                console.log('Firebase inicializado correctamente en dashboard');
+                return true;
+            } catch (error) {
+                console.error('Error inicializando Firebase:', error);
+                return false;
+            }
+        }
+
+        const FirebaseHelper = {
+            async getDocs(collection) {
+                try {
+                    const snapshot = await db.collection(collection).get();
+                    const docs = [];
+                    snapshot.forEach(doc => {
+                        docs.push({ id: doc.id, ...doc.data() });
+                    });
+                    return { success: true, docs };
+                } catch (error) {
+                    console.error('Error obteniendo documentos:', error);
+                    return { success: false, error };
+                }
+            }
+        };
+
+        // Variables globales
+        let offers = [];
+
+        // Inicializar dashboard
+        document.addEventListener('DOMContentLoaded', async function() {
+            isFirebaseInitialized = initializeFirebase();
+            await loadAllData();
+            updateStats();
+            switchTab('offers');
+            console.log('Dashboard Administrativo cargado correctamente');
+        });
+
+       // Cargar todos los datos desde Firebase
+        async function loadAllData() {
+            try {
+                if (isFirebaseInitialized) {
+                    // Cargar ofertas desde Firebase
+                    const offersResult = await FirebaseHelper.getDocs('jobOffers');
+                    if (offersResult.success) {
+                        offers = offersResult.docs;
+                        console.log('Ofertas cargadas desde Firebase:', offers.length);
+                    }
+
+                    // Cargar participantes desde Firebase
+                    const participantsResult = await FirebaseHelper.getDocs('participants');
+                    if (participantsResult.success) {
+                        participants = participantsResult.docs;
+                        console.log('Participantes cargados desde Firebase:', participants.length);
+                    }
+
+                    // Cargar aplicaciones desde Firebase
+                    const applicationsResult = await FirebaseHelper.getDocs('applications');
+                    if (applicationsResult.success) {
+                        applications = applicationsResult.docs;
+                        console.log('Aplicaciones cargadas desde Firebase:', applications.length);
+                    }
+                } else {
+                    throw new Error('Firebase no inicializado');
+                }
+            } catch (error) {
+                console.error('Error cargando desde Firebase, usando localStorage:', error);
+                // Fallback a localStorage
+                offers = JSON.parse(localStorage.getItem('jobOffers')) || [];
+                participants = JSON.parse(localStorage.getItem('participants')) || [];
+                applications = JSON.parse(localStorage.getItem('applications')) || [];
+            }
+        }
+
+        // Actualizar estadísticas principales
+        function updateStats() {
+            const today = new Date();
+            
+            // Estadísticas de ofertas
+            const activeOffers = offers.filter(offer => getOfferStatus(offer.deadline) === 'active').length;
+            const expiringSoon = offers.filter(offer => getOfferStatus(offer.deadline) === 'expiring').length;
+            const expiredOffers = offers.filter(offer => getOfferStatus(offer.deadline) === 'expired').length;
+            const thisMonth = offers.filter(offer => {
+                const offerDate = new Date(offer.createdAt || offer.today);
+                return offerDate.getMonth() === today.getMonth() && 
+                       offerDate.getFullYear() === today.getFullYear();
+            }).length;
+
+            // Estadísticas de participantes
+            const newParticipants = participants.filter(p => p.participantType === 'new').length;
+            const returningParticipants = participants.filter(p => p.participantType === 'returning').length;
+            const graduationCandidates = participants.filter(p => p.graduationCandidate === 'yes').length;
+
+            // Estadísticas de aplicaciones
+            const pendingApplications = applications.filter(app => app.status === 'pending').length;
+            const processedApplications = applications.filter(app => app.status !== 'pending').length;
+            const todayApplications = applications.filter(app => {
+                const appDate = new Date(app.appliedAt);
+                return appDate.toDateString() === today.toDateString();
+            }).length;
+
+            // Empresas únicas
+            const uniqueCompanies = [...new Set(offers.map(offer => offer.companyName))].length;
+
+            // Actualizar elementos del DOM
+            document.getElementById('totalOffers').textContent = offers.length;
+            document.getElementById('totalParticipants').textContent = participants.length;
+            document.getElementById('totalApplications').textContent = pendingApplications;
+            document.getElementById('totalCompanies').textContent = uniqueCompanies;
+
+            // Stats rápidas ofertas
+            document.getElementById('activeOffers').textContent = activeOffers;
+            document.getElementById('expiringSoon').textContent = expiringSoon;
+            document.getElementById('expiredOffers').textContent = expiredOffers;
+            document.getElementById('newThisMonth').textContent = thisMonth;
+
+            // Stats rápidas participantes
+            document.getElementById('newParticipants').textContent = newParticipants;
+            document.getElementById('returningParticipants').textContent = returningParticipants;
+            document.getElementById('graduationCandidates').textContent = graduationCandidates;
+
+            // Stats rápidas aplicaciones
+            document.getElementById('pendingApplications').textContent = pendingApplications;
+            document.getElementById('processedApplications').textContent = processedApplications;
+            document.getElementById('todayApplications').textContent = todayApplications;
+
+            // Stats reportes
+            const placementRate = participants.length > 0 ? Math.round((processedApplications / participants.length) * 100) : 0;
+            const avgApplications = participants.length > 0 ? Math.round(applications.length / participants.length) : 0;
+            
+            document.getElementById('placementRate').textContent = placementRate + '%';
+            document.getElementById('avgApplications').textContent = avgApplications;
+            document.getElementById('activeCompanies').textContent = uniqueCompanies;
+        }
+
+        // Obtener estado de oferta
+        function getOfferStatus(deadline) {
+            const today = new Date();
+            const deadlineDate = new Date(deadline);
+            const diffTime = deadlineDate - today;
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+            if (diffDays < 0) return 'expired';
+            if (diffDays <= 7) return 'expiring';
+            return 'active';
+        }
+
+        // Cambiar entre tabs
+        function switchTab(tabName) {
+            currentTab = tabName;
+            
+            // Actualizar tabs activos
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            // Activar tab correspondiente
+            const tabIndex = ['offers', 'participants', 'applications', 'reports'].indexOf(tabName);
+            document.querySelectorAll('.tab')[tabIndex].classList.add('active');
+            document.getElementById(tabName + 'Content').classList.add('active');
+            
+            // Cargar contenido específico
+            switch(tabName) {
+                case 'offers':
+                    loadOffersTable();
+                    break;
+                case 'participants':
+                    loadParticipantsTable();
+                    break;
+                case 'applications':
+                    loadApplicationsTable();
+                    break;
+                case 'reports':
+                    updateReports();
+                    break;
+            }
+        }
+
+        // Cargar tabla de ofertas
+        function loadOffersTable() {
+            const container = document.getElementById('offersTableContainer');
+            
+            if (offers.length === 0) {
+                container.innerHTML = `
+                    <div class="no-data">
+                        <i class="fas fa-briefcase"></i>
+                        <h3>No hay ofertas registradas</h3>
+                        <p>Las ofertas publicadas por patronos aparecerán aquí</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = `
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Empresa</th>
+                            <th>Posición</th>
+                            <th>Ubicación</th>
+                            <th>Salario</th>
+                            <th>Tipo</th>
+                            <th>Fecha Límite</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            offers.forEach(offer => {
+                const status = getOfferStatus(offer.deadline);
+                const statusClass = status === 'expired' ? 'status-expired' : 
+                                  status === 'expiring' ? 'status-expiring' : 'status-active';
+                const statusText = status === 'expired' ? 'Vencida' : 
+                                 status === 'expiring' ? 'Vence Pronto' : 'Activa';
+
+                html += `
+                    <tr>
+                        <td>${new Date(offer.today).toLocaleDateString()}</td>
+                        <td><strong>${offer.companyName}</strong><br><small>${offer.contactPerson}</small></td>
+                        <td>${offer.position}</td>
+                        <td>${offer.location}</td>
+                        <td>${offer.salary}</td>
+                        <td><span class="status-badge">${getTypeLabel(offer.positionType)}</span></td>
+                        <td>${new Date(offer.deadline).toLocaleDateString()}</td>
+                        <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+                        <td>
+                            <div class="actions">
+                                <button class="btn btn-info btn-small" onclick="viewOfferDetails('${offer.id}')" title="Ver detalles">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="btn btn-warning btn-small" onclick="editOffer('${offer.id}')" title="Editar">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-danger btn-small" onclick="deleteOffer('${offer.id}')" title="Eliminar">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        // Cargar tabla de participantes
+        function loadParticipantsTable() {
+        console.log("Ejecutando loadParticipantsTable");
+            const container = document.getElementById('participantsTableContainer');
+            
+            if (participants.length === 0) {
+                container.innerHTML = `
+                    <div class="no-data">
+                        <i class="fas fa-users"></i>
+                        <h3>No hay participantes registrados</h3>
+                        <p>Los participantes registrados aparecerán aquí</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = `
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Fecha Registro</th>
+                            <th>Nombre</th>
+                            <th>Email</th>
+                            <th>Teléfono</th>
+                            <th>Recinto</th>
+                            <th>Concentración</th>
+                            <th>Año</th>
+                            <th>Tipo</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            participants.forEach(participant => {
+                const campusLabels = {
+                    'cupey': 'Cupey',
+                    'bayamon': 'Bayamón',
+                    'aguadilla': 'Aguadilla'
+                };
+
+                const typeLabels = {
+                    'new': 'Nuevo',
+                    'returning': 'Seguimiento'
+                };
+
+                html += `
+                    <tr>
+                        <td>${new Date(participant.registeredAt).toLocaleDateString()}</td>
+                        <td><strong>${participant.firstName} ${participant.lastName}</strong><br><small>ID: ${participant.studentId}</small></td>
+                        <td>${participant.email}</td>
+                        <td>${participant.phone}</td>
+                        <td>${campusLabels[participant.campus] || participant.campus}</td>
+                        <td>${participant.concentration}</td>
+                        <td>${participant.studyYear}</td>
+                        <td><span class="status-badge status-active">${typeLabels[participant.participantType]}</span></td>
+                        <td>
+                            <div class="actions">
+                                <button class="btn btn-info btn-small" onclick="viewParticipantDetails('${participant.id}')" title="Ver detalles">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="btn btn-success btn-small" onclick="downloadResume('${participant.id}')" title="Descargar resumé">
+                                    <i class="fas fa-download"></i>
+                                </button>
+                                <button class="btn btn-danger btn-small" onclick="deleteParticipant('${participant.id}')" title="Eliminar">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        // Cargar tabla de aplicaciones
+        function loadApplicationsTable() {
+            const container = document.getElementById('applicationsTableContainer');
+            
+            if (applications.length === 0) {
+                container.innerHTML = `
+                    <div class="no-data">
+                        <i class="fas fa-paper-plane"></i>
+                        <h3>No hay solicitudes registradas</h3>
+                        <p>Las solicitudes de participantes aparecerán aquí</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = `
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Participante</th>
+                            <th>Empresa</th>
+                            <th>Posición</th>
+                            <th>Contacto</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            applications.forEach(application => {
+                const statusLabels = {
+                    'pending': 'Pendiente',
+                    'processed': 'Procesada',
+                    'referred': 'Referida'
+                };
+
+                const statusClasses = {
+                    'pending': 'status-pending',
+                    'processed': 'status-approved',
+                    'referred': 'status-active'
+                };
+
+                html += `
+                    <tr>
+                        <td>${new Date(application.appliedAt).toLocaleDateString()}</td>
+                        <td><strong>${application.participantName}</strong><br><small>${application.participantEmail}</small></td>
+                        <td>${application.companyName}</td>
+                        <td>${application.offerTitle}</td>
+                        <td>${application.participantPhone}</td>
+                        <td><span class="status-badge ${statusClasses[application.status]}">${statusLabels[application.status]}</span></td>
+                        <td>
+                            <div class="actions">
+                                <button class="btn btn-info btn-small" onclick="viewApplicationDetails('${application.id}')" title="Ver detalles">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                ${application.status === 'pending' ? `
+                                    <button class="btn btn-success btn-small" onclick="processApplication('${application.id}')" title="Procesar">
+                                        <i class="fas fa-check"></i>
+                                    </button>
+                                ` : ''}
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        // Obtener etiqueta de tipo
+        function getTypeLabel(type) {
+            const labels = {
+                'part-time': 'Part-Time',
+                'full-time': 'Full-Time',
+                'regular': 'Regular',
+                'temporary': 'Temporero'
+            };
+            return labels[type] || type;
+        }
+// Ver detalles de oferta
+        function viewOfferDetails(offerId) {
+            const offer = offers.find(o => o.id === offerId);
+            if (!offer) return;
+
+            currentModalData = { type: 'offer', data: offer };
+
+            const activities = offer.activities ? offer.activities.map(act => {
+                const labels = {
+                    'feria': 'Ferias de Empleo',
+                    'mesas': 'Mesas de reclutamiento',
+                    'talleres': 'Ofrecimiento de Talleres',
+                    'no': 'No participan en actividades'
+                };
+                return labels[act] || act;
+            }).join(', ') : 'No especificadas';
+
+            document.getElementById('modalTitle').textContent = `Oferta: ${offer.position} - ${offer.companyName}`;
+            document.getElementById('modalBody').innerHTML = `
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 20px;">
+                    <div>
+                        <h4 style="color: #c8102e; margin-bottom: 15px;">Información de la Empresa</h4>
+                        <p><strong>Empresa:</strong> ${offer.companyName}</p>
+                        <p><strong>Tipo:</strong> ${offer.patronType === 'new' ? 'Patrono Nuevo' : 'Patrono Existente'}</p>
+                        <p><strong>Contacto:</strong> ${offer.contactPerson}</p>
+                        <p><strong>Posición del Contacto:</strong> ${offer.contactPosition || 'No especificada'}</p>
+                        <p><strong>Teléfono:</strong> ${offer.phone}</p>
+                        <p><strong>Email:</strong> ${offer.email}</p>
+                        <p><strong>Recibida por:</strong> ${offer.receivedThrough}</p>
+                    </div>
+                    <div>
+                        <h4 style="color: #c8102e; margin-bottom: 15px;">Detalles del Puesto</h4>
+                        <p><strong>Posición:</strong> ${offer.position}</p>
+                        <p><strong>Tipo:</strong> ${getTypeLabel(offer.positionType)}</p>
+                        <p><strong>Salario:</strong> ${offer.salary}</p>
+                        <p><strong>Ubicación:</strong> ${offer.location}</p>
+                        <p><strong>Fecha Límite:</strong> ${new Date(offer.deadline).toLocaleDateString()}</p>
+                        <p><strong>Estado:</strong> <span class="status-badge ${getOfferStatus(offer.deadline) === 'expired' ? 'status-expired' : getOfferStatus(offer.deadline) === 'expiring' ? 'status-expiring' : 'status-active'}">${getOfferStatus(offer.deadline) === 'expired' ? 'Vencida' : getOfferStatus(offer.deadline) === 'expiring' ? 'Vence Pronto' : 'Activa'}</span></p>
+                    </div>
+                </div>
+                
+                ${offer.jobDescription ? `
+                <div style="margin-bottom: 20px;">
+                    <h4 style="color: #c8102e; margin-bottom: 10px;">Descripción del Empleo</h4>
+                    <p style="background: #f8f9fa; padding: 15px; border-radius: 6px; white-space: pre-wrap;">${offer.jobDescription}</p>
+                </div>
+                ` : ''}
+                
+                ${offer.schedule ? `
+                <div style="margin-bottom: 20px;">
+                    <h4 style="color: #c8102e; margin-bottom: 10px;">Horarios y Días de Trabajo</h4>
+                    <p style="background: #f8f9fa; padding: 15px; border-radius: 6px; white-space: pre-wrap;">${offer.schedule}</p>
+                </div>
+                ` : ''}
+                
+                <div style="margin-bottom: 20px;">
+                    <h4 style="color: #c8102e; margin-bottom: 10px;">Requisitos de la Posición</h4>
+                    <p style="background: #f8f9fa; padding: 15px; border-radius: 6px; white-space: pre-wrap;">${offer.requirements}</p>
+                </div>
+                
+                <div style="margin-bottom: 20px;">
+                    <h4 style="color: #c8102e; margin-bottom: 10px;">Actividades de Reclutamiento</h4>
+                    <p style="background: #f8f9fa; padding: 15px; border-radius: 6px;">${activities}</p>
+                </div>
+                
+                ${offer.notes ? `
+                <div style="margin-bottom: 20px;">
+                    <h4 style="color: #c8102e; margin-bottom: 10px;">Notas Adicionales</h4>
+                    <p style="background: #fff3cd; padding: 15px; border-radius: 6px; white-space: pre-wrap;">${offer.notes}</p>
+                </div>
+                ` : ''}
+                
+                <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; font-size: 12px; color: #6c757d;">
+                    <p><strong>Creada:</strong> ${new Date(offer.createdAt || offer.today).toLocaleString()}</p>
+                    ${offer.updatedAt && offer.updatedAt !== offer.createdAt ? `<p><strong>Última actualización:</strong> ${new Date(offer.updatedAt).toLocaleString()}</p>` : ''}
+                </div>
+            `;
+
+            document.getElementById('detailsModal').style.display = 'flex';
+        }
+
+        // Ver detalles de participante
+        function viewParticipantDetails(participantId) {
+            const participant = participants.find(p => p.id === participantId);
+            if (!participant) return;
+
+            currentModalData = { type: 'participant', data: participant };
+
+            const campusLabels = {
+                'cupey': 'Recinto de Cupey',
+                'bayamon': 'Centro Universitario de Bayamón',
+                'aguadilla': 'Centro Universitario de Aguadilla'
+            };
+
+            const studentTypeLabels = {
+                'student': 'Estudiante',
+                'alumni': 'Exalumno',
+                'community': 'Comunidad'
+            };
+
+            const scheduleLabels = {
+                'diurno': 'Diurno',
+                'nocturno': 'Nocturno'
+            };
+
+            const degreeLabels = {
+                '11mo': '11mo ó menos',
+                'cuarto': 'Cuarto Año',
+                'certificado': 'Certificado',
+                'asociado': 'Grado Asociado',
+                'bachillerato': 'Bachillerato',
+                'maestria': 'Maestría',
+                'doctorado': 'Doctorado'
+            };
+
+            const divisionLabels = {
+                'negocios': 'Negocios, Turismo y Emprendimiento',
+                'salud': 'Ciencias de la Salud',
+                'liberales': 'Artes Liberales',
+                'tecnologia': 'Ciencias y Tecnología',
+                'tecnicos': 'Programas Técnicos'
+            };
+
+            document.getElementById('modalTitle').textContent = `Participante: ${participant.firstName} ${participant.lastName}`;
+            document.getElementById('modalBody').innerHTML = `
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 20px;">
+                    <div>
+                        <h4 style="color: #c8102e; margin-bottom: 15px;">Información Personal</h4>
+                        <p><strong>Nombre:</strong> ${participant.firstName} ${participant.lastName}</p>
+                        <p><strong>Tipo:</strong> ${participant.participantType === 'new' ? 'Nuevo' : 'Participante de Seguimiento'}</p>
+                        <p><strong>Email:</strong> ${participant.email}</p>
+                        <p><strong>Teléfono:</strong> ${participant.phone}</p>
+                        <p><strong>Ciudad:</strong> ${participant.city}</p>
+                        <p><strong>Fecha de Registro:</strong> ${new Date(participant.registeredAt).toLocaleDateString()}</p>
+                    </div>
+                    <div>
+                        <h4 style="color: #c8102e; margin-bottom: 15px;">Información Académica</h4>
+                        <p><strong>Tipo de Estudiante:</strong> ${studentTypeLabels[participant.studentType]}</p>
+                        <p><strong>Recinto:</strong> ${campusLabels[participant.campus]}</p>
+                        <p><strong>ID Estudiante:</strong> ${participant.studentId}</p>
+                        <p><strong>Horario:</strong> ${scheduleLabels[participant.schedule]}</p>
+                        <p><strong>Año de Estudios:</strong> ${participant.studyYear}</p>
+                        <p><strong>Concentración:</strong> ${participant.concentration}</p>
+                    </div>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 20px;">
+                    <div>
+                        <h4 style="color: #c8102e; margin-bottom: 15px;">Información Académica Detallada</h4>
+                        <p><strong>Candidato a Graduación:</strong> ${participant.graduationCandidate === 'yes' ? 'Sí' : 'No'}</p>
+                        <p><strong>Grado Académico:</strong> ${degreeLabels[participant.academicDegree]}</p>
+                        <p><strong>División Académica:</strong> ${divisionLabels[participant.academicDivision]}</p>
+                    </div>
+                    <div>
+                        <h4 style="color: #c8102e; margin-bottom: 15px;">Documentos</h4>
+                        <p><strong>Resumé:</strong> ${participant.resume}</p>
+                        <button class="btn btn-info btn-small" onclick="downloadResume('${participant.id}')">
+                            <i class="fas fa-download"></i> Descargar Resumé
+                        </button>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0;">
+                    <h4 style="color: #c8102e; margin-bottom: 15px;">Actividad del Participante</h4>
+                    <div id="participantActivity">Cargando actividad...</div>
+                </div>
+            `;
+
+            // Cargar actividad del participante
+            setTimeout(() => {
+                const participantApplications = applications.filter(app => app.participantId === participant.id);
+                let activityHtml = '';
+                
+                if (participantApplications.length > 0) {
+                    activityHtml = '<ul>';
+                    participantApplications.forEach(app => {
+                        activityHtml += `
+                            <li style="margin-bottom: 10px;">
+                                <strong>${app.offerTitle}</strong> en <em>${app.companyName}</em>
+                                <br><small>Aplicado el ${new Date(app.appliedAt).toLocaleDateString()} - Estado: ${app.status}</small>
+                            </li>
+                        `;
+                    });
+                    activityHtml += '</ul>';
+                } else {
+                    activityHtml = '<p style="color: #6c757d; font-style: italic;">No hay aplicaciones registradas</p>';
+                }
+                
+                document.getElementById('participantActivity').innerHTML = activityHtml;
+            }, 500);
+
+            document.getElementById('detailsModal').style.display = 'flex';
+        }
+
+        // Ver detalles de aplicación
+        function viewApplicationDetails(applicationId) {
+            const application = applications.find(app => app.id === applicationId);
+            if (!application) return;
+
+            currentModalData = { type: 'application', data: application };
+
+            // Buscar información completa del participante y oferta
+            const participant = participants.find(p => p.id === application.participantId);
+            const offer = offers.find(o => o.id === application.offerId);
+
+            document.getElementById('modalTitle').textContent = `Solicitud: ${application.offerTitle}`;
+            document.getElementById('modalBody').innerHTML = `
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 20px;">
+                    <div>
+                        <h4 style="color: #c8102e; margin-bottom: 15px;">Información del Participante</h4>
+                        <p><strong>Nombre:</strong> ${application.participantName}</p>
+                        <p><strong>Email:</strong> ${application.participantEmail}</p>
+                        <p><strong>Teléfono:</strong> ${application.participantPhone}</p>
+                        ${participant ? `
+                            <p><strong>ID Estudiante:</strong> ${participant.studentId}</p>
+                            <p><strong>Concentración:</strong> ${participant.concentration}</p>
+                            <p><strong>Recinto:</strong> ${participant.campus}</p>
+                        ` : ''}
+                    </div>
+                    <div>
+                        <h4 style="color: #c8102e; margin-bottom: 15px;">Información de la Oferta</h4>
+                        <p><strong>Empresa:</strong> ${application.companyName}</p>
+                        <p><strong>Posición:</strong> ${application.offerTitle}</p>
+                        ${offer ? `
+                            <p><strong>Contacto Empresa:</strong> ${offer.contactPerson}</p>
+                            <p><strong>Email Empresa:</strong> ${offer.email}</p>
+                            <p><strong>Teléfono Empresa:</strong> ${offer.phone}</p>
+                        ` : ''}
+                    </div>
+                </div>
+                
+                <div style="margin-bottom: 20px;">
+                    <h4 style="color: #c8102e; margin-bottom: 15px;">Detalles de la Solicitud</h4>
+                    <p><strong>Fecha de Aplicación:</strong> ${new Date(application.appliedAt).toLocaleString()}</p>
+                    <p><strong>Estado:</strong> <span class="status-badge ${application.status === 'pending' ? 'status-pending' : application.status === 'processed' ? 'status-approved' : 'status-active'}">${application.status === 'pending' ? 'Pendiente' : application.status === 'processed' ? 'Procesada' : 'Referida'}</span></p>
+                </div>
+                
+                ${application.status === 'pending' ? `
+                <div style="margin-top: 30px; padding: 20px; background: #fff3cd; border-radius: 8px; border-left: 4px solid #ffc107;">
+                    <h5 style="color: #856404; margin-bottom: 10px;">Acciones Disponibles</h5>
+                    <p style="color: #856404; margin-bottom: 15px;">Esta solicitud está pendiente de procesamiento.</p>
+                    <button class="btn btn-success" onclick="processApplication('${application.id}')">
+                        <i class="fas fa-check"></i> Marcar como Procesada
+                    </button>
+                </div>
+                ` : ''}
+            `;
+
+            // Mostrar botón de acción en el modal si es necesario
+            const modalAction = document.getElementById('modalAction');
+            if (application.status === 'pending') {
+                modalAction.style.display = 'inline-flex';
+                modalAction.innerHTML = '<i class="fas fa-paper-plane"></i> Procesar Solicitud';
+                modalAction.onclick = () => processApplication(application.id);
+            } else {
+                modalAction.style.display = 'none';
+            }
+
+            document.getElementById('detailsModal').style.display = 'flex';
+        }
+
+        // Procesar aplicación
+        function processApplication(applicationId) {
+            if (confirm('¿Estás seguro de que quieres marcar esta solicitud como procesada?')) {
+                const application = applications.find(app => app.id === applicationId);
+                if (application) {
+                    application.status = 'processed';
+                    application.processedAt = new Date().toISOString();
+                    
+                    // Actualizar localStorage
+                    localStorage.setItem('applications', JSON.stringify(applications));
+                    
+                    // Actualizar estadísticas y tabla
+                    updateStats();
+                    loadApplicationsTable();
+                    closeDetailsModal();
+                    
+                    showNotification('Solicitud procesada exitosamente', 'success');
+                }
+            }
+        }
+
+        // Descargar resumé real desde Firebase Storage
+        function downloadResume(participantId) {
+            const participant = participants.find(p => p.id === participantId);
+            if (participant && participant.resume) {
+                if (participant.resume.startsWith('http')) {
+                    // Es una URL de Storage, descargar archivo real
+                    const link = document.createElement('a');
+                    link.href = participant.resume;
+                    link.download = participant.resumeFileName || `resume_${participant.firstName}_${participant.lastName}.pdf`;
+                    link.target = '_blank';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    showNotification(`Descargando resumé de ${participant.firstName} ${participant.lastName}`, 'success');
+                } else {
+                    // Es solo el nombre del archivo (datos viejos)
+                    showNotification('Resumé no disponible para descarga', 'warning');
+                }
+            } else {
+                showNotification('No hay resumé disponible', 'warning');
+            }
+        }
+
+        // Cerrar modal de detalles
+        function closeDetailsModal() {
+            document.getElementById('detailsModal').style.display = 'none';
+            document.getElementById('modalAction').style.display = 'none';
+            currentModalData = null;
+        }
+
+// Eliminar participante
+        function deleteParticipant(participantId) {
+            const participant = participants.find(p => p.id === participantId);
+            if (participant && confirm(`¿Estás seguro de que quieres eliminar al participante "${participant.firstName} ${participant.lastName}"?`)) {
+                participants = participants.filter(p => p.id !== participantId);
+                localStorage.setItem('participants', JSON.stringify(participants));
+                
+                // También eliminar aplicaciones relacionadas
+                applications = applications.filter(app => app.participantId !== participantId);
+                localStorage.setItem('applications', JSON.stringify(applications));
+                
+                updateStats();
+                loadParticipantsTable();
+                showNotification('Participante eliminado exitosamente', 'success');
+            }
+        }
+
+        // Editar oferta (redirigir al gestor de ofertas)
+        function editOffer(offerId) {
+            if (confirm('¿Quieres abrir el gestor de ofertas para editar esta oferta?')) {
+                window.open('gestor-ofertas.html', '_blank');
+            }
+        }
+
+        // Eliminar oferta
+        function deleteOffer(offerId) {
+            const offer = offers.find(o => o.id === offerId);
+            if (offer && confirm(`¿Estás seguro de que quieres eliminar la oferta "${offer.position}" de "${offer.companyName}"?`)) {
+                offers = offers.filter(o => o.id !== offerId);
+                localStorage.setItem('jobOffers', JSON.stringify(offers));
+                
+                // También eliminar aplicaciones relacionadas
+                applications = applications.filter(app => app.offerId !== offerId);
+                localStorage.setItem('applications', JSON.stringify(applications));
+                
+                updateStats();
+                loadOffersTable();
+                showNotification('Oferta eliminada exitosamente', 'success');
+            }
+        }
+// Filtrar ofertas
+        function filterOffers() {
+            const search = document.getElementById('offersSearch').value.toLowerCase();
+            const statusFilter = document.getElementById('offersStatusFilter').value;
+            
+            let filteredOffers = offers;
+            
+            if (search) {
+                filteredOffers = filteredOffers.filter(offer => 
+                    offer.companyName.toLowerCase().includes(search) ||
+                    offer.position.toLowerCase().includes(search) ||
+                    offer.location.toLowerCase().includes(search) ||
+                    offer.contactPerson.toLowerCase().includes(search)
+                );
+            }
+            
+            if (statusFilter) {
+                filteredOffers = filteredOffers.filter(offer => {
+                    const status = getOfferStatus(offer.deadline);
+                    return status === statusFilter;
+                });
+            }
+            
+            displayFilteredOffers(filteredOffers);
+        }
+
+        // Mostrar ofertas filtradas
+        function displayFilteredOffers(filteredOffers) {
+            const container = document.getElementById('offersTableContainer');
+            
+            if (filteredOffers.length === 0) {
+                container.innerHTML = `
+                    <div class="no-data">
+                        <i class="fas fa-search"></i>
+                        <h3>No se encontraron ofertas</h3>
+                        <p>No hay ofertas que coincidan con los filtros aplicados</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = `
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Empresa</th>
+                            <th>Posición</th>
+                            <th>Ubicación</th>
+                            <th>Salario</th>
+                            <th>Tipo</th>
+                            <th>Fecha Límite</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            filteredOffers.forEach(offer => {
+                const status = getOfferStatus(offer.deadline);
+                const statusClass = status === 'expired' ? 'status-expired' : 
+                                  status === 'expiring' ? 'status-expiring' : 'status-active';
+                const statusText = status === 'expired' ? 'Vencida' : 
+                                 status === 'expiring' ? 'Vence Pronto' : 'Activa';
+
+                html += `
+                    <tr>
+                        <td>${new Date(offer.today).toLocaleDateString()}</td>
+                        <td><strong>${offer.companyName}</strong><br><small>${offer.contactPerson}</small></td>
+                        <td>${offer.position}</td>
+                        <td>${offer.location}</td>
+                        <td>${offer.salary}</td>
+                        <td><span class="status-badge">${getTypeLabel(offer.positionType)}</span></td>
+                        <td>${new Date(offer.deadline).toLocaleDateString()}</td>
+                        <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+                        <td>
+                            <div class="actions">
+                                <button class="btn btn-info btn-small" onclick="viewOfferDetails('${offer.id}')" title="Ver detalles">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="btn btn-warning btn-small" onclick="editOffer('${offer.id}')" title="Editar">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-danger btn-small" onclick="deleteOffer('${offer.id}')" title="Eliminar">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        // Filtrar participantes
+        function filterParticipants() {
+            const search = document.getElementById('participantsSearch').value.toLowerCase();
+            const campusFilter = document.getElementById('participantsCampusFilter').value;
+            const typeFilter = document.getElementById('participantsTypeFilter').value;
+            
+            let filteredParticipants = participants;
+            
+            if (search) {
+                filteredParticipants = filteredParticipants.filter(participant => 
+                    `${participant.firstName} ${participant.lastName}`.toLowerCase().includes(search) ||
+                    participant.email.toLowerCase().includes(search) ||
+                    participant.studentId.toLowerCase().includes(search) ||
+                    participant.concentration.toLowerCase().includes(search)
+                );
+            }
+            
+            if (campusFilter) {
+                filteredParticipants = filteredParticipants.filter(participant => 
+                    participant.campus === campusFilter
+                );
+            }
+            
+            if (typeFilter) {
+                filteredParticipants = filteredParticipants.filter(participant => 
+                    participant.participantType === typeFilter
+                );
+            }
+            
+            displayFilteredParticipants(filteredParticipants);
+        }
+
+        // Mostrar participantes filtrados
+        function displayFilteredParticipants(filteredParticipants) {
+            const container = document.getElementById('participantsTableContainer');
+            
+            if (filteredParticipants.length === 0) {
+                container.innerHTML = `
+                    <div class="no-data">
+                        <i class="fas fa-search"></i>
+                        <h3>No se encontraron participantes</h3>
+                        <p>No hay participantes que coincidan con los filtros aplicados</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = `
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Fecha Registro</th>
+                            <th>Nombre</th>
+                            <th>Email</th>
+                            <th>Teléfono</th>
+                            <th>Recinto</th>
+                            <th>Concentración</th>
+                            <th>Año</th>
+                            <th>Tipo</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            filteredParticipants.forEach(participant => {
+                const campusLabels = {
+                    'cupey': 'Cupey',
+                    'bayamon': 'Bayamón',
+                    'aguadilla': 'Aguadilla'
+                };
+
+                const typeLabels = {
+                    'new': 'Nuevo',
+                    'returning': 'Seguimiento'
+                };
+
+                html += `
+                    <tr>
+                        <td>${new Date(participant.registeredAt).toLocaleDateString()}</td>
+                        <td><strong>${participant.firstName} ${participant.lastName}</strong><br><small>ID: ${participant.studentId}</small></td>
+                        <td>${participant.email}</td>
+                        <td>${participant.phone}</td>
+                        <td>${campusLabels[participant.campus] || participant.campus}</td>
+                        <td>${participant.concentration}</td>
+                        <td>${participant.studyYear}</td>
+                        <td><span class="status-badge status-active">${typeLabels[participant.participantType]}</span></td>
+                        <td>
+                            <div class="actions">
+                                <button class="btn btn-info btn-small" onclick="viewParticipantDetails('${participant.id}')" title="Ver detalles">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="btn btn-success btn-small" onclick="downloadResume('${participant.id}')" title="Descargar resumé">
+                                    <i class="fas fa-download"></i>
+                                </button>
+                                <button class="btn btn-danger btn-small" onclick="deleteParticipant('${participant.id}')" title="Eliminar">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        // Filtrar aplicaciones
+        function filterApplications() {
+            const search = document.getElementById('applicationsSearch').value.toLowerCase();
+            const statusFilter = document.getElementById('applicationsStatusFilter').value;
+            
+            let filteredApplications = applications;
+            
+            if (search) {
+                filteredApplications = filteredApplications.filter(application => 
+                    application.participantName.toLowerCase().includes(search) ||
+                    application.companyName.toLowerCase().includes(search) ||
+                    application.offerTitle.toLowerCase().includes(search) ||
+                    application.participantEmail.toLowerCase().includes(search)
+                );
+            }
+            
+            if (statusFilter) {
+                filteredApplications = filteredApplications.filter(application => 
+                    application.status === statusFilter
+                );
+            }
+            
+            displayFilteredApplications(filteredApplications);
+        }
+
+        // Mostrar aplicaciones filtradas
+        function displayFilteredApplications(filteredApplications) {
+            const container = document.getElementById('applicationsTableContainer');
+            
+            if (filteredApplications.length === 0) {
+                container.innerHTML = `
+                    <div class="no-data">
+                        <i class="fas fa-search"></i>
+                        <h3>No se encontraron solicitudes</h3>
+                        <p>No hay solicitudes que coincidan con los filtros aplicados</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = `
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Participante</th>
+                            <th>Empresa</th>
+                            <th>Posición</th>
+                            <th>Contacto</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            filteredApplications.forEach(application => {
+                const statusLabels = {
+                    'pending': 'Pendiente',
+                    'processed': 'Procesada',
+                    'referred': 'Referida'
+                };
+
+                const statusClasses = {
+                    'pending': 'status-pending',
+                    'processed': 'status-approved',
+                    'referred': 'status-active'
+                };
+
+                html += `
+                    <tr>
+                        <td>${new Date(application.appliedAt).toLocaleDateString()}</td>
+                        <td><strong>${application.participantName}</strong><br><small>${application.participantEmail}</small></td>
+                        <td>${application.companyName}</td>
+                        <td>${application.offerTitle}</td>
+                        <td>${application.participantPhone}</td>
+                        <td><span class="status-badge ${statusClasses[application.status]}">${statusLabels[application.status]}</span></td>
+                        <td>
+                            <div class="actions">
+                                <button class="btn btn-info btn-small" onclick="viewApplicationDetails('${application.id}')" title="Ver detalles">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                ${application.status === 'pending' ? `
+                                    <button class="btn btn-success btn-small" onclick="processApplication('${application.id}')" title="Procesar">
+                                        <i class="fas fa-check"></i>
+                                    </button>
+                                ` : ''}
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        // Exportar datos de ofertas
+        function exportOffersData() {
+            if (offers.length === 0) {
+                showNotification('No hay ofertas para exportar', 'warning');
+                return;
+            }
+
+            const data = offers.map(offer => ({
+                'Fecha': new Date(offer.today).toLocaleDateString(),
+                'Tipo Patrono': offer.patronType === 'new' ? 'Nuevo' : 'Existente',
+                'Empresa': offer.companyName,
+                'Contacto': offer.contactPerson,
+                'Posición Contacto': offer.contactPosition || '',
+                'Teléfono': offer.phone,
+                'Email': offer.email,
+                'Recibida Por': offer.receivedThrough,
+                'Posición': offer.position,
+                'Tipo Posición': getTypeLabel(offer.positionType),
+                'Salario': offer.salary,
+                'Ubicación': offer.location,
+                'Fecha Límite': new Date(offer.deadline).toLocaleDateString(),
+                'Estado': getOfferStatus(offer.deadline) === 'expired' ? 'Vencida' : 
+                         getOfferStatus(offer.deadline) === 'expiring' ? 'Vence Pronto' : 'Activa',
+                'Descripción': offer.jobDescription || '',
+                'Horarios': offer.schedule || '',
+                'Requisitos': offer.requirements,
+                'Actividades': offer.activities ? offer.activities.join(', ') : '',
+                'Notas': offer.notes || ''
+            }));
+
+            const ws = XLSX.utils.json_to_sheet(data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Ofertas de Empleo");
+            
+            const filename = `Ofertas_Empleo_Admin_${new Date().toISOString().split('T')[0]}.xlsx`;
+            XLSX.writeFile(wb, filename);
+            
+            showNotification('Ofertas exportadas exitosamente', 'success');
+        }
+
+        // Exportar datos de participantes
+        function exportParticipantsData() {
+            if (participants.length === 0) {
+                showNotification('No hay participantes para exportar', 'warning');
+                return;
+            }
+
+            const data = participants.map(participant => ({
+                'Fecha Registro': new Date(participant.registeredAt).toLocaleDateString(),
+                'Tipo Participante': participant.participantType === 'new' ? 'Nuevo' : 'Seguimiento',
+                'Nombre': participant.firstName,
+                'Apellidos': participant.lastName,
+                'Email': participant.email,
+                'Teléfono': participant.phone,
+                'Ciudad': participant.city,
+                'Tipo Estudiante': participant.studentType,
+                'Recinto': participant.campus,
+                'ID Estudiante': participant.studentId,
+                'Horario': participant.schedule,
+                'Año Estudios': participant.studyYear,
+                'Concentración': participant.concentration,
+                'Candidato Graduación': participant.graduationCandidate === 'yes' ? 'Sí' : 'No',
+                'Grado Académico': participant.academicDegree,
+                'División Académica': participant.academicDivision,
+                'Resumé': participant.resume
+            }));
+
+            const ws = XLSX.utils.json_to_sheet(data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Participantes");
+            
+            const filename = `Participantes_Admin_${new Date().toISOString().split('T')[0]}.xlsx`;
+            XLSX.writeFile(wb, filename);
+            
+            showNotification('Participantes exportados exitosamente', 'success');
+        }
+
+        // Exportar datos de aplicaciones
+        function exportApplicationsData() {
+            if (applications.length === 0) {
+                showNotification('No hay solicitudes para exportar', 'warning');
+                return;
+            }
+
+            const data = applications.map(application => ({
+                'Fecha Solicitud': new Date(application.appliedAt).toLocaleDateString(),
+                'Participante': application.participantName,
+                'Email Participante': application.participantEmail,
+                'Teléfono Participante': application.participantPhone,
+                'Empresa': application.companyName,
+                'Posición': application.offerTitle,
+                'Estado': application.status === 'pending' ? 'Pendiente' : 
+                         application.status === 'processed' ? 'Procesada' : 'Referida',
+                'Fecha Procesado': application.processedAt ? new Date(application.processedAt).toLocaleDateString() : ''
+            }));
+
+            const ws = XLSX.utils.json_to_sheet(data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Solicitudes");
+            
+            const filename = `Solicitudes_Admin_${new Date().toISOString().split('T')[0]}.xlsx`;
+            XLSX.writeFile(wb, filename);
+            
+            showNotification('Solicitudes exportadas exitosamente', 'success');
+        }
+
+        // Exportar todos los datos
+        function exportAllData() {
+            const wb = XLSX.utils.book_new();
+
+            // Ofertas
+            if (offers.length > 0) {
+                const offersData = offers.map(offer => ({
+                    'Fecha': new Date(offer.today).toLocaleDateString(),
+                    'Empresa': offer.companyName,
+                    'Posición': offer.position,
+                    'Contacto': offer.contactPerson,
+                    'Email': offer.email,
+                    'Teléfono': offer.phone,
+                    'Ubicación': offer.location,
+                    'Salario': offer.salary,
+                    'Estado': getOfferStatus(offer.deadline) === 'expired' ? 'Vencida' : 
+                             getOfferStatus(offer.deadline) === 'expiring' ? 'Vence Pronto' : 'Activa'
+                }));
+                const offersSheet = XLSX.utils.json_to_sheet(offersData);
+                XLSX.utils.book_append_sheet(wb, offersSheet, "Ofertas");
+            }
+
+            // Participantes
+            if (participants.length > 0) {
+                const participantsData = participants.map(participant => ({
+                    'Fecha Registro': new Date(participant.registeredAt).toLocaleDateString(),
+                    'Nombre': `${participant.firstName} ${participant.lastName}`,
+                    'Email': participant.email,
+                    'Teléfono': participant.phone,
+                    'Recinto': participant.campus,
+                    'Concentración': participant.concentration,
+                    'Año': participant.studyYear
+                }));
+                const participantsSheet = XLSX.utils.json_to_sheet(participantsData);
+                XLSX.utils.book_append_sheet(wb, participantsSheet, "Participantes");
+            }
+
+            // Solicitudes
+            if (applications.length > 0) {
+                const applicationsData = applications.map(application => ({
+                    'Fecha': new Date(application.appliedAt).toLocaleDateString(),
+                    'Participante': application.participantName,
+                    'Empresa': application.companyName,
+                    'Posición': application.offerTitle,
+                    'Estado': application.status
+                }));
+                const applicationsSheet = XLSX.utils.json_to_sheet(applicationsData);
+                XLSX.utils.book_append_sheet(wb, applicationsSheet, "Solicitudes");
+            }
+
+            const filename = `Reporte_Completo_UAGM_${new Date().toISOString().split('T')[0]}.xlsx`;
+            XLSX.writeFile(wb, filename);
+            
+            showNotification('Reporte completo exportado exitosamente', 'success');
+        }
+
+        // Generar reporte mensual
+        function generateMonthlyReport() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            const today = new Date();
+            const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+                'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+            
+            doc.setFontSize(18);
+            doc.text('Reporte Mensual - Portal de Empleos UAGM', 20, 20);
+            doc.setFontSize(14);
+            doc.text(`${monthNames[today.getMonth()]} ${today.getFullYear()}`, 20, 35);
+            
+            let yPos = 55;
+            
+            // Estadísticas principales
+            doc.setFontSize(16);
+            doc.text('Resumen Ejecutivo', 20, yPos);
+            yPos += 15;
+            
+            doc.setFontSize(12);
+            doc.text(`• Total de Ofertas: ${offers.length}`, 25, yPos);
+            yPos += 8;
+            doc.text(`• Total de Participantes: ${participants.length}`, 25, yPos);
+            yPos += 8;
+            doc.text(`• Total de Solicitudes: ${applications.length}`, 25, yPos);
+            yPos += 8;
+            doc.text(`• Empresas Activas: ${[...new Set(offers.map(o => o.companyName))].length}`, 25, yPos);
+            yPos += 20;
+            
+            // Ofertas por estado
+            const activeOffers = offers.filter(offer => getOfferStatus(offer.deadline) === 'active').length;
+            const expiredOffers = offers.filter(offer => getOfferStatus(offer.deadline) === 'expired').length;
+            
+            doc.setFontSize(16);
+            doc.text('Estado de Ofertas', 20, yPos);
+            yPos += 15;
+            
+            doc.setFontSize(12);
+            doc.text(`• Ofertas Activas: ${activeOffers}`, 25, yPos);
+            yPos += 8;
+            doc.text(`• Ofertas Vencidas: ${expiredOffers}`, 25, yPos);
+            yPos += 20;
+            
+            // Participantes por tipo
+            const newParticipants = participants.filter(p => p.participantType === 'new').length;
+            const returningParticipants = participants.filter(p => p.participantType === 'returning').length;
+            
+            doc.setFontSize(16);
+            doc.text('Participantes por Tipo', 20, yPos);
+            yPos += 15;
+            
+            doc.setFontSize(12);
+            doc.text(`• Participantes Nuevos: ${newParticipants}`, 25, yPos);
+            yPos += 8;
+            doc.text(`• Participantes de Seguimiento: ${returningParticipants}`, 25, yPos);
+            
+            const filename = `Reporte_Mensual_${today.getFullYear()}_${String(today.getMonth() + 1).padStart(2, '0')}.pdf`;
+            doc.save(filename);
+            
+            showNotification('Reporte mensual generado exitosamente', 'success');
+        }
+
+        // Actualizar reportes
+        function updateReports() {
+            const container = document.getElementById('reportsContainer');
+            const period = document.getElementById('reportsDateFilter').value;
+            
+            // Aquí se pueden agregar gráficos y estadísticas más detalladas
+            container.innerHTML = `
+                <div style="text-align: center; padding: 40px;">
+                    <h3>Reportes para el período: ${period}</h3>
+                    <p>Estadísticas detalladas en desarrollo...</p>
+                    <button class="btn btn-primary" onclick="generateMonthlyReport()">
+                        <i class="fas fa-file-pdf"></i> Generar Reporte PDF
+                    </button>
+                </div>
+            `;
+        }
+
+        // Actualizar datos
+        function refreshData() {
+            loadAllData();
+            updateStats();
+            
+            // Recargar tabla actual
+            switch(currentTab) {
+                case 'offers':
+                    loadOffersTable();
+                    break;
+                case 'participants':
+                    loadParticipantsTable();
+                    break;
+                case 'applications':
+                    loadApplicationsTable();
+                    break;
+                case 'reports':
+                    updateReports();
+                    break;
+            }
+            
+            showNotification('Datos actualizados correctamente', 'success');
+        }
+
+        // Cerrar sesión
+        function logout() {
+            if (confirm('¿Estás seguro de que quieres cerrar sesión?')) {
+                window.location.href = 'Portal pagina principal.html';
+            }
+        }
+
+        // Sistema de notificaciones
+        function showNotification(message, type = 'info') {
+            const existingNotification = document.querySelector('.notification');
+            if (existingNotification) {
+                existingNotification.remove();
+            }
+
+            const notification = document.createElement('div');
+            notification.className = 'notification';
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 15px 20px;
+                border-radius: 10px;
+                color: white;
+                font-weight: 600;
+                z-index: 10000;
+                animation: slideIn 0.3s ease;
+                max-width: 350px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            `;
+            
+            const colors = {
+                success: '#28a745',
+                error: '#dc3545',
+                warning: '#ffc107',
+                info: '#17a2b8'
+            };
+            
+            notification.style.backgroundColor = colors[type] || colors.info;
+            
+            const icons = {
+                success: 'fas fa-check-circle',
+                error: 'fas fa-exclamation-circle',
+                warning: 'fas fa-exclamation-triangle',
+                info: 'fas fa-info-circle'
+            };
+            
+            notification.innerHTML = `
+                <i class="${icons[type] || icons.info}" style="margin-right: 10px;"></i>
+                ${message}
+            `;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.style.animation = 'slideOut 0.3s ease';
+                    setTimeout(() => {
+                        if (notification.parentNode) {
+                            notification.remove();
+                        }
+                    }, 300);
+                }
+            }, 4000);
+        }
+
+        // Cerrar modal al hacer clic fuera
+        window.onclick = function(event) {
+            const modal = document.getElementById('detailsModal');
+            if (event.target === modal) {
+                closeDetailsModal();
+            }
+        }
+
+        // Agregar animaciones CSS
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideIn {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+            
+            @keyframes slideOut {
+                from { transform: translateX(0); opacity: 1; }
+                to { transform: translateX(100%); opacity: 0; }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
