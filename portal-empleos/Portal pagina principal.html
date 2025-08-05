@@ -276,6 +276,17 @@
             </div>
         </div>
 
+        <!-- Tarjeta Resume Builder -->
+            <div class="access-card" onclick="goToResumeBuilder()" style="background: linear-gradient(135deg, #6f42c1 0%, #5a2d91 100%); color: white;">
+                <div class="card-icon" style="color: white;">
+                    <i class="fas fa-file-alt"></i>
+                </div>
+                <h3 class="card-title" style="color: white;">Resume Builder</h3>
+                <p class="card-description" style="color: rgba(255,255,255,0.9);">
+                    Crea tu currículum profesional con nuestra herramienta interactiva
+                </p>
+            </div>
+
         <div class="footer">
             <p>© 2025 Universidad Ana G. Méndez - Desarrollado por: Braulio González Vélez</p>
         </div>
@@ -399,6 +410,11 @@
         // Navegación a patronos
         function goToPatronos() {
             window.location.href = 'portal-para-patronos.html';
+        }
+
+        // Navegación a Resume Builder
+        function goToResumeBuilder() {
+            window.location.href = '../index.html';
         }
 
         // Abrir modal de login admin
