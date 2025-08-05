@@ -10,6 +10,11 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+<!-- Scripts Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
@@ -1459,6 +1464,7 @@
             <button class="btn btn-primary" onclick="exportToWord()">Exportar Word</button>
             <button class="btn btn-primary" onclick="clearAll()">Reiniciar</button>
             <button class="btn btn-primary" onclick="openProfessionalCoverLetter()">📝 Crear Carta de Presentación</button>
+<button class="btn btn-primary" onclick="saveToUAGMPortal()">💾 Guardar en Portal UAGM</button>
 	    <button class="btn btn-primary" onclick="openExitModal()">🚪 Salir</button>
         </div>
 
@@ -1556,6 +1562,33 @@
 </div>
 
 <script>
+// Configuración Firebase (NUEVO)
+const firebaseConfig = {
+    apiKey: "AIzaSyBFgSuKNJMUoVcKgHjsqOsInArSPBsb32A",
+    authDomain: "uagm-portal-de-empleo-17aed.firebaseapp.com",
+    projectId: "uagm-portal-de-empleo-17aed",
+    storageBucket: "uagm-portal-de-empleo-17aed.firebasestorage.app",
+    messagingSenderId: "582147767835",
+    appId: "1:582147767835:web:546ab8f2557b6da6ccc2be"
+};
+
+// Variables globales Firebase (NUEVO)
+let app, db, storage;
+let isFirebaseInitialized = false;
+
+function initializeFirebase() {
+    try {
+        app = firebase.initializeApp(firebaseConfig);
+        db = firebase.firestore();
+        storage = firebase.storage();
+        console.log('Firebase inicializado en Resume Builder');
+        return true;
+    } catch (error) {
+        console.error('Error inicializando Firebase:', error);
+        return false;
+    }
+}
+
 let currentLang = 'es';
 let expCount = 0;
 let eduCount = 0;
@@ -1784,6 +1817,7 @@ const texts = {
 
 // Inicializar cuando se carga la página
 window.addEventListener('load', function() {
+    isFirebaseInitialized = initializeFirebase();
     setupEvents();
     updatePreview();
 });
@@ -3464,6 +3498,90 @@ function downloadLetterAsWord(filename) {
     } catch (error) {
         console.error('Error generating Word:', error);
         alert(currentLang === 'es' ? 'Error al generar Word' : 'Error generating Word');
+    }
+}
+
+// Función para guardar en Portal UAGM
+async function saveToUAGMPortal() {
+    // Validar que hay contenido mínimo
+    const name = document.getElementById('name').value.trim();
+    const email = document.getElementById('email').value.trim();
+    
+    if (!name || !email) {
+        alert(currentLang === 'es' 
+            ? 'Por favor completa al menos tu nombre y email antes de guardar.' 
+            : 'Please fill in at least your name and email before saving.');
+        return;
+    }
+    
+    if (!isFirebaseInitialized) {
+        alert(currentLang === 'es' 
+            ? 'Firebase no está disponible. Por favor intenta más tarde.' 
+            : 'Firebase is not available. Please try again later.');
+        return;
+    }
+    
+    try {
+        // Generar PDF del resumé
+        const { jsPDF } = window.jspdf;
+        const element = document.getElementById('resume-preview');
+        
+        // Crear canvas del resumé
+        const canvas = await html2canvas(element, {
+            scale: 2,
+            useCORS: true,
+            backgroundColor: '#ffffff'
+        });
+        
+        const imgData = canvas.toDataURL('image/png', 1.0);
+        
+        // Crear PDF
+        const pdf = new jsPDF('portrait', 'mm', 'a4');
+        const pdfWidth = 210;
+        const pdfHeight = 297;
+        const margin = 10;
+        const contentWidth = pdfWidth - (margin * 2);
+        const imgWidth = contentWidth;
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+        
+        pdf.addImage(imgData, 'PNG', margin, margin, imgWidth, Math.min(imgHeight, pdfHeight - margin * 2));
+        
+        // Convertir PDF a blob
+        const pdfBlob = pdf.output('blob');
+        
+        // Subir PDF a Firebase Storage
+        const fileName = `resume_${name.replace(/\s+/g, '_')}_${Date.now()}.pdf`;
+        const storageRef = storage.ref(`resume-builder/${fileName}`);
+        const uploadTask = await storageRef.put(pdfBlob);
+        const downloadURL = await uploadTask.ref.getDownloadURL();
+        
+        // Preparar datos para Firestore
+        const resumeData = {
+            id: Date.now().toString(),
+            name: name,
+            email: email,
+            studentId: document.getElementById('phone').value || '', // Usamos phone como campo extra
+            resumePDF: downloadURL,
+            resumeFileName: fileName,
+            createdAt: new Date().toISOString(),
+            source: 'resume-builder'
+        };
+        
+        // Guardar en Firestore
+        await db.collection('resumeBuilder').add(resumeData);
+        
+        // Mostrar éxito
+        alert(currentLang === 'es' 
+            ? '¡Resumé guardado exitosamente en el Portal UAGM!\n\nLos administradores podrán ver tu resumé en el dashboard.' 
+            : 'Resume successfully saved to UAGM Portal!\n\nAdministrators will be able to see your resume in the dashboard.');
+        
+        console.log('Resumé guardado en Portal UAGM:', resumeData);
+        
+    } catch (error) {
+        console.error('Error guardando en Portal UAGM:', error);
+        alert(currentLang === 'es' 
+            ? 'Error al guardar en el Portal. Por favor intenta de nuevo.' 
+            : 'Error saving to Portal. Please try again.');
     }
 }
 
