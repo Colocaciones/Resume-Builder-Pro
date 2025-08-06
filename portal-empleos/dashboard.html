@@ -2314,6 +2314,8 @@ if (tabIndex !== -1) {
                                 ${appointment.hasResume ? `
                                     <button class="btn btn-warning btn-small" onclick="downloadAppointmentResume('${appointment.id}')" title="Descargar resumé">
                                         <i class="fas fa-download"></i>
+<button class="btn btn-danger btn-small" onclick="deleteAppointment('${appointment.id}')" title="Eliminar cita">
+                                    <i class="fas fa-trash"></i>
                                     </button>
                                 ` : ''}
                             </div>
@@ -2453,6 +2455,47 @@ if (tabIndex !== -1) {
                 showNotification(`Descargando resumé de ${appointment.firstName} ${appointment.lastName}`, 'success');
             } else {
                 showNotification('No hay resumé disponible para esta cita', 'warning');
+            }
+        }
+
+// Eliminar cita completamente
+        async function deleteAppointment(appointmentId) {
+            const appointment = appointments.find(app => app.id === appointmentId);
+            if (!appointment) return;
+            
+            if (confirm(`¿Estás seguro de que quieres eliminar permanentemente la cita de "${appointment.firstName} ${appointment.lastName}"?`)) {
+                try {
+                    // Buscar y eliminar de Firebase
+                    if (isFirebaseInitialized) {
+                        const snapshot = await db.collection('appointments')
+                            .where('id', '==', appointmentId)
+                            .get();
+                        
+                        if (!snapshot.empty) {
+                            const batch = db.batch();
+                            snapshot.docs.forEach(doc => {
+                                batch.delete(doc.ref);
+                            });
+                            await batch.commit();
+                            console.log('Cita eliminada de Firebase:', appointmentId);
+                        }
+                    }
+                    
+                    // Eliminar de memoria local
+                    appointments = appointments.filter(app => app.id !== appointmentId);
+                    
+                    // Actualizar localStorage como respaldo
+                    localStorage.setItem('appointments', JSON.stringify(appointments));
+                    
+                    // Actualizar interfaz
+                    updateStats();
+                    loadAppointmentsTable();
+                    showNotification('Cita eliminada permanentemente', 'success');
+                    
+                } catch (error) {
+                    console.error('Error eliminando cita:', error);
+                    showNotification('Error eliminando la cita. Intenta de nuevo.', 'error');
+                }
             }
         }
 // Filtrar citas
@@ -2595,6 +2638,10 @@ if (tabIndex !== -1) {
                                         <i class="fas fa-download"></i>
                                     </button>
                                 ` : ''}
+<button class="btn btn-danger btn-small" onclick="deleteAppointment('${appointment.id}')" title="Eliminar cita">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
                             </div>
                         </td>
                     </tr>
