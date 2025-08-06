@@ -488,6 +488,13 @@
                 <span class="stat-number" id="totalCompanies">0</span>
                 <div class="stat-label">Empresas Activas</div>
             </div>
+<div class="stat-card" style="border-left: 4px solid #6f42c1;">
+                <div class="stat-icon" style="color: #6f42c1;">
+                    <i class="fas fa-calendar-alt"></i>
+                </div>
+                <span class="stat-number" id="totalAppointments">0</span>
+                <div class="stat-label">Citas Programadas</div>
+            </div>
         </div>
 
         <!-- Contenido Principal -->
@@ -520,6 +527,9 @@
                     </button>
                     <button class="tab" onclick="switchTab('reports')">
                         <i class="fas fa-chart-bar"></i> Reportes
+                    </button>
+<button class="tab" onclick="switchTab('appointments')">
+                        <i class="fas fa-calendar-alt"></i> Citas
                     </button>
                 </div>
 
@@ -677,6 +687,53 @@
                         </div>
                     </div>
                 </div>
+<!-- Tab Citas -->
+                <div class="tab-content" id="appointmentsContent">
+                    <div class="quick-stats">
+                        <div class="quick-stat">
+                            <div class="quick-stat-number" id="todayAppointments">0</div>
+                            <div class="quick-stat-label">Citas Hoy</div>
+                        </div>
+                        <div class="quick-stat">
+                            <div class="quick-stat-number" id="upcomingAppointments">0</div>
+                            <div class="quick-stat-label">Próximas Citas</div>
+                        </div>
+                        <div class="quick-stat">
+                            <div class="quick-stat-number" id="completedAppointments">0</div>
+                            <div class="quick-stat-label">Completadas</div>
+                        </div>
+                        <div class="quick-stat">
+                            <div class="quick-stat-number" id="manpowerAppointments">0</div>
+                            <div class="quick-stat-label">Con Manpower</div>
+                        </div>
+                    </div>
+
+                    <div class="search-filter-bar">
+                        <input type="text" class="search-input" id="appointmentsSearch" placeholder="🔍 Buscar citas..." oninput="filterAppointments()">
+                        <select class="filter-select" id="appointmentsStatusFilter" onchange="filterAppointments()">
+                            <option value="">Todos los Estados</option>
+                            <option value="scheduled">Programadas</option>
+                            <option value="completed">Completadas</option>
+                            <option value="cancelled">Canceladas</option>
+                        </select>
+                        <select class="filter-select" id="appointmentsDateFilter" onchange="filterAppointments()">
+                            <option value="">Todas las Fechas</option>
+                            <option value="today">Hoy</option>
+                            <option value="week">Esta Semana</option>
+                            <option value="month">Este Mes</option>
+                        </select>
+                        <button class="btn btn-primary" onclick="exportAppointmentsData()">
+                            <i class="fas fa-file-excel"></i> Exportar
+                        </button>
+                                </div>
+
+                                <div id="appointmentsTableContainer">
+                                    <!-- Tabla se genera dinámicamente -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -746,6 +803,9 @@
 
         // Variables globales
         let offers = [];
+        let participants = [];
+        let applications = [];
+        let appointments = [];
 
         // Inicializar dashboard
         document.addEventListener('DOMContentLoaded', async function() {
@@ -780,6 +840,14 @@
                         applications = applicationsResult.docs;
                         console.log('Aplicaciones cargadas desde Firebase:', applications.length);
                     }
+
+                   // Cargar citas desde Firebase
+                   const appointmentsResult = await FirebaseHelper.getDocs('appointments');
+                   if (appointmentsResult.success) {
+                       appointments = appointmentsResult.docs;
+                       console.log('Citas cargadas desde Firebase:', appointments.length);
+                   }
+
                 } else {
                     throw new Error('Firebase no inicializado');
                 }
@@ -789,6 +857,7 @@
                 offers = JSON.parse(localStorage.getItem('jobOffers')) || [];
                 participants = JSON.parse(localStorage.getItem('participants')) || [];
                 applications = JSON.parse(localStorage.getItem('applications')) || [];
+                appointments = JSON.parse(localStorage.getItem('appointments')) || [];
             }
         }
 
@@ -827,6 +896,26 @@
             document.getElementById('totalParticipants').textContent = participants.length;
             document.getElementById('totalApplications').textContent = pendingApplications;
             document.getElementById('totalCompanies').textContent = uniqueCompanies;
+document.getElementById('totalAppointments').textContent = appointments.length;
+        
+        // Stats rápidas citas
+        const todayAppointments = appointments.filter(app => {
+            const appDate = new Date(app.appointmentDate);
+            return appDate.toDateString() === today.toDateString();
+        }).length;
+        
+        const upcomingAppointments = appointments.filter(app => {
+            const appDate = new Date(app.appointmentDate);
+            return appDate > today && app.status === 'scheduled';
+        }).length;
+        
+        const completedAppointments = appointments.filter(app => app.status === 'completed').length;
+        const manpowerAppointments = appointments.filter(app => app.serviceType === 'orientacion-manpower').length;
+        
+        document.getElementById('todayAppointments').textContent = todayAppointments;
+        document.getElementById('upcomingAppointments').textContent = upcomingAppointments;
+        document.getElementById('completedAppointments').textContent = completedAppointments;
+        document.getElementById('manpowerAppointments').textContent = manpowerAppointments;
 
             // Stats rápidas ofertas
             document.getElementById('activeOffers').textContent = activeOffers;
@@ -874,8 +963,10 @@
             document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
             
             // Activar tab correspondiente
-            const tabIndex = ['offers', 'participants', 'applications', 'reports'].indexOf(tabName);
-            document.querySelectorAll('.tab')[tabIndex].classList.add('active');
+            const tabIndex = ['offers', 'participants', 'applications', 'reports', 'appointments'].indexOf(tabName);
+if (tabIndex !== -1) {
+    document.querySelectorAll('.tab')[tabIndex].classList.add('active');
+}
             document.getElementById(tabName + 'Content').classList.add('active');
             
             // Cargar contenido específico
@@ -891,6 +982,9 @@
                     break;
                 case 'reports':
                     updateReports();
+                    break;
+                case 'appointments':
+                    loadAppointmentsTable();
                     break;
             }
         }
@@ -2133,6 +2227,450 @@
             }
         `;
         document.head.appendChild(style);
+// Cargar tabla de citas
+        function loadAppointmentsTable() {
+            const container = document.getElementById('appointmentsTableContainer');
+            
+            if (appointments.length === 0) {
+                container.innerHTML = `
+                    <div class="no-data">
+                        <i class="fas fa-calendar-alt"></i>
+                        <h3>No hay citas registradas</h3>
+                        <p>Las citas programadas aparecerán aquí</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = `
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Hora</th>
+                            <th>Participante</th>
+                            <th>Email</th>
+                            <th>Teléfono</th>
+                            <th>Servicio</th>
+                            <th>Recinto</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            appointments.forEach(appointment => {
+                const statusLabels = {
+                    'scheduled': 'Programada',
+                    'completed': 'Completada',
+                    'cancelled': 'Cancelada'
+                };
+
+                const statusClasses = {
+                    'scheduled': 'status-pending',
+                    'completed': 'status-approved',
+                    'cancelled': 'status-expired'
+                };
+
+                const campusLabels = {
+                    'cupey': 'Cupey',
+                    'bayamon': 'Bayamón',
+                    'aguadilla': 'Aguadilla'
+                };
+
+                // Formatear fecha y hora
+                const appointmentDate = new Date(appointment.appointmentDate);
+                const formattedDate = appointmentDate.toLocaleDateString('es-ES');
+                
+                const [hours, minutes] = appointment.appointmentTime.split(':');
+                const hour12 = hours > 12 ? hours - 12 : (hours === '00' ? 12 : hours);
+                const ampm = hours >= 12 ? 'PM' : 'AM';
+                const formattedTime = `${hour12}:${minutes} ${ampm}`;
+
+                html += `
+                    <tr>
+                        <td>${formattedDate}</td>
+                        <td>${formattedTime}</td>
+                        <td><strong>${appointment.firstName} ${appointment.lastName}</strong><br><small>ID: ${appointment.studentId || 'N/A'}</small></td>
+                        <td>${appointment.email}</td>
+                        <td>${appointment.phone}</td>
+                        <td>Orientación Manpower</td>
+                        <td>${campusLabels[appointment.campus] || appointment.campus || 'N/A'}</td>
+                        <td><span class="status-badge ${statusClasses[appointment.status]}">${statusLabels[appointment.status]}</span></td>
+                        <td>
+                            <div class="actions">
+                                <button class="btn btn-info btn-small" onclick="viewAppointmentDetails('${appointment.id}')" title="Ver detalles">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                ${appointment.status === 'scheduled' ? `
+                                    <button class="btn btn-success btn-small" onclick="completeAppointment('${appointment.id}')" title="Marcar completada">
+                                        <i class="fas fa-check"></i>
+                                    </button>
+                                    <button class="btn btn-danger btn-small" onclick="cancelAppointment('${appointment.id}')" title="Cancelar">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                ` : ''}
+                                ${appointment.hasResume ? `
+                                    <button class="btn btn-warning btn-small" onclick="downloadAppointmentResume('${appointment.id}')" title="Descargar resumé">
+                                        <i class="fas fa-download"></i>
+                                    </button>
+                                ` : ''}
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+// Ver detalles de cita
+        function viewAppointmentDetails(appointmentId) {
+            const appointment = appointments.find(app => app.id === appointmentId);
+            if (!appointment) return;
+
+            currentModalData = { type: 'appointment', data: appointment };
+
+            const campusLabels = {
+                'cupey': 'Recinto de Cupey',
+                'bayamon': 'Centro Universitario de Bayamón',
+                'aguadilla': 'Centro Universitario de Aguadilla'
+            };
+
+            const studentTypeLabels = {
+                'student': 'Estudiante',
+                'alumni': 'Exalumno',
+                'community': 'Comunidad'
+            };
+
+            // Formatear fecha y hora
+            const appointmentDate = new Date(appointment.appointmentDate);
+            const formattedDate = appointmentDate.toLocaleDateString('es-ES', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+            
+            const [hours, minutes] = appointment.appointmentTime.split(':');
+            const hour12 = hours > 12 ? hours - 12 : (hours === '00' ? 12 : hours);
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+            const formattedTime = `${hour12}:${minutes} ${ampm}`;
+
+            document.getElementById('modalTitle').textContent = `Cita: ${appointment.firstName} ${appointment.lastName}`;
+            document.getElementById('modalBody').innerHTML = `
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 20px;">
+                    <div>
+                        <h4 style="color: #c8102e; margin-bottom: 15px;">Información Personal</h4>
+                        <p><strong>Nombre:</strong> ${appointment.firstName} ${appointment.lastName}</p>
+                        <p><strong>Tipo:</strong> ${appointment.participantType === 'new' ? 'Nuevo' : 'Participante de Seguimiento'}</p>
+                        <p><strong>Email:</strong> ${appointment.email}</p>
+                        <p><strong>Teléfono:</strong> ${appointment.phone}</p>
+                        <p><strong>Ciudad:</strong> ${appointment.city}</p>
+                    </div>
+                    <div>
+                        <h4 style="color: #c8102e; margin-bottom: 15px;">Información Académica</h4>
+                        <p><strong>Tipo:</strong> ${studentTypeLabels[appointment.studentType]}</p>
+                        <p><strong>Recinto:</strong> ${campusLabels[appointment.campus] || appointment.campus || 'N/A'}</p>
+                        <p><strong>ID Estudiante:</strong> ${appointment.studentId || 'N/A'}</p>
+                        <p><strong>Concentración:</strong> ${appointment.concentration}</p>
+                    </div>
+                </div>
+                
+                <div style="margin-bottom: 20px;">
+                    <h4 style="color: #c8102e; margin-bottom: 15px;">Detalles de la Cita</h4>
+                    <p><strong>Fecha:</strong> ${formattedDate}</p>
+                    <p><strong>Hora:</strong> ${formattedTime}</p>
+                    <p><strong>Servicio:</strong> Orientación con Manpower</p>
+                    <p><strong>Estado:</strong> <span class="status-badge ${appointment.status === 'scheduled' ? 'status-pending' : appointment.status === 'completed' ? 'status-approved' : 'status-expired'}">${appointment.status === 'scheduled' ? 'Programada' : appointment.status === 'completed' ? 'Completada' : 'Cancelada'}</span></p>
+                    ${appointment.hasResume ? '<p><strong>Resumé:</strong> <i class="fas fa-check text-success"></i> Adjuntado</p>' : '<p><strong>Resumé:</strong> No adjuntado</p>'}
+                </div>
+                
+                ${appointment.description ? `
+                <div style="margin-bottom: 20px;">
+                    <h4 style="color: #c8102e; margin-bottom: 10px;">Descripción</h4>
+                    <p style="background: #f8f9fa; padding: 15px; border-radius: 6px; white-space: pre-wrap;">${appointment.description}</p>
+                </div>
+                ` : ''}
+                
+                <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0; font-size: 12px; color: #6c757d;">
+                    <p><strong>Registrada:</strong> ${new Date(appointment.createdAt).toLocaleString()}</p>
+                    <p><strong>Fuente:</strong> Sistema de Citas Online</p>
+                </div>
+            `;
+
+            document.getElementById('detailsModal').style.display = 'flex';
+        }
+
+        // Completar cita
+        function completeAppointment(appointmentId) {
+            if (confirm('¿Marcar esta cita como completada?')) {
+                const appointment = appointments.find(app => app.id === appointmentId);
+                if (appointment) {
+                    appointment.status = 'completed';
+                    appointment.completedAt = new Date().toISOString();
+                    
+                    // Actualizar localStorage como fallback
+                    localStorage.setItem('appointments', JSON.stringify(appointments));
+                    
+                    updateStats();
+                    loadAppointmentsTable();
+                    showNotification('Cita marcada como completada', 'success');
+                }
+            }
+        }
+
+        // Cancelar cita
+        function cancelAppointment(appointmentId) {
+            if (confirm('¿Estás seguro de que quieres cancelar esta cita?')) {
+                const appointment = appointments.find(app => app.id === appointmentId);
+                if (appointment) {
+                    appointment.status = 'cancelled';
+                    appointment.cancelledAt = new Date().toISOString();
+                    
+                    // Actualizar localStorage como fallback
+                    localStorage.setItem('appointments', JSON.stringify(appointments));
+                    
+                    updateStats();
+                    loadAppointmentsTable();
+                    showNotification('Cita cancelada', 'success');
+                }
+            }
+        }
+
+        // Descargar resumé de cita
+        function downloadAppointmentResume(appointmentId) {
+            const appointment = appointments.find(app => app.id === appointmentId);
+            if (appointment && appointment.resumeUrl) {
+                const link = document.createElement('a');
+                link.href = appointment.resumeUrl;
+                link.download = `resume_cita_${appointment.firstName}_${appointment.lastName}.pdf`;
+                link.target = '_blank';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                showNotification(`Descargando resumé de ${appointment.firstName} ${appointment.lastName}`, 'success');
+            } else {
+                showNotification('No hay resumé disponible para esta cita', 'warning');
+            }
+        }
+// Filtrar citas
+        function filterAppointments() {
+            const search = document.getElementById('appointmentsSearch').value.toLowerCase();
+            const statusFilter = document.getElementById('appointmentsStatusFilter').value;
+            const dateFilter = document.getElementById('appointmentsDateFilter').value;
+            
+            let filteredAppointments = appointments;
+            
+            // Filtro de búsqueda
+            if (search) {
+                filteredAppointments = filteredAppointments.filter(appointment => 
+                    `${appointment.firstName} ${appointment.lastName}`.toLowerCase().includes(search) ||
+                    appointment.email.toLowerCase().includes(search) ||
+                    appointment.phone.includes(search) ||
+                    appointment.concentration.toLowerCase().includes(search) ||
+                    (appointment.studentId && appointment.studentId.toLowerCase().includes(search))
+                );
+            }
+            
+            // Filtro de estado
+            if (statusFilter) {
+                filteredAppointments = filteredAppointments.filter(appointment => 
+                    appointment.status === statusFilter
+                );
+            }
+            
+            // Filtro de fecha
+            if (dateFilter) {
+                const today = new Date();
+                filteredAppointments = filteredAppointments.filter(appointment => {
+                    const appointmentDate = new Date(appointment.appointmentDate);
+                    
+                    switch(dateFilter) {
+                        case 'today':
+                            return appointmentDate.toDateString() === today.toDateString();
+                        case 'week':
+                            const weekFromNow = new Date(today);
+                            weekFromNow.setDate(today.getDate() + 7);
+                            return appointmentDate >= today && appointmentDate <= weekFromNow;
+                        case 'month':
+                            return appointmentDate.getMonth() === today.getMonth() && 
+                                   appointmentDate.getFullYear() === today.getFullYear();
+                        default:
+                            return true;
+                    }
+                });
+            }
+            
+            displayFilteredAppointments(filteredAppointments);
+        }
+
+        // Mostrar citas filtradas
+        function displayFilteredAppointments(filteredAppointments) {
+            const container = document.getElementById('appointmentsTableContainer');
+            
+            if (filteredAppointments.length === 0) {
+                container.innerHTML = `
+                    <div class="no-data">
+                        <i class="fas fa-search"></i>
+                        <h3>No se encontraron citas</h3>
+                        <p>No hay citas que coincidan con los filtros aplicados</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = `
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Hora</th>
+                            <th>Participante</th>
+                            <th>Email</th>
+                            <th>Teléfono</th>
+                            <th>Servicio</th>
+                            <th>Recinto</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            filteredAppointments.forEach(appointment => {
+                const statusLabels = {
+                    'scheduled': 'Programada',
+                    'completed': 'Completada',
+                    'cancelled': 'Cancelada'
+                };
+
+                const statusClasses = {
+                    'scheduled': 'status-pending',
+                    'completed': 'status-approved',
+                    'cancelled': 'status-expired'
+                };
+
+                const campusLabels = {
+                    'cupey': 'Cupey',
+                    'bayamon': 'Bayamón',
+                    'aguadilla': 'Aguadilla'
+                };
+
+                // Formatear fecha y hora
+                const appointmentDate = new Date(appointment.appointmentDate);
+                const formattedDate = appointmentDate.toLocaleDateString('es-ES');
+                
+                const [hours, minutes] = appointment.appointmentTime.split(':');
+                const hour12 = hours > 12 ? hours - 12 : (hours === '00' ? 12 : hours);
+                const ampm = hours >= 12 ? 'PM' : 'AM';
+                const formattedTime = `${hour12}:${minutes} ${ampm}`;
+
+                html += `
+                    <tr>
+                        <td>${formattedDate}</td>
+                        <td>${formattedTime}</td>
+                        <td><strong>${appointment.firstName} ${appointment.lastName}</strong><br><small>ID: ${appointment.studentId || 'N/A'}</small></td>
+                        <td>${appointment.email}</td>
+                        <td>${appointment.phone}</td>
+                        <td>Orientación Manpower</td>
+                        <td>${campusLabels[appointment.campus] || appointment.campus || 'N/A'}</td>
+                        <td><span class="status-badge ${statusClasses[appointment.status]}">${statusLabels[appointment.status]}</span></td>
+                        <td>
+                            <div class="actions">
+                                <button class="btn btn-info btn-small" onclick="viewAppointmentDetails('${appointment.id}')" title="Ver detalles">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                ${appointment.status === 'scheduled' ? `
+                                    <button class="btn btn-success btn-small" onclick="completeAppointment('${appointment.id}')" title="Marcar completada">
+                                        <i class="fas fa-check"></i>
+                                    </button>
+                                    <button class="btn btn-danger btn-small" onclick="cancelAppointment('${appointment.id}')" title="Cancelar">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                ` : ''}
+                                ${appointment.hasResume ? `
+                                    <button class="btn btn-warning btn-small" onclick="downloadAppointmentResume('${appointment.id}')" title="Descargar resumé">
+                                        <i class="fas fa-download"></i>
+                                    </button>
+                                ` : ''}
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+// Exportar datos de citas
+        function exportAppointmentsData() {
+            if (appointments.length === 0) {
+                showNotification('No hay citas para exportar', 'warning');
+                return;
+            }
+
+            const data = appointments.map(appointment => {
+                const campusLabels = {
+                    'cupey': 'Recinto de Cupey',
+                    'bayamon': 'Centro Universitario de Bayamón',
+                    'aguadilla': 'Centro Universitario de Aguadilla'
+                };
+
+                const studentTypeLabels = {
+                    'student': 'Estudiante',
+                    'alumni': 'Exalumno',
+                    'community': 'Comunidad'
+                };
+
+                const statusLabels = {
+                    'scheduled': 'Programada',
+                    'completed': 'Completada',
+                    'cancelled': 'Cancelada'
+                };
+
+                // Formatear fecha y hora
+                const appointmentDate = new Date(appointment.appointmentDate);
+                const formattedDate = appointmentDate.toLocaleDateString('es-ES');
+                
+                const [hours, minutes] = appointment.appointmentTime.split(':');
+                const hour12 = hours > 12 ? hours - 12 : (hours === '00' ? 12 : hours);
+                const ampm = hours >= 12 ? 'PM' : 'AM';
+                const formattedTime = `${hour12}:${minutes} ${ampm}`;
+
+                return {
+                    'Fecha Registro': new Date(appointment.createdAt).toLocaleDateString('es-ES'),
+                    'Tipo Participante': appointment.participantType === 'new' ? 'Nuevo' : 'Seguimiento',
+                    'Nombre': appointment.firstName,
+                    'Apellidos': appointment.lastName,
+                    'Email': appointment.email,
+                    'Teléfono': appointment.phone,
+                    'Ciudad': appointment.city,
+                    'Tipo Estudiante': studentTypeLabels[appointment.studentType],
+                    'Recinto': campusLabels[appointment.campus] || appointment.campus || 'N/A',
+                    'ID Estudiante': appointment.studentId || 'N/A',
+                    'Concentración': appointment.concentration,
+                    'Fecha Cita': formattedDate,
+                    'Hora Cita': formattedTime,
+                    'Servicio': 'Orientación con Manpower',
+                    'Estado': statusLabels[appointment.status],
+                    'Descripción': appointment.description || '',
+                    'Resume Adjunto': appointment.hasResume ? 'Sí' : 'No',
+                    'Completada': appointment.completedAt ? new Date(appointment.completedAt).toLocaleDateString('es-ES') : '',
+                    'Cancelada': appointment.cancelledAt ? new Date(appointment.cancelledAt).toLocaleDateString('es-ES') : ''
+                };
+            });
+
+            const ws = XLSX.utils.json_to_sheet(data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Citas");
+            
+            const filename = `Citas_Manpower_${new Date().toISOString().split('T')[0]}.xlsx`;
+            XLSX.writeFile(wb, filename);
+            
+            showNotification('Citas exportadas exitosamente', 'success');
+        }
     </script>
 </body>
 </html>
