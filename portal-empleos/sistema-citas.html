@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Citas - UAGM</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- Scripts Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+
+<style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #c8102e 0%, #8b0b1f 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            position: relative;
+        }
+        
+        .header img {
+            position: absolute;
+            height: 80px;
+            left: 30px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+        
+        .header-content {
+            padding-left: 100px;
+        }
+        
+        .main-content {
+            padding: 40px;
+        }
+        
+        .section-title {
+            font-size: 20px;
+            color: #c8102e;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #c8102e;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #495057;
+        }
+        
+        .required {
+            color: #dc3545;
+        }
+        
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #c8102e;
+            box-shadow: 0 0 0 3px rgba(200, 16, 46, 0.1);
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .btn-primary {
+            background: #c8102e;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #a00d26;
+            transform: translateY(-2px);
+        }
+        
+        .success-message {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                border-radius: 15px;
+            }
+            
+            .header {
+                padding: 20px;
+            }
+            
+            .header img {
+                display: none;
+            }
+            
+            .header-content {
+                padding-left: 0;
+            }
+            
+            .main-content {
+                padding: 20px;
+            }
+            
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <img src="logo blanco.png" alt="UAGM Logo">
+            <div class="header-content">
+                <h1><i class="fas fa-calendar-alt"></i> Sistema de Citas</h1>
+                <p>Orientación con Manpower - Solo Miércoles</p>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="success-message" id="successMessage">
+                <i class="fas fa-check-circle" style="font-size: 24px; margin-bottom: 10px;"></i>
+                <h3>¡Cita Registrada Exitosamente!</h3>
+                <p id="appointmentDetails">Tu cita ha sido confirmada.</p>
+            </div>
+
+            <form id="appointmentForm">
+                <!-- Información Personal -->
+                <div class="section-title">
+                    <i class="fas fa-user"></i>
+                    Información Personal
+                </div>
+
+                <div class="form-group">
+                    <label>Tipo de participante <span class="required">*</span></label>
+                    <select id="participantType" required>
+                        <option value="">Seleccionar...</option>
+                        <option value="new">Nuevo</option>
+                        <option value="returning">Participante de Seguimiento</option>
+                    </select>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Nombre <span class="required">*</span></label>
+                        <input type="text" id="firstName" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Apellidos <span class="required">*</span></label>
+                        <input type="text" id="lastName" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Teléfono <span class="required">*</span></label>
+                        <input type="tel" id="phone" required placeholder="787-555-1234">
+                    </div>
+                    <div class="form-group">
+                        <label>Correo electrónico <span class="required">*</span></label>
+                        <input type="email" id="email" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Pueblo al que pertenece <span class="required">*</span></label>
+                    <input type="text" id="city" required placeholder="Ej: San Juan">
+                </div>
+<!-- Información Académica -->
+                <div class="section-title">
+                    <i class="fas fa-graduation-cap"></i>
+                    Información Académica
+                </div>
+
+                <div class="form-group">
+                    <label>¿Eres Estudiante, Exalumno de UAGM o Comunidad? <span class="required">*</span></label>
+                    <select id="studentType" required>
+                        <option value="">Seleccionar...</option>
+                        <option value="student">Estudiante</option>
+                        <option value="alumni">Exalumno</option>
+                        <option value="community">Comunidad</option>
+                    </select>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Recinto o Centro Universitario <span class="required">*</span></label>
+                        <select id="campus" required>
+                            <option value="">Seleccionar...</option>
+                            <option value="cupey">Recinto de Cupey</option>
+                            <option value="bayamon">Centro Universitario de Bayamón</option>
+                            <option value="aguadilla">Centro Universitario de Aguadilla</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>ID Estudiante (S0...)</label>
+                        <input type="text" id="studentId" placeholder="S0123456789">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Concentración <span class="required">*</span></label>
+                    <input type="text" id="concentration" required placeholder="Ej: Administración de Empresas">
+                </div>
+
+                <!-- Información de la Cita -->
+                <div class="section-title">
+                    <i class="fas fa-calendar-check"></i>
+                    Información de la Cita
+                </div>
+
+                <div class="form-group">
+    <label>Tipo de Servicio <span class="required">*</span></label>
+    <select id="serviceType" required>
+        <option value="">Seleccionar...</option>
+        <option value="orientacion-manpower">Orientación con Manpower</option>
+    </select>
+    <div style="background: #e8f4fd; border-left: 4px solid #2196F3; padding: 12px; margin-top: 10px; border-radius: 4px;">
+      
+        <small style="color: #555;">
+            Las citas son <strong>presenciales</strong> en la Oficina de Carreras y Colocaciones. 
+            Si por alguna razón no puedes asistir, contáctanos a 
+            <strong>brgonzalez@uagm.edu</strong> para coordinar una alternativa virtual.
+        </small>
+    </div>
+</div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Fecha (Solo Miércoles) <span class="required">*</span></label>
+                        <select id="appointmentDate" required>
+                            <option value="">Seleccionar miércoles...</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Horario <span class="required">*</span></label>
+                        <select id="appointmentTime" required>
+                            <option value="">Primero selecciona una fecha</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Motivo o descripción adicional</label>
+                    <textarea id="description" placeholder="Describe brevemente el motivo de tu cita..."></textarea>
+                </div>
+
+<div class="form-group">
+    <label>Subir Resume/CV (Opcional)</label>
+    <input type="file" id="resumeFile" accept=".pdf,.doc,.docx" style="padding: 8px;">
+    <small style="color: #666; font-size: 12px; display: block; margin-top: 5px;">
+        Formatos aceptados: PDF, Word (.doc, .docx) - Máximo 5MB
+    </small>
+</div>
+
+                <div style="text-align: center; margin-top: 40px;">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-calendar-plus"></i> Registrar Cita
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+<script>
+        // Configuración Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyBFgSuKNJMUoVcKgHjsqOsInArSPBsb32A",
+            authDomain: "uagm-portal-de-empleo-17aed.firebaseapp.com",
+            projectId: "uagm-portal-de-empleo-17aed",
+            storageBucket: "uagm-portal-de-empleo-17aed.firebasestorage.app",
+            messagingSenderId: "582147767835",
+            appId: "1:582147767835:web:546ab8f2557b6da6ccc2be"
+        };
+
+        // Variables globales Firebase
+        let app, db, auth, storage;
+        let isFirebaseInitialized = false;
+
+        function initializeFirebase() {
+            try {
+                app = firebase.initializeApp(firebaseConfig);
+                db = firebase.firestore();
+                auth = firebase.auth();
+                storage = firebase.storage();
+                console.log('Firebase inicializado correctamente en Sistema de Citas');
+                return true;
+            } catch (error) {
+                console.error('Error inicializando Firebase:', error);
+                return false;
+            }
+        }
+
+        const FirebaseHelper = {
+            async saveDoc(collection, data) {
+                try {
+                    const docRef = await db.collection(collection).add(data);
+                    return { success: true, id: docRef.id };
+                } catch (error) {
+                    console.error('Error guardando documento:', error);
+                    return { success: false, error };
+                }
+            }
+        };
+
+        // Inicializar cuando se carga la página
+        document.addEventListener('DOMContentLoaded', function() {
+            isFirebaseInitialized = initializeFirebase();
+            generateWednesdayDates();
+            setupEventListeners();
+            console.log('Sistema de Citas cargado correctamente');
+        });
+
+// Generar fechas de miércoles disponibles
+        function generateWednesdayDates() {
+            const dateSelect = document.getElementById('appointmentDate');
+            const today = new Date();
+            const wednesdays = [];
+
+            // Generar próximos 4 miércoles
+            for (let i = 0; i < 28; i++) { // 4 semanas
+                const date = new Date(today);
+                date.setDate(today.getDate() + i);
+                
+                if (date.getDay() === 3) { // Miércoles = 3
+                    wednesdays.push(date);
+                }
+            }
+
+            // Agregar opciones al select
+            wednesdays.forEach(date => {
+                const option = document.createElement('option');
+                const dateString = date.toISOString().split('T')[0];
+                const displayDate = date.toLocaleDateString('es-ES', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+                
+                option.value = dateString;
+                option.textContent = displayDate;
+                dateSelect.appendChild(option);
+            });
+        }
+
+        // Generar horarios disponibles
+        function generateTimeSlots() {
+            const timeSelect = document.getElementById('appointmentTime');
+            const selectedDate = document.getElementById('appointmentDate').value;
+            
+            // Limpiar opciones anteriores
+            timeSelect.innerHTML = '<option value="">Seleccionar horario...</option>';
+            
+            if (!selectedDate) {
+                timeSelect.innerHTML = '<option value="">Primero selecciona una fecha</option>';
+                return;
+            }
+
+            // Horarios disponibles - Excluyendo 10:00 AM - 1:00 PM y 4:00-5:00 PM
+const timeSlots = [
+    '09:00', '09:30',          // 9:00 AM - 9:30 AM
+    '13:00', '13:30',          // 1:00 PM - 1:30 PM  
+    '14:00', '14:30',          // 2:00 PM - 2:30 PM
+    '15:00', '15:30'           // 3:00 PM - 3:30 PM
+];
+
+            timeSlots.forEach(time => {
+                const option = document.createElement('option');
+                option.value = time;
+                
+                // Convertir a formato 12 horas
+                const [hours, minutes] = time.split(':');
+                const hour12 = hours > 12 ? hours - 12 : (hours === '00' ? 12 : hours);
+                const ampm = hours >= 12 ? 'PM' : 'AM';
+                option.textContent = `${hour12}:${minutes} ${ampm}`;
+                
+                timeSelect.appendChild(option);
+            });
+        }
+
+// Configurar event listeners
+function setupEventListeners() {
+    // Cuando cambie la fecha, generar horarios
+    document.getElementById('appointmentDate').addEventListener('change', generateTimeSlots);
+    
+    // Manejar envío del formulario
+    document.getElementById('appointmentForm').addEventListener('submit', handleSubmit);
+    
+    // Cuando cambie tipo de estudiante
+    document.getElementById('studentType').addEventListener('change', toggleAcademicFields);
+    
+    // AÑADIR ESTA LÍNEA - Ejecutar al cargar la página
+    toggleAcademicFields();
+}
+
+// Mostrar/ocultar campos según tipo de estudiante
+function toggleAcademicFields() {
+    const studentType = document.getElementById('studentType').value;
+    const campusGroup = document.getElementById('campus').closest('.form-group');
+    const studentIdGroup = document.getElementById('studentId').closest('.form-group');
+    
+    // Si no hay selección, ocultar campos por defecto
+    if (!studentType || studentType === 'alumni' || studentType === 'community') {
+        // Ocultar campos para exalumnos, comunidad y sin selección
+        campusGroup.style.display = 'none';
+        studentIdGroup.style.display = 'none';
+        
+        // Remover required
+        document.getElementById('campus').removeAttribute('required');
+        document.getElementById('studentId').removeAttribute('required');
+        
+        // Limpiar valores
+        document.getElementById('campus').value = '';
+        document.getElementById('studentId').value = '';
+    } else {
+        // Mostrar campos solo para estudiantes
+        campusGroup.style.display = 'block';
+        studentIdGroup.style.display = 'block';
+        
+        // Restaurar required
+        document.getElementById('campus').setAttribute('required', '');
+    }
+}
+        // Manejar envío del formulario
+        function handleSubmit(e) {
+            e.preventDefault();
+            
+            if (!validateForm()) {
+                return;
+            }
+
+            submitAppointment();
+        }
+
+        // Validar formulario
+function validateForm() {
+    const studentType = document.getElementById('studentType').value;
+    
+    // Campos básicos siempre requeridos
+    const basicRequiredFields = [
+        'participantType', 'firstName', 'lastName', 'phone', 'email', 'city',
+        'studentType', 'concentration', 'serviceType', 'appointmentDate', 'appointmentTime'
+    ];
+    
+    // Si es estudiante, también requerir campus
+    const requiredFields = studentType === 'student' 
+        ? [...basicRequiredFields, 'campus']
+        : basicRequiredFields;
+
+    for (let fieldId of requiredFields) {
+        const field = document.getElementById(fieldId);
+        if (!field.value.trim()) {
+            field.focus();
+            showNotification(`Por favor completa: ${field.previousElementSibling.textContent.replace(' *', '')}`, 'error');
+            return false;
+        }
+    }
+
+    // Validar email
+    const email = document.getElementById('email').value;
+    if (!isValidEmail(email)) {
+        document.getElementById('email').focus();
+        showNotification('Por favor ingresa un email válido', 'error');
+        return false;
+    }
+
+    return true;
+}
+
+        // Validar email
+        function isValidEmail(email) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return emailRegex.test(email);
+        }
+
+// Enviar cita a Firebase
+async function submitAppointment() {
+    let resumeUrl = null;
+    
+    // Subir resume si existe
+    const resumeFile = document.getElementById('resumeFile').files[0];
+    if (resumeFile) {
+        try {
+            // Validar tamaño (5MB máximo)
+            if (resumeFile.size > 5 * 1024 * 1024) {
+                showNotification('El archivo es muy grande. Máximo 5MB permitido.', 'error');
+                return;
+            }
+            
+            // Subir a Firebase Storage
+            const fileName = `citas manpower/${Date.now()}_${resumeFile.name}`;
+            const storageRef = storage.ref(fileName);
+            
+            showNotification('Subiendo archivo...', 'info');
+            const snapshot = await storageRef.put(resumeFile);
+            resumeUrl = await snapshot.ref.getDownloadURL();
+            console.log('Resume subido:', resumeUrl);
+        } catch (error) {
+            console.error('Error subiendo resume:', error);
+            showNotification('Error subiendo el archivo. Intenta de nuevo.', 'error');
+            return;
+        }
+    }
+
+    
+const appointmentData = {
+    id: Date.now().toString(),
+    // Información personal
+    participantType: document.getElementById('participantType').value,
+    firstName: document.getElementById('firstName').value,
+    lastName: document.getElementById('lastName').value,
+    phone: document.getElementById('phone').value,
+    email: document.getElementById('email').value,
+    city: document.getElementById('city').value,
+    
+    // Información académica
+    studentType: document.getElementById('studentType').value,
+    campus: document.getElementById('campus').value,
+    studentId: document.getElementById('studentId').value,
+    concentration: document.getElementById('concentration').value,
+    
+    // Información de la cita
+    serviceType: document.getElementById('serviceType').value,
+    appointmentDate: document.getElementById('appointmentDate').value,
+    appointmentTime: document.getElementById('appointmentTime').value,
+    description: document.getElementById('description').value,
+    
+    // Resume URL (nuevo)
+    resumeUrl: resumeUrl,
+    hasResume: resumeUrl !== null,
+    
+    // Metadata
+    status: 'scheduled',
+    createdAt: new Date().toISOString(),
+    source: 'sistema-citas'
+};
+
+            try {
+                // Intentar guardar en Firebase
+                if (isFirebaseInitialized) {
+                    const result = await FirebaseHelper.saveDoc('appointments', appointmentData);
+                    if (result.success) {
+                        console.log('Cita guardada en Firebase:', result.id);
+// Enviar email de confirmación
+await sendConfirmationEmail(appointmentData);
+                        showSuccessMessage(appointmentData);
+                    } else {
+                        throw new Error('Error de Firebase');
+                    }
+                } else {
+                    throw new Error('Firebase no inicializado');
+                }
+            } catch (error) {
+                console.error('Error con Firebase:', error);
+                showNotification('Error al registrar la cita. Por favor intenta de nuevo.', 'error');
+            }
+        }
+
+        // Mostrar mensaje de éxito
+        function showSuccessMessage(appointmentData) {
+            const dateObj = new Date(appointmentData.appointmentDate);
+            const displayDate = dateObj.toLocaleDateString('es-ES', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+
+            // Convertir hora a formato 12 horas
+            const [hours, minutes] = appointmentData.appointmentTime.split(':');
+            const hour12 = hours > 12 ? hours - 12 : (hours === '00' ? 12 : hours);
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+            const displayTime = `${hour12}:${minutes} ${ampm}`;
+
+            document.getElementById('appointmentDetails').innerHTML = `
+    <strong>Detalles de tu cita:</strong><br>
+    📅 ${displayDate}<br>
+    🕒 ${displayTime}<br>
+    👤 ${appointmentData.firstName} ${appointmentData.lastName}<br>
+    ${appointmentData.hasResume ? '<br>📎 Resume enviado correctamente<br>' : ''}<br>
+
+    <div style="background: rgba(255,255,255,0.2); padding: 15px; border-radius: 8px; margin-top: 15px;">
+        <strong>📍 Ubicación:</strong><br>
+        Oficina de Carreras y Colocaciones<br>
+        Edificio Extensión Morales Carrión<br><br>
+        
+        <strong>📧 Cambios o consultas:</strong><br>
+        <a href="mailto:brgonzalez@uagm.edu" style="color: white; text-decoration: underline;">brgonzalez@uagm.edu</a>
+    </div>
+`;
+
+            document.getElementById('successMessage').style.display = 'block';
+            document.getElementById('appointmentForm').style.display = 'none';
+
+            showNotification('¡Cita registrada exitosamente!', 'success');
+        }
+
+// Mostrar notificación
+function showNotification(message, type = 'info') {
+    // Crear elemento de notificación
+    const notification = document.createElement('div');
+    notification.className = `notification notification-${type}`;
+    notification.innerHTML = `
+        <i class="fas ${type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle'}"></i>
+        <span>${message}</span>
+        <i class="fas fa-times notification-close"></i>
+    `;
+
+    // Estilos CSS para la notificación
+    const style = document.createElement('style');
+    style.textContent = `
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 8px;
+            color: white;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 1000;
+            max-width: 400px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            animation: slideIn 0.3s ease-out;
+        }
+        
+        .notification-success { background: #28a745; }
+        .notification-error { background: #dc3545; }
+        .notification-info { background: #17a2b8; }
+        
+        .notification-close {
+            cursor: pointer;
+            margin-left: auto;
+            opacity: 0.8;
+        }
+        
+        .notification-close:hover {
+            opacity: 1;
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+    `;
+
+    // Añadir estilos si no existen
+    if (!document.querySelector('style[data-notifications]')) {
+        style.setAttribute('data-notifications', 'true');
+        document.head.appendChild(style);
+    }
+
+    // Añadir al body
+    document.body.appendChild(notification);
+
+    // Cerrar al hacer click en X
+    notification.querySelector('.notification-close').addEventListener('click', () => {
+        notification.remove();
+    });
+
+    // Auto-cerrar después de 5 segundos
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.remove();
+        }
+    }, 5000);
+}
+// Enviar email de confirmación
+async function sendConfirmationEmail(appointmentData) {
+    try {
+        const dateObj = new Date(appointmentData.appointmentDate);
+        const displayDate = dateObj.toLocaleDateString('es-ES', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+
+        const [hours, minutes] = appointmentData.appointmentTime.split(':');
+        const hour12 = hours > 12 ? hours - 12 : (hours === '00' ? 12 : hours);
+        const ampm = hours >= 12 ? 'PM' : 'AM';
+        const displayTime = `${hour12}:${minutes} ${ampm}`;
+
+        const emailData = {
+            to: appointmentData.email,
+            subject: 'Confirmación de Cita - UAGM',
+            html: `
+                <h2>¡Tu cita ha sido confirmada!</h2>
+                <p><strong>Nombre:</strong> ${appointmentData.firstName} ${appointmentData.lastName}</p>
+                <p><strong>Fecha:</strong> ${displayDate}</p>
+                <p><strong>Hora:</strong> ${displayTime}</p>
+                <p><strong>Servicio:</strong> ${appointmentData.serviceType}</p>
+                <p><strong>Recinto:</strong> ${appointmentData.campus}</p>
+                <hr>
+                <p>Si necesitas cancelar o reprogramar, por favor contacta a la oficina.</p>
+                <p><em>Universidad Ana G. Méndez</em></p>
+            `,
+            createdAt: new Date().toISOString()
+        };
+
+        await db.collection('emails').add(emailData);
+        console.log('Email programado para envío');
+    } catch (error) {
+        console.error('Error enviando email:', error);
+    }
+}
+    </script>
+</body>
+</html>
