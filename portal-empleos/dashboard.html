@@ -518,6 +518,9 @@
                     <button class="tab" onclick="switchTab('applications')">
                         <i class="fas fa-paper-plane"></i> Solicitudes
                     </button>
+                    <button class="tab" onclick="switchTab('resumes')">
+                        <i class="fas fa-file-alt"></i> Resume Builder
+                    </button>
                     <button class="tab" onclick="switchTab('reports')">
                         <i class="fas fa-chart-bar"></i> Reportes
                     </button>
@@ -651,7 +654,7 @@
                         <div class="quick-stat">
                             <div class="quick-stat-number" id="activeCompanies">0</div>
                             <div class="quick-stat-label">Empresas Activas</div>
-                        </div>
+                        </div>            
                     </div>
 
                     <div class="search-filter-bar">
@@ -675,6 +678,40 @@
                             <h3>Reportes y Estadísticas</h3>
                             <p>Selecciona un período para generar reportes detallados</p>
                         </div>
+                    </div>
+                </div>
+<!-- Tab Resume Builder -->
+                <div class="tab-content" id="resumesContent">
+                    <div class="quick-stats">
+                        <div class="quick-stat">
+                            <div class="quick-stat-number" id="totalResumes">0</div>
+                            <div class="quick-stat-label">Resumés Guardados</div>
+                        </div>
+                        <div class="quick-stat">
+                            <div class="quick-stat-number" id="resumesToday">0</div>
+                            <div class="quick-stat-label">Hoy</div>
+                        </div>
+                        <div class="quick-stat">
+                            <div class="quick-stat-number" id="resumesThisWeek">0</div>
+                            <div class="quick-stat-label">Esta Semana</div>
+                        </div>
+                    </div>
+
+                    <div class="search-filter-bar">
+                        <input type="text" class="search-input" id="resumesSearch" placeholder="🔍 Buscar resumés..." oninput="filterResumes()">
+                        <select class="filter-select" id="resumesDateFilter" onchange="filterResumes()">
+                            <option value="">Todas las fechas</option>
+                            <option value="today">Hoy</option>
+                            <option value="week">Esta semana</option>
+                            <option value="month">Este mes</option>
+                        </select>
+                        <button class="btn btn-primary" onclick="exportResumesData()">
+                            <i class="fas fa-file-excel"></i> Exportar
+                        </button>
+                    </div>
+
+                    <div id="resumesTableContainer">
+                        <!-- Tabla se genera dinámicamente -->
                     </div>
                 </div>
             </div>
@@ -746,6 +783,9 @@
 
         // Variables globales
         let offers = [];
+        let participants = [];
+        let applications = [];
+        let resumes = [];
 
         // Inicializar dashboard
         document.addEventListener('DOMContentLoaded', async function() {
@@ -780,6 +820,14 @@
                         applications = applicationsResult.docs;
                         console.log('Aplicaciones cargadas desde Firebase:', applications.length);
                     }
+
+                    // Cargar resumés desde Firebase
+                    const resumesResult = await FirebaseHelper.getDocs('resumeBuilder');
+                    if (resumesResult.success) {
+                        resumes = resumesResult.docs;
+                        console.log('Resumés cargados desde Firebase:', resumes.length);
+                    }
+
                 } else {
                     throw new Error('Firebase no inicializado');
                 }
@@ -819,6 +867,18 @@
                 return appDate.toDateString() === today.toDateString();
             }).length;
 
+            // Estadísticas de resumés
+            const totalResumeCount = resumes.length;
+            const resumesToday = resumes.filter(resume => {
+                const resumeDate = new Date(resume.createdAt);
+                return resumeDate.toDateString() === today.toDateString();
+            }).length;
+            const resumesThisWeek = resumes.filter(resume => {
+                const resumeDate = new Date(resume.createdAt);
+                const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+                return resumeDate >= weekAgo;
+            }).length;
+
             // Empresas únicas
             const uniqueCompanies = [...new Set(offers.map(offer => offer.companyName))].length;
 
@@ -851,6 +911,13 @@
             document.getElementById('placementRate').textContent = placementRate + '%';
             document.getElementById('avgApplications').textContent = avgApplications;
             document.getElementById('activeCompanies').textContent = uniqueCompanies;
+            // Stats resumés
+            if (document.getElementById('totalResumes')) {
+                document.getElementById('totalResumes').textContent = totalResumeCount;
+                document.getElementById('resumesToday').textContent = resumesToday;
+                document.getElementById('resumesThisWeek').textContent = resumesThisWeek;
+            }
+
         }
 
         // Obtener estado de oferta
@@ -891,6 +958,9 @@
                     break;
                 case 'reports':
                     updateReports();
+                    break;
+                case 'resumes':
+                    loadResumesTable();
                     break;
             }
         }
@@ -1041,6 +1111,109 @@
 
             html += '</tbody></table>';
             container.innerHTML = html;
+        }
+
+// Cargar tabla de resumés
+        function loadResumesTable() {
+            const container = document.getElementById('resumesTableContainer');
+            
+            if (resumes.length === 0) {
+                container.innerHTML = `
+                    <div class="no-data">
+                        <i class="fas fa-file-alt"></i>
+                        <h3>No hay resumés guardados</h3>
+                        <p>Los resumés creados con Resume Builder aparecerán aquí</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = `
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Nombre</th>
+                            <th>Email</th>
+                            <th>ID Estudiante</th>
+                            <th>Archivo</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            resumes.forEach(resume => {
+                html += `
+                    <tr>
+                        <td>${new Date(resume.createdAt).toLocaleDateString()}</td>
+                        <td><strong>${resume.name}</strong></td>
+                        <td>${resume.email}</td>
+                        <td>${resume.studentId || 'N/A'}</td>
+                        <td>${resume.resumeFileName || 'resume.pdf'}</td>
+                        <td>
+                            <div class="actions">
+                                <button class="btn btn-success btn-small" onclick="downloadResumeFile('${resume.resumePDF}')" title="Descargar resumé">
+                                    <i class="fas fa-download"></i>
+                                </button>
+                                <button class="btn btn-info btn-small" onclick="viewResumeDetails('${resume.id}')" title="Ver detalles">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+// Descargar archivo de resumé
+        function downloadResumeFile(resumeURL) {
+            if (resumeURL) {
+                const link = document.createElement('a');
+                link.href = resumeURL;
+                link.target = '_blank';
+                link.download = 'resume.pdf';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                showNotification('Descargando resumé...', 'success');
+            } else {
+                showNotification('URL de resumé no disponible', 'error');
+            }
+        }
+
+        // Ver detalles del resumé
+        function viewResumeDetails(resumeId) {
+            const resume = resumes.find(r => r.id === resumeId);
+            if (!resume) return;
+
+            document.getElementById('modalTitle').textContent = `Resumé: ${resume.name}`;
+            document.getElementById('modalBody').innerHTML = `
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 20px;">
+                    <div>
+                        <h4 style="color: #c8102e; margin-bottom: 15px;">Información Personal</h4>
+                        <p><strong>Nombre:</strong> ${resume.name}</p>
+                        <p><strong>Email:</strong> ${resume.email}</p>
+                        <p><strong>ID Estudiante:</strong> ${resume.studentId || 'No especificado'}</p>
+                        <p><strong>Fecha de creación:</strong> ${new Date(resume.createdAt).toLocaleString()}</p>
+                    </div>
+                    <div>
+                        <h4 style="color: #c8102e; margin-bottom: 15px;">Archivo</h4>
+                        <p><strong>Nombre del archivo:</strong> ${resume.resumeFileName || 'resume.pdf'}</p>
+                        <p><strong>Fuente:</strong> Resume Builder</p>
+                        <div style="margin-top: 20px;">
+                            <button class="btn btn-success" onclick="downloadResumeFile('${resume.resumePDF}')">
+                                <i class="fas fa-download"></i> Descargar Resumé
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('detailsModal').style.display = 'flex';
         }
 
         // Cargar tabla de aplicaciones
