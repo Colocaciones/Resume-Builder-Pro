@@ -1501,6 +1501,48 @@ if (tabIndex !== -1) {
             }
         }
 
+// Eliminar aplicación completamente
+async function deleteApplication(applicationId) {
+    const application = applications.find(app => app.id === applicationId);
+    if (!application) return;
+    
+    if (confirm(`¿Estás seguro de que quieres eliminar la solicitud de "${application.participantName}" para "${application.offerTitle}"?`)) {
+        try {
+            // Eliminar de Firebase
+            if (isFirebaseInitialized) {
+                const snapshot = await db.collection('applications')
+                    .where('id', '==', applicationId)
+                    .get();
+                
+                if (!snapshot.empty) {
+                    const batch = db.batch();
+                    snapshot.docs.forEach(doc => {
+                        batch.delete(doc.ref);
+                    });
+                    await batch.commit();
+                    console.log('Aplicación eliminada de Firebase:', applicationId);
+                }
+            }
+            
+            // Eliminar de memoria local
+            applications = applications.filter(app => app.id !== applicationId);
+            
+            // Actualizar localStorage como respaldo
+            localStorage.setItem('applications', JSON.stringify(applications));
+            
+            // Actualizar interfaz
+            updateStats();
+            loadApplicationsTable();
+            closeDetailsModal();
+            showNotification('Solicitud eliminada exitosamente', 'success');
+            
+        } catch (error) {
+            console.error('Error eliminando aplicación:', error);
+            showNotification('Error eliminando la solicitud. Intenta de nuevo.', 'error');
+        }
+    }
+}
+
         // Descargar resumé real desde Firebase Storage
         function downloadResume(participantId) {
             const participant = participants.find(p => p.id === participantId);
@@ -1532,22 +1574,65 @@ if (tabIndex !== -1) {
         }
 
 // Eliminar participante
-        function deleteParticipant(participantId) {
-            const participant = participants.find(p => p.id === participantId);
-            if (participant && confirm(`¿Estás seguro de que quieres eliminar al participante "${participant.firstName} ${participant.lastName}"?`)) {
-                participants = participants.filter(p => p.id !== participantId);
-                localStorage.setItem('participants', JSON.stringify(participants));
+        async function deleteParticipant(participantId) {
+    const participant = participants.find(p => p.id === participantId);
+    if (!participant) return;
+    
+    if (confirm(`¿Estás seguro de que quieres eliminar al participante "${participant.firstName} ${participant.lastName}"?`)) {
+        try {
+            // Eliminar de Firebase
+            if (isFirebaseInitialized) {
+                const snapshot = await db.collection('participants')
+                    .where('id', '==', participantId)
+                    .get();
                 
-                // También eliminar aplicaciones relacionadas
-                applications = applications.filter(app => app.participantId !== participantId);
-                localStorage.setItem('applications', JSON.stringify(applications));
-                
-                updateStats();
-                loadParticipantsTable();
-                showNotification('Participante eliminado exitosamente', 'success');
+                if (!snapshot.empty) {
+                    const batch = db.batch();
+                    snapshot.docs.forEach(doc => {
+                        batch.delete(doc.ref);
+                    });
+                    await batch.commit();
+                    console.log('Participante eliminado de Firebase:', participantId);
+                }
             }
+            
+            // Eliminar de memoria local
+            participants = participants.filter(p => p.id !== participantId);
+            
+            // También eliminar aplicaciones relacionadas
+            const relatedApplications = applications.filter(app => app.participantId === participantId);
+            for (const app of relatedApplications) {
+                if (isFirebaseInitialized) {
+                    const appSnapshot = await db.collection('applications')
+                        .where('id', '==', app.id)
+                        .get();
+                    
+                    if (!appSnapshot.empty) {
+                        const batch = db.batch();
+                        appSnapshot.docs.forEach(doc => {
+                            batch.delete(doc.ref);
+                        });
+                        await batch.commit();
+                    }
+                }
+            }
+            applications = applications.filter(app => app.participantId !== participantId);
+            
+            // Actualizar localStorage como respaldo
+            localStorage.setItem('participants', JSON.stringify(participants));
+            localStorage.setItem('applications', JSON.stringify(applications));
+            
+            // Actualizar interfaz
+            updateStats();
+            loadParticipantsTable();
+            showNotification('Participante eliminado exitosamente', 'success');
+            
+        } catch (error) {
+            console.error('Error eliminando participante:', error);
+            showNotification('Error eliminando el participante. Intenta de nuevo.', 'error');
         }
-
+    }
+}
         // Editar oferta (redirigir al gestor de ofertas)
         function editOffer(offerId) {
             if (confirm('¿Quieres abrir el gestor de ofertas para editar esta oferta?')) {
@@ -1556,21 +1641,65 @@ if (tabIndex !== -1) {
         }
 
         // Eliminar oferta
-        function deleteOffer(offerId) {
-            const offer = offers.find(o => o.id === offerId);
-            if (offer && confirm(`¿Estás seguro de que quieres eliminar la oferta "${offer.position}" de "${offer.companyName}"?`)) {
-                offers = offers.filter(o => o.id !== offerId);
-                localStorage.setItem('jobOffers', JSON.stringify(offers));
+        async function deleteOffer(offerId) {
+    const offer = offers.find(o => o.id === offerId);
+    if (!offer) return;
+    
+    if (confirm(`¿Estás seguro de que quieres eliminar la oferta "${offer.position}" de "${offer.companyName}"?`)) {
+        try {
+            // Eliminar de Firebase
+            if (isFirebaseInitialized) {
+                const snapshot = await db.collection('jobOffers')
+                    .where('id', '==', offerId)
+                    .get();
                 
-                // También eliminar aplicaciones relacionadas
-                applications = applications.filter(app => app.offerId !== offerId);
-                localStorage.setItem('applications', JSON.stringify(applications));
-                
-                updateStats();
-                loadOffersTable();
-                showNotification('Oferta eliminada exitosamente', 'success');
+                if (!snapshot.empty) {
+                    const batch = db.batch();
+                    snapshot.docs.forEach(doc => {
+                        batch.delete(doc.ref);
+                    });
+                    await batch.commit();
+                    console.log('Oferta eliminada de Firebase:', offerId);
+                }
             }
+            
+            // Eliminar de memoria local
+            offers = offers.filter(o => o.id !== offerId);
+            
+            // También eliminar aplicaciones relacionadas
+            const relatedApplications = applications.filter(app => app.offerId === offerId);
+            for (const app of relatedApplications) {
+                if (isFirebaseInitialized) {
+                    const appSnapshot = await db.collection('applications')
+                        .where('id', '==', app.id)
+                        .get();
+                    
+                    if (!appSnapshot.empty) {
+                        const batch = db.batch();
+                        appSnapshot.docs.forEach(doc => {
+                            batch.delete(doc.ref);
+                        });
+                        await batch.commit();
+                    }
+                }
+            }
+            applications = applications.filter(app => app.offerId !== offerId);
+            
+            // Actualizar localStorage como respaldo
+            localStorage.setItem('jobOffers', JSON.stringify(offers));
+            localStorage.setItem('applications', JSON.stringify(applications));
+            
+            // Actualizar interfaz
+            updateStats();
+            loadOffersTable();
+            showNotification('Oferta eliminada exitosamente', 'success');
+            
+        } catch (error) {
+            console.error('Error eliminando oferta:', error);
+            showNotification('Error eliminando la oferta. Intenta de nuevo.', 'error');
         }
+    }
+}
 // Filtrar ofertas
         function filterOffers() {
             const search = document.getElementById('offersSearch').value.toLowerCase();
@@ -1648,18 +1777,20 @@ if (tabIndex !== -1) {
                         <td>${new Date(offer.deadline).toLocaleDateString()}</td>
                         <td><span class="status-badge ${statusClass}">${statusText}</span></td>
                         <td>
-                            <div class="actions">
-                                <button class="btn btn-info btn-small" onclick="viewOfferDetails('${offer.id}')" title="Ver detalles">
-                                    <i class="fas fa-eye"></i>
-                                </button>
-                                <button class="btn btn-warning btn-small" onclick="editOffer('${offer.id}')" title="Editar">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                                <button class="btn btn-danger btn-small" onclick="deleteOffer('${offer.id}')" title="Eliminar">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </div>
-                        </td>
+    <div class="actions">
+        <button class="btn btn-info btn-small" onclick="viewApplicationDetails('${application.id}')" title="Ver detalles">
+            <i class="fas fa-eye"></i>
+        </button>
+        ${application.status === 'pending' ? `
+            <button class="btn btn-success btn-small" onclick="processApplication('${application.id}')" title="Procesar">
+                <i class="fas fa-check"></i>
+            </button>
+        ` : ''}
+        <button class="btn btn-danger btn-small" onclick="deleteApplication('${application.id}')" title="Eliminar">
+            <i class="fas fa-trash"></i>
+        </button>
+    </div>
+</td>
                     </tr>
                 `;
             });
@@ -1859,9 +1990,9 @@ if (tabIndex !== -1) {
                                     <i class="fas fa-eye"></i>
                                 </button>
                                 ${application.status === 'pending' ? `
-                                    <button class="btn btn-success btn-small" onclick="processApplication('${application.id}')" title="Procesar">
-                                        <i class="fas fa-check"></i>
-                                    </button>
+                                    <button class="btn btn-danger btn-small" onclick="deleteApplication('${application.id}')" title="Eliminar">
+    					<i class="fas fa-trash"></i>
+				</button>
                                 ` : ''}
                             </div>
                         </td>
