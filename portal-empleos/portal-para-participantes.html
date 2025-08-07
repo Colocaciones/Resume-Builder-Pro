@@ -1056,11 +1056,7 @@ function initializeFirebase() {
                                     <i class="fas fa-map-marker-alt"></i>
                                     <span>${offer.location}</span>
                                 </div>
-                                <div class="offer-detail">
-                                    <i class="fas fa-dollar-sign"></i>
-                                    <span>${offer.salary}</span>
-                                </div>
-                                <div class="offer-detail">
+                            <div class="offer-detail">
                                     <i class="fas fa-clock"></i>
                                     <span>${getTypeLabel(offer.positionType)}</span>
                                 </div>
@@ -1126,22 +1122,18 @@ function initializeFirebase() {
 
             document.getElementById('modalTitle').textContent = `${offer.position} - ${offer.companyName}`;
             document.getElementById('modalBody').innerHTML = `
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 20px;">
-                    <div>
-                        <h4 style="color: #c8102e; margin-bottom: 15px;">Información de la Empresa</h4>
-                        <p><strong>Empresa:</strong> ${offer.companyName}</p>
-                        <p><strong>Contacto:</strong> ${offer.contactPerson}</p>
-                        <p><strong>Teléfono:</strong> ${offer.phone}</p>
-                        <p><strong>Email:</strong> ${offer.email}</p>
-                    </div>
-                    <div>
-                        <h4 style="color: #c8102e; margin-bottom: 15px;">Detalles del Puesto</h4>
-                        <p><strong>Posición:</strong> ${offer.position}</p>
-                        <p><strong>Tipo:</strong> ${getTypeLabel(offer.positionType)}</p>
-                        <p><strong>Salario:</strong> ${offer.salary}</p>
-                        <p><strong>Ubicación:</strong> ${offer.location}</p>
-                        <p><strong>Fecha Límite:</strong> ${new Date(offer.deadline).toLocaleDateString()}</p>
-                    </div>
+    <div style="margin-bottom: 20px;">
+        <h4 style="color: #c8102e; margin-bottom: 15px;">Información de la Empresa</h4>
+        <p><strong>Empresa:</strong> ${offer.companyName}</p>
+        <p><strong>Ubicación:</strong> ${offer.location}</p>
+    </div>
+    
+    <div style="margin-bottom: 20px;">
+        <h4 style="color: #c8102e; margin-bottom: 15px;">Detalles del Puesto</h4>
+        <p><strong>Posición:</strong> ${offer.position}</p>
+        <p><strong>Tipo:</strong> ${getTypeLabel(offer.positionType)}</p>
+        <p><strong>Fecha Límite:</strong> ${new Date(offer.deadline).toLocaleDateString()}</p>
+    </div>
                 </div>
                 
                 ${offer.jobDescription ? `
