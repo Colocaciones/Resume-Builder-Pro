@@ -1403,11 +1403,176 @@
 
 }
 
+/* Estilos del Menú Hamburguesa */
+.menu-toggle {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    z-index: 1001;
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 10px 15px;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    font-size: 14px;
+    font-weight: 500;
+    color: #4a5568;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.menu-toggle:hover {
+    background: #f7fafc;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.hamburger-icon {
+    font-size: 16px;
+    line-height: 1;
+}
+
+.sidebar-menu {
+    position: fixed;
+    top: 0;
+    left: -300px;
+    width: 280px;
+    height: 100vh;
+    background: white;
+    box-shadow: 2px 0 12px rgba(0,0,0,0.1);
+    z-index: 1000;
+    transition: left 0.3s ease;
+    overflow-y: auto;
+}
+
+.sidebar-menu.open {
+    left: 0;
+}
+
+.sidebar-header {
+    padding: 25px 20px;
+    border-bottom: 1px solid #e2e8f0;
+    background: #f8fafc;
+}
+
+.sidebar-header h3 {
+    margin: 0;
+    font-size: 18px;
+    color: #2d3748;
+    font-weight: 600;
+}
+
+.menu-items {
+    padding: 20px 0;
+}
+
+.menu-item {
+    display: flex;
+    align-items: center;
+    padding: 12px 20px;
+    color: #4a5568;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+    font-size: 14px;
+}
+
+.menu-item:hover {
+    background: #f7fafc;
+    color: #2d3748;
+}
+
+.menu-item-icon {
+    margin-right: 12px;
+    font-size: 16px;
+    width: 20px;
+    text-align: center;
+}
+
+.menu-divider {
+    height: 1px;
+    background: #e2e8f0;
+    margin: 10px 20px;
+}
+
+.menu-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.3);
+    z-index: 999;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+
+.menu-overlay.show {
+    opacity: 1;
+    visibility: visible;
+}
 
     </style>
 </head>
 <body>
     <div class="container">
+<!-- Botón del Menú Hamburguesa -->
+<div class="menu-toggle" onclick="toggleMenu()" id="menu-toggle">
+    <span class="hamburger-icon">☰</span>
+    <span id="menu-text">MENÚ</span>
+</div>
+
+<!-- Overlay del Menú -->
+<div class="menu-overlay" id="menu-overlay" onclick="closeMenu()"></div>
+
+<!-- Menú Lateral -->
+<div class="sidebar-menu" id="sidebar-menu">
+    <div class="sidebar-header">
+        <h3 id="sidebar-title">Opciones</h3>
+    </div>
+    <div class="menu-items">
+        <button class="menu-item" onclick="exportToPDF(); closeMenu()">
+            <span class="menu-item-icon">📄</span>
+            <span id="menu-export-pdf">Exportar PDF</span>
+        </button>
+        
+        <button class="menu-item" onclick="exportToWord(); closeMenu()">
+            <span class="menu-item-icon">📄</span>
+            <span id="menu-export-word">Exportar Word</span>
+        </button>
+        
+        <div class="menu-divider"></div>
+        
+        <button class="menu-item" onclick="openProfessionalCoverLetter(); closeMenu()">
+            <span class="menu-item-icon">📝</span>
+            <span id="menu-cover-letter">Crear Carta de Presentación</span>
+        </button>
+        
+        <button class="menu-item" onclick="saveToUAGMPortal(); closeMenu()">
+            <span class="menu-item-icon">💾</span>
+            <span id="menu-save-portal">Guardar en Portal UAGM</span>
+        </button>
+        
+        <div class="menu-divider"></div>
+        
+        <button class="menu-item" onclick="clearAll(); closeMenu()">
+            <span class="menu-item-icon">🔄</span>
+            <span id="menu-reset">Reiniciar</span>
+        </button>
+        
+        <button class="menu-item" onclick="openExitModal(); closeMenu()">
+            <span class="menu-item-icon">🚪</span>
+            <span id="menu-exit">Salir</span>
+        </button>
+    </div>
+</div>
        <div class="header" style="position: relative; padding-left: 150px;">
     <img src="logo blanco.png" alt="logo blanco" style="position: absolute; height: 150px; left: 40px; top: 50%; transform: translateY(-50%);">
     <p style="font-size: 22px; margin-bottom: 2px;">Universidad Ana G. Méndez</p>
@@ -1460,12 +1625,7 @@
                 <option value="18">Extra Grande (18px)</option>
             </select>
 
-            <button class="btn btn-primary" onclick="exportToPDF()">Exportar PDF</button>
-            <button class="btn btn-primary" onclick="exportToWord()">Exportar Word</button>
-            <button class="btn btn-primary" onclick="clearAll()">Reiniciar</button>
-            <button class="btn btn-primary" onclick="openProfessionalCoverLetter()">📝 Crear Carta de Presentación</button>
-<button class="btn btn-primary" onclick="saveToUAGMPortal()">💾 Guardar en Portal UAGM</button>
-	    <button class="btn btn-primary" onclick="openExitModal()">🚪 Salir</button>
+            
         </div>
 
         <div class="main-content">
@@ -1904,7 +2064,7 @@ function updateLanguage() {
     document.getElementById('volunteer-title').textContent = t.volunteerTitle;
     document.getElementById('add-certification-btn').textContent = t.addCertification;
     document.getElementById('add-volunteer-btn').textContent = t.addVolunteer;
-    document.querySelector('button[onclick="clearAll()"]').textContent = currentLang === 'es' ? '🔄 Reiniciar' : '🔄 Reset';
+    
 
     document.getElementById('preview-summary-title').textContent = t.summaryTitle;
     document.getElementById('preview-experience-title').textContent = t.experienceTitle;
@@ -1912,6 +2072,30 @@ function updateLanguage() {
     document.getElementById('preview-skills-title').textContent = t.skillsTitle;
     document.getElementById('preview-certifications-title').textContent = t.certificationsTitle;
     document.getElementById('preview-volunteer-title').textContent = t.volunteerTitle;
+// Actualizar textos del menú (con verificación)
+const menuText = document.getElementById('menu-text');
+if (menuText) menuText.textContent = currentLang === 'es' ? 'MENÚ' : 'MENU';
+
+const sidebarTitle = document.getElementById('sidebar-title');
+if (sidebarTitle) sidebarTitle.textContent = currentLang === 'es' ? 'Opciones' : 'Options';
+
+const menuExportPdf = document.getElementById('menu-export-pdf');
+if (menuExportPdf) menuExportPdf.textContent = currentLang === 'es' ? 'Exportar PDF' : 'Export PDF';
+
+const menuExportWord = document.getElementById('menu-export-word');
+if (menuExportWord) menuExportWord.textContent = currentLang === 'es' ? 'Exportar Word' : 'Export Word';
+
+const menuCoverLetter = document.getElementById('menu-cover-letter');
+if (menuCoverLetter) menuCoverLetter.textContent = currentLang === 'es' ? 'Crear Carta de Presentación' : 'Create Cover Letter';
+
+const menuSavePortal = document.getElementById('menu-save-portal');
+if (menuSavePortal) menuSavePortal.textContent = currentLang === 'es' ? 'Guardar en Portal UAGM' : 'Save to UAGM Portal';
+
+const menuReset = document.getElementById('menu-reset');
+if (menuReset) menuReset.textContent = currentLang === 'es' ? 'Reiniciar' : 'Reset';
+
+const menuExit = document.getElementById('menu-exit');
+if (menuExit) menuExit.textContent = currentLang === 'es' ? 'Salir' : 'Exit';
     document.getElementById('summary').placeholder = 
     currentLang === 'es'
     ? "Profesional comprometido, proactivo y orientado a resultados, con habilidades en comunicación, trabajo en equipo y resolución de problemas. Capacidad para adaptarse a distintos entornos laborales, aprender rápidamente y cumplir con metas establecidas."
@@ -2059,20 +2243,10 @@ function addSkillCategory() {
             </button>
             <h4>${t.skillsTitle} ${id + 1}</h4>
             
-            <div class="form-group">
-                <label>${t.skillCategory}</label>
-                <select class="skill-category-name" onchange="updateSkillOptions(${id})" id="category-select-${id}">
-                    <option value="">${currentLang === 'es' ? 'Seleccionar categoría' : 'Select category'}</option>
-                    <option value="technical">${currentLang === 'es' ? 'Habilidades Técnicas' : 'Technical Skills'}</option>
-                    <option value="soft">${currentLang === 'es' ? 'Habilidades Blandas' : 'Soft Skills'}</option>
-                </select>
-            </div>
-            
-            <div class="skill-selection-container" id="skill-selection-${id}" style="display: none;">
+            <div class="skill-selection-container" id="skill-selection-${id}">
                 <label>${currentLang === 'es' ? 'Seleccionar habilidades:' : 'Select skills:'}</label>
                 <div class="skill-checkboxes" id="skill-checkboxes-${id}"></div>
                 
-                <!-- NUEVA SECCIÓN PARA HABILIDADES PERSONALIZADAS -->
                 <div class="custom-skill-section">
                     <label>${currentLang === 'es' ? 'Agregar habilidad personalizada:' : 'Add custom skill:'}</label>
                     <div class="custom-skill-input-container">
@@ -2101,7 +2275,42 @@ function addSkillCategory() {
     `;
     
     container.insertAdjacentHTML('beforeend', html);
+    
+    // Cargar todas las habilidades automáticamente
+    loadAllSkills(id);
+    
     updatePreview();
+}
+
+function loadAllSkills(categoryId) {
+    const skillCheckboxes = document.getElementById(`skill-checkboxes-${categoryId}`);
+    skillCheckboxes.innerHTML = '';
+    
+    // Primero agregar habilidades técnicas
+    const technicalSkills = predefinedSkills[currentLang]['technical'];
+    technicalSkills.forEach((skill, index) => {
+        const checkboxId = `skill-${categoryId}-tech-${index}`;
+        const checkboxHtml = `
+            <div class="skill-checkbox-item">
+                <input type="checkbox" id="${checkboxId}" value="${skill}" onchange="updateSelectedSkills(${categoryId})">
+                <label for="${checkboxId}">${skill}</label>
+            </div>
+        `;
+        skillCheckboxes.insertAdjacentHTML('beforeend', checkboxHtml);
+    });
+    
+    // Luego agregar habilidades blandas
+    const softSkills = predefinedSkills[currentLang]['soft'];
+    softSkills.forEach((skill, index) => {
+        const checkboxId = `skill-${categoryId}-soft-${index}`;
+        const checkboxHtml = `
+            <div class="skill-checkbox-item">
+                <input type="checkbox" id="${checkboxId}" value="${skill}" onchange="updateSelectedSkills(${categoryId})">
+                <label for="${checkboxId}">${skill}</label>
+            </div>
+        `;
+        skillCheckboxes.insertAdjacentHTML('beforeend', checkboxHtml);
+    });
 }
 
 function addCertification() {
@@ -2220,35 +2429,6 @@ function removeCustomSkill(skillId, categoryId) {
     }
 }
 
-function updateSkillOptions(categoryId) {
-    const categorySelect = document.getElementById(`category-select-${categoryId}`);
-    const skillSelection = document.getElementById(`skill-selection-${categoryId}`);
-    const skillCheckboxes = document.getElementById(`skill-checkboxes-${categoryId}`);
-    
-    const selectedCategory = categorySelect.value;
-    
-    if (selectedCategory) {
-        skillSelection.style.display = 'block';
-        skillCheckboxes.innerHTML = '';
-        
-        const skills = predefinedSkills[currentLang][selectedCategory];
-        
-        skills.forEach((skill, index) => {
-            const checkboxId = `skill-${categoryId}-${index}`;
-            const checkboxHtml = `
-                <div class="skill-checkbox-item">
-                    <input type="checkbox" id="${checkboxId}" value="${skill}" onchange="updateSelectedSkills(${categoryId})">
-                    <label for="${checkboxId}">${skill}</label>
-                </div>
-            `;
-            skillCheckboxes.insertAdjacentHTML('beforeend', checkboxHtml);
-        });
-    } else {
-        skillSelection.style.display = 'none';
-        document.getElementById(`skills-list-${categoryId}`).innerHTML = '';
-        updatePreview();
-    }
-}
 
 function updateSelectedSkills(categoryId) {
     const checkboxes = document.querySelectorAll(`#skill-checkboxes-${categoryId} input[type="checkbox"]:checked`);
@@ -2381,16 +2561,13 @@ function updateSkillsPreview() {
     let html = '';
     
     const skillCategories = document.querySelectorAll('#skills-container .dynamic-section');
-    skillCategories.forEach((cat) => {
-        const categorySelect = cat.querySelector('.skill-category-name');
-        const categoryName = categorySelect ? categorySelect.selectedOptions[0]?.text : '';
-        
+    skillCategories.forEach((cat, index) => {
         // Buscar las habilidades seleccionadas (checkboxes marcados)
         const selectedSkills = cat.querySelectorAll('.skill-checkboxes input[type="checkbox"]:checked');
         
-        if (categoryName && categoryName !== (currentLang === 'es' ? 'Seleccionar categoría' : 'Select category') && selectedSkills.length > 0) {
+        if (selectedSkills.length > 0) {
+            // Usar un título genérico para la categoría
             html += `<div class="skills-category">`;
-            html += `<h4>${categoryName}</h4>`;
             html += `<div class="skills-list">`;
             
             selectedSkills.forEach((checkbox) => {
@@ -2407,7 +2584,6 @@ function updateSkillsPreview() {
     container.innerHTML = html || 
         (currentLang === 'es' ? 'Tus habilidades aparecerán aquí...' : 'Your skills will appear here...');
 }
-
 function updateCertificationsPreview() {
     const container = document.getElementById('preview-certifications');
     const section = container.closest('.resume-section');
@@ -3231,6 +3407,43 @@ function updateSurveyTexts() {
    // Actualizar botón
 document.getElementById('survey-submit-btn').textContent = texts.submitBtn;
 }
+
+// Funciones del Menú Hamburguesa
+function toggleMenu() {
+    const sidebar = document.getElementById('sidebar-menu');
+    const overlay = document.getElementById('menu-overlay');
+    
+    if (sidebar.classList.contains('open')) {
+        closeMenu();
+    } else {
+        openMenu();
+    }
+}
+
+function openMenu() {
+    const sidebar = document.getElementById('sidebar-menu');
+    const overlay = document.getElementById('menu-overlay');
+    
+    sidebar.classList.add('open');
+    overlay.classList.add('show');
+    document.body.style.overflow = 'hidden'; // Prevenir scroll del body
+}
+
+function closeMenu() {
+    const sidebar = document.getElementById('sidebar-menu');
+    const overlay = document.getElementById('menu-overlay');
+    
+    sidebar.classList.remove('open');
+    overlay.classList.remove('show');
+    document.body.style.overflow = ''; // Restaurar scroll del body
+}
+
+// Cerrar menú con tecla Escape
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeMenu();
+    }
+});
 
 function closeApplication() {
     window.close();
