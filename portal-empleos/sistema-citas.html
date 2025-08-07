@@ -279,7 +279,7 @@
         <small style="color: #555;">
             Las citas son <strong>presenciales</strong> en la Oficina de Carreras y Colocaciones. 
             Si por alguna razón no puedes asistir, contáctanos a 
-            <strong>brgonzalez@uagm.edu</strong> Estudiantes de Aguadilla y Bayamón se les brindará servicio de manera virtual.
+            <strong>brgonzalez@uagm.edu</strong> para coordinar una alternativa virtual.
         </small>
     </div>
 </div>
@@ -388,7 +388,7 @@
             // Agregar opciones al select
             wednesdays.forEach(date => {
                 const option = document.createElement('option');
-                const dateString = date.toISOString().split('T')[0];
+                const dateString = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
                 const displayDate = date.toLocaleDateString('es-ES', {
                     weekday: 'long',
                     year: 'numeric',
@@ -403,27 +403,52 @@
         }
 
         // Generar horarios disponibles
-        function generateTimeSlots() {
-            const timeSelect = document.getElementById('appointmentTime');
-            const selectedDate = document.getElementById('appointmentDate').value;
-            
-            // Limpiar opciones anteriores
-            timeSelect.innerHTML = '<option value="">Seleccionar horario...</option>';
-            
-            if (!selectedDate) {
-                timeSelect.innerHTML = '<option value="">Primero selecciona una fecha</option>';
-                return;
-            }
+        async function generateTimeSlots() {
+    const timeSelect = document.getElementById('appointmentTime');
+    const selectedDate = document.getElementById('appointmentDate').value;
+    
+    // Limpiar opciones anteriores
+    timeSelect.innerHTML = '<option value="">Seleccionar horario...</option>';
+    
+    if (!selectedDate) {
+        timeSelect.innerHTML = '<option value="">Primero selecciona una fecha</option>';
+        return;
+    }
 
-            // Horarios disponibles - Excluyendo 10:00 AM - 1:00 PM y 4:00-5:00 PM
-const timeSlots = [
-    '09:00', '09:30',          // 9:00 AM - 9:30 AM
-    '13:00', '13:30',          // 1:00 PM - 1:30 PM  
-    '14:00', '14:30',          // 2:00 PM - 2:30 PM
-    '15:00', '15:30'           // 3:00 PM - 3:30 PM
-];
+    // Horarios disponibles
+    const allTimeSlots = [
+        '09:00', '09:30',
+        '13:00', '13:30',
+        '14:00', '14:30',
+        '15:00', '15:30'
+    ];
 
-            timeSlots.forEach(time => {
+    // Verificar horarios ocupados
+    await checkAvailableSlots(selectedDate, allTimeSlots);
+        }
+
+// Verificar horarios disponibles
+async function checkAvailableSlots(selectedDate, allTimeSlots) {
+    const timeSelect = document.getElementById('appointmentTime');
+    
+    try {
+        // Consultar Firebase por citas en esa fecha
+        const snapshot = await db.collection('appointments')
+            .where('appointmentDate', '==', selectedDate)
+            .where('status', '==', 'scheduled')
+            .get();
+        
+        // Obtener horarios ocupados
+        const bookedTimes = [];
+        snapshot.forEach(doc => {
+            bookedTimes.push(doc.data().appointmentTime);
+        });
+        
+        console.log('Horarios ocupados:', bookedTimes);
+        
+        // Mostrar solo horarios disponibles
+        allTimeSlots.forEach(time => {
+            if (!bookedTimes.includes(time)) {
                 const option = document.createElement('option');
                 option.value = time;
                 
@@ -434,8 +459,34 @@ const timeSlots = [
                 option.textContent = `${hour12}:${minutes} ${ampm}`;
                 
                 timeSelect.appendChild(option);
-            });
+            }
+        });
+        
+        // Si no hay horarios disponibles
+        if (timeSelect.children.length === 1) { // Solo la opción "Seleccionar horario..."
+            const option = document.createElement('option');
+            option.value = '';
+            option.textContent = 'No hay horarios disponibles';
+            option.disabled = true;
+            timeSelect.appendChild(option);
         }
+        
+    } catch (error) {
+        console.error('Error verificando disponibilidad:', error);
+        // Si hay error, mostrar todos los horarios
+        allTimeSlots.forEach(time => {
+            const option = document.createElement('option');
+            option.value = time;
+            
+            const [hours, minutes] = time.split(':');
+            const hour12 = hours > 12 ? hours - 12 : (hours === '00' ? 12 : hours);
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+            option.textContent = `${hour12}:${minutes} ${ampm}`;
+            
+            timeSelect.appendChild(option);
+        });
+    }
+}
 
 // Configurar event listeners
 function setupEventListeners() {
@@ -617,7 +668,8 @@ await sendConfirmationEmail(appointmentData);
 
         // Mostrar mensaje de éxito
         function showSuccessMessage(appointmentData) {
-            const dateObj = new Date(appointmentData.appointmentDate);
+            const [year, month, day] = appointmentData.appointmentDate.split('-');
+const dateObj = new Date(year, month - 1, day);
             const displayDate = dateObj.toLocaleDateString('es-ES', {
                 weekday: 'long',
                 year: 'numeric',
@@ -729,7 +781,8 @@ function showNotification(message, type = 'info') {
 // Enviar email de confirmación
 async function sendConfirmationEmail(appointmentData) {
     try {
-        const dateObj = new Date(appointmentData.appointmentDate);
+        const [year, month, day] = appointmentData.appointmentDate.split('-');
+const dateObj = new Date(year, month - 1, day);
         const displayDate = dateObj.toLocaleDateString('es-ES', {
             weekday: 'long',
             year: 'numeric',
