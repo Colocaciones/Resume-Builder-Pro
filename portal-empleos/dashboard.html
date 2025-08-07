@@ -899,15 +899,17 @@
 document.getElementById('totalAppointments').textContent = appointments.length;
         
         // Stats rápidas citas
-        const todayAppointments = appointments.filter(app => {
-            const appDate = new Date(app.appointmentDate);
-            return appDate.toDateString() === today.toDateString();
-        }).length;
-        
-        const upcomingAppointments = appointments.filter(app => {
-            const appDate = new Date(app.appointmentDate);
-            return appDate > today && app.status === 'scheduled';
-        }).length;
+const todayAppointments = appointments.filter(app => {
+    const [year, month, day] = app.appointmentDate.split('-');
+    const appDate = new Date(year, month - 1, day);
+    return appDate.toDateString() === today.toDateString();
+}).length;
+
+const upcomingAppointments = appointments.filter(app => {
+    const [year, month, day] = app.appointmentDate.split('-');
+    const appDate = new Date(year, month - 1, day);
+    return appDate > today && app.status === 'scheduled';
+}).length;
         
         const completedAppointments = appointments.filter(app => app.status === 'completed').length;
         const manpowerAppointments = appointments.filter(app => app.serviceType === 'orientacion-manpower').length;
@@ -2411,8 +2413,9 @@ async function deleteApplication(applicationId) {
                 };
 
                 // Formatear fecha y hora
-                const appointmentDate = new Date(appointment.appointmentDate);
-                const formattedDate = appointmentDate.toLocaleDateString('es-ES');
+const [year, month, day] = appointment.appointmentDate.split('-');
+const appointmentDate = new Date(year, month - 1, day);
+const formattedDate = appointmentDate.toLocaleDateString('es-ES');
                 
                 const [hours, minutes] = appointment.appointmentTime.split(':');
                 const hour12 = hours > 12 ? hours - 12 : (hours === '00' ? 12 : hours);
@@ -2477,14 +2480,15 @@ async function deleteApplication(applicationId) {
                 'community': 'Comunidad'
             };
 
-            // Formatear fecha y hora
-            const appointmentDate = new Date(appointment.appointmentDate);
-            const formattedDate = appointmentDate.toLocaleDateString('es-ES', {
-                weekday: 'long',
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-            });
+           // Formatear fecha y hora
+const [year, month, day] = appointment.appointmentDate.split('-');
+const appointmentDate = new Date(year, month - 1, day);
+const formattedDate = appointmentDate.toLocaleDateString('es-ES', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+});
             
             const [hours, minutes] = appointment.appointmentTime.split(':');
             const hour12 = hours > 12 ? hours - 12 : (hours === '00' ? 12 : hours);
@@ -2659,7 +2663,8 @@ async function deleteApplication(applicationId) {
             if (dateFilter) {
                 const today = new Date();
                 filteredAppointments = filteredAppointments.filter(appointment => {
-                    const appointmentDate = new Date(appointment.appointmentDate);
+                   const [year, month, day] = appointment.appointmentDate.split('-');
+const appointmentDate = new Date(year, month - 1, day);
                     
                     switch(dateFilter) {
                         case 'today':
@@ -2733,7 +2738,8 @@ async function deleteApplication(applicationId) {
                 };
 
                 // Formatear fecha y hora
-                const appointmentDate = new Date(appointment.appointmentDate);
+               const [year, month, day] = appointment.appointmentDate.split('-');
+const appointmentDate = new Date(year, month - 1, day);
                 const formattedDate = appointmentDate.toLocaleDateString('es-ES');
                 
                 const [hours, minutes] = appointment.appointmentTime.split(':');
