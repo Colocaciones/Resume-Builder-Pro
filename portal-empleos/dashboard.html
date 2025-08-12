@@ -432,6 +432,47 @@
                 padding: 8px 4px;
             }
         }
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 15px;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 600;
+    color: #495057;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: 10px;
+    border: 2px solid #e2e8f0;
+    border-radius: 5px;
+    font-size: 14px;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: #c8102e;
+}
+
+@media (max-width: 768px) {
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+}
     </style>
 </head>
 <body>
@@ -1637,10 +1678,142 @@ async function deleteApplication(applicationId) {
 }
         // Editar oferta (redirigir al gestor de ofertas)
         function editOffer(offerId) {
-            if (confirm('¿Quieres abrir el gestor de ofertas para editar esta oferta?')) {
-                window.open('gestor-ofertas.html', '_blank');
+    const offer = offers.find(o => o.id === offerId);
+    if (!offer) return;
+
+    currentModalData = { type: 'editOffer', data: offer };
+    
+    document.getElementById('modalTitle').textContent = 'Editar Oferta de Empleo';
+    document.getElementById('modalBody').innerHTML = `
+        <form id="editOfferForm">
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Empresa:</label>
+                    <input type="text" id="edit-companyName" value="${offer.companyName}" required>
+                </div>
+                <div class="form-group">
+                    <label>Posición:</label>
+                    <input type="text" id="edit-position" value="${offer.position}" required>
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Ubicación:</label>
+                    <input type="text" id="edit-location" value="${offer.location}" required>
+                </div>
+                <div class="form-group">
+                    <label>Salario:</label>
+                    <input type="text" id="edit-salary" value="${offer.salary}" required>
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Tipo de Posición:</label>
+                    <select id="edit-positionType" required>
+                        <option value="part-time" ${offer.positionType === 'part-time' ? 'selected' : ''}>Part-Time</option>
+                        <option value="full-time" ${offer.positionType === 'full-time' ? 'selected' : ''}>Full-Time</option>
+                        <option value="regular" ${offer.positionType === 'regular' ? 'selected' : ''}>Regular</option>
+                        <option value="temporary" ${offer.positionType === 'temporary' ? 'selected' : ''}>Temporero</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Fecha Límite:</label>
+                    <input type="date" id="edit-deadline" value="${offer.deadline}" required>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>Descripción del Trabajo:</label>
+                <textarea id="edit-jobDescription" rows="3">${offer.jobDescription || ''}</textarea>
+            </div>
+            
+            <div class="form-group">
+                <label>Requisitos:</label>
+                <textarea id="edit-requirements" rows="3" required>${offer.requirements}</textarea>
+            </div>
+            
+            <div class="form-group">
+                <label>Horarios:</label>
+                <textarea id="edit-schedule" rows="2">${offer.schedule || ''}</textarea>
+            </div>
+            
+            <div class="form-group">
+                <label>Notas Adicionales:</label>
+                <textarea id="edit-notes" rows="2">${offer.notes || ''}</textarea>
+            </div>
+        </form>
+    `;
+
+    // Mostrar botón de acción
+    const modalAction = document.getElementById('modalAction');
+    modalAction.style.display = 'inline-flex';
+    modalAction.innerHTML = '<i class="fas fa-save"></i> Guardar Cambios';
+    modalAction.onclick = () => saveOfferChanges(offerId);
+
+    document.getElementById('detailsModal').style.display = 'flex';
+}
+
+async function saveOfferChanges(offerId) {
+    const form = document.getElementById('editOfferForm');
+    if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+    }
+    
+    // Recopilar datos actualizados
+    const updatedOffer = {
+        companyName: document.getElementById('edit-companyName').value,
+        position: document.getElementById('edit-position').value,
+        location: document.getElementById('edit-location').value,
+        salary: document.getElementById('edit-salary').value,
+        positionType: document.getElementById('edit-positionType').value,
+        deadline: document.getElementById('edit-deadline').value,
+        jobDescription: document.getElementById('edit-jobDescription').value,
+        requirements: document.getElementById('edit-requirements').value,
+        schedule: document.getElementById('edit-schedule').value,
+        notes: document.getElementById('edit-notes').value,
+        updatedAt: new Date().toISOString()
+    };
+    
+    try {
+        // Actualizar en Firebase
+        if (isFirebaseInitialized) {
+            const snapshot = await db.collection('jobOffers')
+                .where('id', '==', offerId)
+                .get();
+            
+            if (!snapshot.empty) {
+                const batch = db.batch();
+                snapshot.docs.forEach(doc => {
+                    batch.update(doc.ref, updatedOffer);
+                });
+                await batch.commit();
+                console.log('Oferta actualizada en Firebase:', offerId);
             }
         }
+        
+        // Actualizar en memoria local
+        const offerIndex = offers.findIndex(o => o.id === offerId);
+        if (offerIndex !== -1) {
+            offers[offerIndex] = { ...offers[offerIndex], ...updatedOffer };
+        }
+        
+        // Actualizar localStorage como respaldo
+        localStorage.setItem('jobOffers', JSON.stringify(offers));
+        
+        // Actualizar interfaz
+        updateStats();
+        loadOffersTable();
+        closeDetailsModal();
+        showNotification('Oferta actualizada exitosamente', 'success');
+        
+    } catch (error) {
+        console.error('Error actualizando oferta:', error);
+        showNotification('Error actualizando la oferta. Intenta de nuevo.', 'error');
+    }
+}
 
         // Eliminar oferta
         async function deleteOffer(offerId) {
