@@ -1233,17 +1233,21 @@ if (tabIndex !== -1) {
                         <td>${application.participantPhone}</td>
                         <td><span class="status-badge ${statusClasses[application.status]}">${statusLabels[application.status]}</span></td>
                         <td>
-                            <div class="actions">
-                                <button class="btn btn-info btn-small" onclick="viewApplicationDetails('${application.id}')" title="Ver detalles">
-                                    <i class="fas fa-eye"></i>
-                                </button>
-                                ${application.status === 'pending' ? `
-                                    <button class="btn btn-success btn-small" onclick="processApplication('${application.id}')" title="Procesar">
-                                        <i class="fas fa-check"></i>
-                                    </button>
-                                ` : ''}
-                            </div>
-                        </td>
+                            <td>
+    <div class="actions">
+        <button class="btn btn-info btn-small" onclick="viewApplicationDetails('${application.id}')" title="Ver detalles">
+            <i class="fas fa-eye"></i>
+        </button>
+        ${application.status === 'pending' ? `
+            <button class="btn btn-success btn-small" onclick="processApplication('${application.id}')" title="Procesar">
+                <i class="fas fa-check"></i>
+            </button>
+        ` : ''}
+        <button class="btn btn-danger btn-small" onclick="deleteApplication('${application.id}')" title="Eliminar">
+            <i class="fas fa-trash"></i>
+        </button>
+    </div>
+</td>
                     </tr>
                 `;
             });
@@ -1524,25 +1528,53 @@ if (tabIndex !== -1) {
         }
 
         // Procesar aplicación
-        function processApplication(applicationId) {
-            if (confirm('¿Estás seguro de que quieres marcar esta solicitud como procesada?')) {
-                const application = applications.find(app => app.id === applicationId);
-                if (application) {
-                    application.status = 'processed';
-                    application.processedAt = new Date().toISOString();
-                    
-                    // Actualizar localStorage
-                    localStorage.setItem('applications', JSON.stringify(applications));
-                    
-                    // Actualizar estadísticas y tabla
-                    updateStats();
-                    loadApplicationsTable();
-                    closeDetailsModal();
-                    
-                    showNotification('Solicitud procesada exitosamente', 'success');
+        async function processApplication(applicationId) {
+    if (confirm('¿Estás seguro de que quieres marcar esta solicitud como procesada?')) {
+        try {
+            const updatedData = {
+                status: 'processed',
+                processedAt: new Date().toISOString()
+            };
+            
+            // Actualizar en Firebase
+            if (isFirebaseInitialized) {
+                const snapshot = await db.collection('applications')
+                    .where('id', '==', applicationId)
+                    .get();
+                
+                if (!snapshot.empty) {
+                    const batch = db.batch();
+                    snapshot.docs.forEach(doc => {
+                        batch.update(doc.ref, updatedData);
+                    });
+                    await batch.commit();
+                    console.log('Aplicación procesada en Firebase:', applicationId);
                 }
             }
+            
+            // Actualizar en memoria local
+            const application = applications.find(app => app.id === applicationId);
+            if (application) {
+                application.status = 'processed';
+                application.processedAt = new Date().toISOString();
+            }
+            
+            // Actualizar localStorage como respaldo
+            localStorage.setItem('applications', JSON.stringify(applications));
+            
+            // Actualizar estadísticas y tabla
+            updateStats();
+            loadApplicationsTable();
+            closeDetailsModal();
+            
+            showNotification('Solicitud procesada exitosamente', 'success');
+            
+        } catch (error) {
+            console.error('Error procesando aplicación:', error);
+            showNotification('Error procesando la solicitud. Intenta de nuevo.', 'error');
         }
+    }
+}
 
 // Eliminar aplicación completamente
 async function deleteApplication(applicationId) {
