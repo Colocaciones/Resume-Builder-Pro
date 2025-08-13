@@ -440,54 +440,6 @@
                 flex-direction: column;
             }
         }
-
-.search-filter-bar {
-    display: flex;
-    gap: 15px;
-    margin-bottom: 20px;
-    flex-wrap: wrap;
-    align-items: center;
-}
-
-.search-input {
-    flex: 1;
-    min-width: 250px;
-    padding: 12px 15px;
-    border: 2px solid #e2e8f0;
-    border-radius: 8px;
-    font-size: 14px;
-    transition: border-color 0.3s ease;
-}
-
-.search-input:focus {
-    outline: none;
-    border-color: #c8102e;
-    box-shadow: 0 0 0 3px rgba(200, 16, 46, 0.1);
-}
-
-.filter-select {
-    padding: 12px 15px;
-    border: 2px solid #e2e8f0;
-    border-radius: 8px;
-    font-size: 14px;
-    background: white;
-    min-width: 150px;
-}
-
-.filter-select:focus {
-    outline: none;
-    border-color: #c8102e;
-}
-
-@media (max-width: 768px) {
-    .search-filter-bar {
-        flex-direction: column;
-    }
-    
-    .search-input {
-        min-width: 100%;
-    }
-}
     </style>
 </head>
 <body>
@@ -693,18 +645,9 @@
             <!-- Tab Ofertas -->
             <div class="tab-content" id="offersContent">
                 <div class="section-title">
-    <i class="fas fa-search"></i>
-    Ofertas de Empleo Disponibles
-</div>
-
-<div class="search-filter-bar">
-    <input type="text" class="search-input" id="offersSearch" placeholder="🔍 Buscar por empresa, posición o ubicación..." oninput="filterOffers()">
-    <select class="filter-select" id="statusFilter" onchange="filterOffers()">
-        <option value="">Todas las ofertas</option>
-        <option value="active">Solo activas</option>
-        <option value="expiring">Vencen pronto</option>
-    </select>
-</div>
+                    <i class="fas fa-search"></i>
+                    Ofertas de Empleo Disponibles
+                </div>
 
                 <div id="offersContainer">
                     <div class="no-offers">
@@ -1136,110 +1079,6 @@ function initializeFirebase() {
             html += '</div>';
             container.innerHTML = html;
         }
-
-// Filtrar ofertas
-function filterOffers() {
-    const search = document.getElementById('offersSearch').value.toLowerCase();
-    const statusFilter = document.getElementById('statusFilter').value;
-    
-    let filteredOffers = offers;
-    
-    // Filtro de búsqueda por texto
-    if (search) {
-        filteredOffers = filteredOffers.filter(offer => 
-            offer.companyName.toLowerCase().includes(search) ||
-            offer.position.toLowerCase().includes(search) ||
-            offer.location.toLowerCase().includes(search) ||
-            (offer.requirements && offer.requirements.toLowerCase().includes(search))
-        );
-    }
-    
-    // Filtro por estado
-    if (statusFilter) {
-        filteredOffers = filteredOffers.filter(offer => {
-            const status = getOfferStatus(offer.deadline);
-            return status === statusFilter;
-        });
-    }
-    
-    displayFilteredOffers(filteredOffers);
-}
-
-// Mostrar ofertas filtradas
-function displayFilteredOffers(filteredOffers) {
-    const container = document.getElementById('offersContainer');
-    
-    if (!currentUser) {
-        container.innerHTML = `
-            <div class="no-offers">
-                <i class="fas fa-info-circle"></i>
-                <h3>Regístrate para ver ofertas</h3>
-                <p>Completa tu registro para acceder a las ofertas de empleo disponibles</p>
-            </div>
-        `;
-        return;
-    }
-
-    if (filteredOffers.length === 0) {
-        container.innerHTML = `
-            <div class="no-offers">
-                <i class="fas fa-search"></i>
-                <h3>No se encontraron ofertas</h3>
-                <p>No hay ofertas que coincidan con tu búsqueda</p>
-            </div>
-        `;
-        return;
-    }
-
-    let html = '<div class="offers-grid">';
-    
-    filteredOffers.forEach(offer => {
-        const status = getOfferStatus(offer.deadline);
-        const statusClass = status === 'expired' ? 'status-expired' : 
-                          status === 'expiring' ? 'status-expiring' : 'status-active';
-        const statusText = status === 'expired' ? 'Vencida' : 
-                         status === 'expiring' ? 'Vence Pronto' : 'Activa';
-
-        // Solo mostrar ofertas activas
-        if (status !== 'expired') {
-            html += `
-                <div class="offer-card" onclick="viewOfferDetails('${offer.id}')">
-                    <div class="offer-header">
-                        <div>
-                            <div class="company-name">${offer.companyName}</div>
-                            <div class="position-title">${offer.position}</div>
-                        </div>
-                        <span class="status-badge ${statusClass}">${statusText}</span>
-                    </div>
-                    
-                    <div class="offer-details">
-                        <div class="offer-detail">
-                            <i class="fas fa-map-marker-alt"></i>
-                            <span>${offer.location}</span>
-                        </div>
-                        <div class="offer-detail">
-                            <i class="fas fa-clock"></i>
-                            <span>${getTypeLabel(offer.positionType)}</span>
-                        </div>
-                        <div class="offer-detail">
-                            <i class="fas fa-calendar-alt"></i>
-                            <span>Vence: ${new Date(offer.deadline).toLocaleDateString()}</span>
-                        </div>
-                    </div>
-                    
-                    <div class="offer-actions">
-                        <button class="btn btn-primary btn-small" onclick="event.stopPropagation(); viewOfferDetails('${offer.id}')">
-                            <i class="fas fa-eye"></i> Ver Detalles
-                        </button>
-                    </div>
-                </div>
-            `;
-        }
-    });
-    
-    html += '</div>';
-    container.innerHTML = html;
-}
 
         // Obtener estado de oferta
         function getOfferStatus(deadline) {
