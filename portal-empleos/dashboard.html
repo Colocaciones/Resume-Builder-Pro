@@ -2745,40 +2745,96 @@ const formattedDate = appointmentDate.toLocaleDateString('es-ES', {
         }
 
         // Completar cita
-        function completeAppointment(appointmentId) {
-            if (confirm('¿Marcar esta cita como completada?')) {
-                const appointment = appointments.find(app => app.id === appointmentId);
-                if (appointment) {
-                    appointment.status = 'completed';
-                    appointment.completedAt = new Date().toISOString();
-                    
-                    // Actualizar localStorage como fallback
-                    localStorage.setItem('appointments', JSON.stringify(appointments));
-                    
-                    updateStats();
-                    loadAppointmentsTable();
-                    showNotification('Cita marcada como completada', 'success');
+        async function completeAppointment(appointmentId) {
+    if (confirm('¿Marcar esta cita como completada?')) {
+        try {
+            const updatedData = {
+                status: 'completed',
+                completedAt: new Date().toISOString()
+            };
+            
+            // Actualizar en Firebase
+            if (isFirebaseInitialized) {
+                const snapshot = await db.collection('appointments')
+                    .where('id', '==', appointmentId)
+                    .get();
+                
+                if (!snapshot.empty) {
+                    const batch = db.batch();
+                    snapshot.docs.forEach(doc => {
+                        batch.update(doc.ref, updatedData);
+                    });
+                    await batch.commit();
+                    console.log('Cita completada en Firebase:', appointmentId);
                 }
             }
+            
+            // Actualizar en memoria local
+            const appointment = appointments.find(app => app.id === appointmentId);
+            if (appointment) {
+                appointment.status = 'completed';
+                appointment.completedAt = new Date().toISOString();
+            }
+            
+            // Actualizar localStorage como respaldo
+            localStorage.setItem('appointments', JSON.stringify(appointments));
+            
+            updateStats();
+            loadAppointmentsTable();
+            showNotification('Cita marcada como completada', 'success');
+            
+        } catch (error) {
+            console.error('Error completando cita:', error);
+            showNotification('Error marcando cita como completada. Intenta de nuevo.', 'error');
         }
+    }
+}
 
         // Cancelar cita
-        function cancelAppointment(appointmentId) {
-            if (confirm('¿Estás seguro de que quieres cancelar esta cita?')) {
-                const appointment = appointments.find(app => app.id === appointmentId);
-                if (appointment) {
-                    appointment.status = 'cancelled';
-                    appointment.cancelledAt = new Date().toISOString();
-                    
-                    // Actualizar localStorage como fallback
-                    localStorage.setItem('appointments', JSON.stringify(appointments));
-                    
-                    updateStats();
-                    loadAppointmentsTable();
-                    showNotification('Cita cancelada', 'success');
+        async function cancelAppointment(appointmentId) {
+    if (confirm('¿Estás seguro de que quieres cancelar esta cita?')) {
+        try {
+            const updatedData = {
+                status: 'cancelled',
+                cancelledAt: new Date().toISOString()
+            };
+            
+            // Actualizar en Firebase
+            if (isFirebaseInitialized) {
+                const snapshot = await db.collection('appointments')
+                    .where('id', '==', appointmentId)
+                    .get();
+                
+                if (!snapshot.empty) {
+                    const batch = db.batch();
+                    snapshot.docs.forEach(doc => {
+                        batch.update(doc.ref, updatedData);
+                    });
+                    await batch.commit();
+                    console.log('Cita cancelada en Firebase:', appointmentId);
                 }
             }
+            
+            // Actualizar en memoria local
+            const appointment = appointments.find(app => app.id === appointmentId);
+            if (appointment) {
+                appointment.status = 'cancelled';
+                appointment.cancelledAt = new Date().toISOString();
+            }
+            
+            // Actualizar localStorage como respaldo
+            localStorage.setItem('appointments', JSON.stringify(appointments));
+            
+            updateStats();
+            loadAppointmentsTable();
+            showNotification('Cita cancelada', 'success');
+            
+        } catch (error) {
+            console.error('Error cancelando cita:', error);
+            showNotification('Error cancelando la cita. Intenta de nuevo.', 'error');
         }
+    }
+}
 
         // Descargar resumé de cita
         function downloadAppointmentResume(appointmentId) {
