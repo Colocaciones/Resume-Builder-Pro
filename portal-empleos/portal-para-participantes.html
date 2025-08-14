@@ -804,14 +804,6 @@ function initializeFirebase() {
             setupConditionalFields();
             
             // Verificar si hay usuario registrado
-/*
-const userData = localStorage.getItem('currentUser');
-if (userData) {
-    currentUser = JSON.parse(userData);
-    document.getElementById('offersTab').style.display = 'flex';
-    switchTab('offers');
-}
-*/
             const userData = localStorage.getItem('currentUser');
             if (userData) {
                 currentUser = JSON.parse(userData);
