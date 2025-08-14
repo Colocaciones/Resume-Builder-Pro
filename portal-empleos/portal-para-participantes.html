@@ -803,13 +803,7 @@ function initializeFirebase() {
             setupFileUpload();
             setupConditionalFields();
             
-            // Verificar si hay usuario registrado
-            const userData = localStorage.getItem('currentUser');
-            if (userData) {
-                currentUser = JSON.parse(userData);
-                document.getElementById('offersTab').style.display = 'flex';
-                switchTab('offers');
-            }
+            
             
             console.log('Portal Participantes cargado correctamente');
         });
