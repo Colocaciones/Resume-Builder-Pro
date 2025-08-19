@@ -2837,11 +2837,18 @@ function checkForNewItems() {
     
     // Verificar nuevas ofertas
     if (currentOffers > lastCheckedOffers) {
-        const newCount = currentOffers - lastCheckedOffers;
-        addNotification({
-            type: 'new-offer',
-            title: `${newCount} Nueva${newCount > 1 ? 's' : ''} Oferta${newCount > 1 ? 's' : ''}`,
-            message: `Se ${newCount > 1 ? 'han registrado' : 'ha registrado'} ${newCount} nueva${newCount > 1 ? 's' : ''} oferta${newCount > 1 ? 's' : ''} de empleo`
+        const newOffers = offers.slice(lastCheckedOffers);
+        newOffers.forEach(offer => {
+            addNotification({
+                type: 'new-offer',
+                title: `Nueva Oferta de Empleo`,
+                message: `${offer.position} en ${offer.companyName} - ${offer.location}`,
+                data: {
+                    offerId: offer.id,
+                    company: offer.companyName,
+                    position: offer.position
+                }
+            });
         });
         lastCheckedOffers = currentOffers;
         localStorage.setItem('lastCheckedOffers', lastCheckedOffers.toString());
@@ -2849,11 +2856,18 @@ function checkForNewItems() {
     
     // Verificar nuevos participantes
     if (currentParticipants > lastCheckedParticipants) {
-        const newCount = currentParticipants - lastCheckedParticipants;
-        addNotification({
-            type: 'new-participant',
-            title: `${newCount} Nuevo${newCount > 1 ? 's' : ''} Participante${newCount > 1 ? 's' : ''}`,
-            message: `Se ${newCount > 1 ? 'han registrado' : 'ha registrado'} ${newCount} nuevo${newCount > 1 ? 's' : ''} participante${newCount > 1 ? 's' : ''}`
+        const newParticipants = participants.slice(lastCheckedParticipants);
+        newParticipants.forEach(participant => {
+            addNotification({
+                type: 'new-participant',
+                title: `Nuevo Participante Registrado`,
+                message: `${participant.firstName} ${participant.lastName} - ${participant.concentration} (${participant.campus})`,
+                data: {
+                    participantId: participant.id,
+                    name: `${participant.firstName} ${participant.lastName}`,
+                    campus: participant.campus
+                }
+            });
         });
         lastCheckedParticipants = currentParticipants;
         localStorage.setItem('lastCheckedParticipants', lastCheckedParticipants.toString());
@@ -2861,11 +2875,19 @@ function checkForNewItems() {
     
     // Verificar nuevas aplicaciones
     if (currentApplications > lastCheckedApplications) {
-        const newCount = currentApplications - lastCheckedApplications;
-        addNotification({
-            type: 'new-application',
-            title: `${newCount} Nueva${newCount > 1 ? 's' : ''} Solicitud${newCount > 1 ? 'es' : ''}`,
-            message: `Se ${newCount > 1 ? 'han recibido' : 'ha recibido'} ${newCount} nueva${newCount > 1 ? 's' : ''} solicitud${newCount > 1 ? 'es' : ''} de empleo`
+        const newApplications = applications.slice(lastCheckedApplications);
+        newApplications.forEach(application => {
+            addNotification({
+                type: 'new-application',
+                title: `Nueva Solicitud de Empleo`,
+                message: `${application.participantName} aplicó a ${application.offerTitle} en ${application.companyName}`,
+                data: {
+                    applicationId: application.id,
+                    participant: application.participantName,
+                    company: application.companyName,
+                    position: application.offerTitle
+                }
+            });
         });
         lastCheckedApplications = currentApplications;
         localStorage.setItem('lastCheckedApplications', lastCheckedApplications.toString());
@@ -2873,11 +2895,20 @@ function checkForNewItems() {
     
     // Verificar nuevas citas
     if (currentAppointments > lastCheckedAppointments) {
-        const newCount = currentAppointments - lastCheckedAppointments;
-        addNotification({
-            type: 'new-appointment',
-            title: `${newCount} Nueva${newCount > 1 ? 's' : ''} Cita${newCount > 1 ? 's' : ''}`,
-            message: `Se ${newCount > 1 ? 'han programado' : 'ha programado'} ${newCount} nueva${newCount > 1 ? 's' : ''} cita${newCount > 1 ? 's' : ''}`
+        const newAppointments = appointments.slice(lastCheckedAppointments);
+        newAppointments.forEach(appointment => {
+            const appointmentDate = new Date(appointment.appointmentDate).toLocaleDateString('es-ES');
+            addNotification({
+                type: 'new-appointment',
+                title: `Nueva Cita Programada`,
+                message: `${appointment.firstName} ${appointment.lastName} - ${appointmentDate} a las ${appointment.appointmentTime}`,
+                data: {
+                    appointmentId: appointment.id,
+                    name: `${appointment.firstName} ${appointment.lastName}`,
+                    date: appointmentDate,
+                    time: appointment.appointmentTime
+                }
+            });
         });
         lastCheckedAppointments = currentAppointments;
         localStorage.setItem('lastCheckedAppointments', lastCheckedAppointments.toString());
