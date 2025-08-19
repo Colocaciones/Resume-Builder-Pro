@@ -2849,7 +2849,9 @@ function checkForNewItems() {
     
     // Verificar nuevas ofertas
     if (currentOffers > lastCheckedOffers) {
-        const newOffers = offers.slice(lastCheckedOffers);
+        // Tomar las últimas ofertas (las más nuevas)
+const newOffersCount = currentOffers - lastCheckedOffers;
+const newOffers = offers.slice(-newOffersCount);
         newOffers.forEach(offer => {
             addNotification({
                 type: 'new-offer',
@@ -2868,7 +2870,9 @@ function checkForNewItems() {
     
     // Verificar nuevos participantes
     if (currentParticipants > lastCheckedParticipants) {
-        const newParticipants = participants.slice(lastCheckedParticipants);
+        // Tomar los últimos participantes (los más nuevos)
+const newParticipantsCount = currentParticipants - lastCheckedParticipants;
+const newParticipants = participants.slice(-newParticipantsCount);
         newParticipants.forEach(participant => {
             addNotification({
                 type: 'new-participant',
@@ -2887,7 +2891,9 @@ function checkForNewItems() {
     
     // Verificar nuevas aplicaciones
     if (currentApplications > lastCheckedApplications) {
-        const newApplications = applications.slice(lastCheckedApplications);
+        // Tomar las últimas aplicaciones (las más nuevas)
+const newApplicationsCount = currentApplications - lastCheckedApplications;
+const newApplications = applications.slice(-newApplicationsCount);
         newApplications.forEach(application => {
             addNotification({
                 type: 'new-application',
@@ -2907,7 +2913,9 @@ function checkForNewItems() {
     
     // Verificar nuevas citas
     if (currentAppointments > lastCheckedAppointments) {
-        const newAppointments = appointments.slice(lastCheckedAppointments);
+        // Tomar las últimas citas (las más nuevas)
+const newAppointmentsCount = currentAppointments - lastCheckedAppointments;
+const newAppointments = appointments.slice(-newAppointmentsCount);
         newAppointments.forEach(appointment => {
             const appointmentDate = new Date(appointment.appointmentDate).toLocaleDateString('es-ES');
             addNotification({
