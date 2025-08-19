@@ -1825,6 +1825,10 @@ async function deleteApplication(applicationId) {
             loadApplicationsTable();
             closeDetailsModal();
             showNotification('Solicitud eliminada exitosamente', 'success');
+
+// Ajustar contador de aplicaciones
+lastCheckedApplications = Math.max(0, applications.length);
+localStorage.setItem('lastCheckedApplications', lastCheckedApplications.toString());
             
         } catch (error) {
             console.error('Error eliminando aplicación:', error);
@@ -1916,6 +1920,10 @@ async function deleteApplication(applicationId) {
             updateStats();
             loadParticipantsTable();
             showNotification('Participante eliminado exitosamente', 'success');
+
+// Ajustar contador de participantes  
+lastCheckedParticipants = Math.max(0, participants.length);
+localStorage.setItem('lastCheckedParticipants', lastCheckedParticipants.toString());
             
         } catch (error) {
             console.error('Error eliminando participante:', error);
@@ -2115,6 +2123,10 @@ async function saveOfferChanges(offerId) {
             updateStats();
             loadOffersTable();
             showNotification('Oferta eliminada exitosamente', 'success');
+
+// Ajustar contador de ofertas
+lastCheckedOffers = Math.max(0, offers.length);
+localStorage.setItem('lastCheckedOffers', lastCheckedOffers.toString());
             
         } catch (error) {
             console.error('Error eliminando oferta:', error);
@@ -3326,6 +3338,10 @@ const formattedDate = appointmentDate.toLocaleDateString('es-ES', {
                     updateStats();
                     loadAppointmentsTable();
                     showNotification('Cita eliminada permanentemente', 'success');
+
+// Ajustar contador de citas
+lastCheckedAppointments = Math.max(0, appointments.length);
+localStorage.setItem('lastCheckedAppointments', lastCheckedAppointments.toString());
                     
                 } catch (error) {
                     console.error('Error eliminando cita:', error);
