@@ -1289,13 +1289,13 @@ if (tabIndex !== -1) {
 
                 html += `
                     <tr>
-                        <td>${new Date(offer.today).toLocaleDateString()}</td>
+                        <td>${new Date(offer.today).toLocaleDateString('es-PR', { timeZone: 'America/Puerto_Rico' })}</td>
                         <td><strong>${offer.companyName}</strong><br><small>${offer.contactPerson}</small></td>
                         <td>${offer.position}</td>
                         <td>${offer.location}</td>
                         <td>${offer.salary}</td>
                         <td><span class="status-badge">${getTypeLabel(offer.positionType)}</span></td>
-                        <td>${new Date(offer.deadline).toLocaleDateString()}</td>
+                        <td>${new Date(offer.deadline).toLocaleDateString('es-PR', { timeZone: 'America/Puerto_Rico' })}</td>
                         <td><span class="status-badge ${statusClass}">${statusText}</span></td>
                         <td>
                             <div class="actions">
