@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acceso Patronos - UAGM</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #c8102e 0%, #8b0b1f 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #333;
+        }
+
+        .access-container {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+        }
+
+        .logo {
+            width: 80px;
+            height: 80px;
+            background: #c8102e;
+            border-radius: 50%;
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+        }
+
+        h1 {
+            color: #c8102e;
+            margin-bottom: 10px;
+            font-size: 24px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+        }
+
+        input[type="password"] {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e1e1e1;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+            text-align: center;
+            letter-spacing: 2px;
+        }
+
+        input[type="password"]:focus {
+            outline: none;
+            border-color: #c8102e;
+        }
+
+        .access-btn {
+            width: 100%;
+            padding: 15px;
+            background: #c8102e;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            margin-bottom: 20px;
+        }
+
+        .access-btn:hover {
+            background: #a00d26;
+        }
+
+        .error-message {
+            color: #dc3545;
+            font-size: 14px;
+            margin-top: 10px;
+            display: none;
+        }
+
+        .back-link {
+            color: #666;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .back-link:hover {
+            color: #c8102e;
+        }
+    </style>
+</head>
+<body>
+    <div class="access-container">
+        <div class="logo">
+            <i class="fas fa-building"></i>
+        </div>
+        
+        <h1>Acceso para Patronos</h1>
+        <p class="subtitle">Ingrese el código de acceso para registrar ofertas de empleo</p>
+        
+        <div class="form-group">
+            <label for="accessCode">Código de Acceso:</label>
+            <input type="password" id="accessCode" placeholder="Ingrese su código">
+        </div>
+        
+        <button class="access-btn" onclick="validateAccess()">
+            <i class="fas fa-unlock"></i> Acceder
+        </button>
+        
+        <div class="error-message" id="errorMessage">
+            Código incorrecto. Contacte al administrador para obtener el código válido.
+        </div>
+        
+        <a href="Portal pagina principal.html" class="back-link">
+            <i class="fas fa-arrow-left"></i> Volver al portal principal
+        </a>
+    </div>
+
+    <script>
+        // Código de acceso (puedes cambiarlo aquí)
+        const CODIGO_ACCESO = "UAGM2025";
+        
+        function validateAccess() {
+            const inputCode = document.getElementById('accessCode').value.trim();
+            const errorMessage = document.getElementById('errorMessage');
+            
+            if (inputCode === CODIGO_ACCESO) {
+                // Código correcto - redirigir al formulario de patronos
+                window.location.href = "portal-para-patronos.html";
+            } else {
+                // Código incorrecto - mostrar error
+                errorMessage.style.display = 'block';
+                document.getElementById('accessCode').value = '';
+                document.getElementById('accessCode').focus();
+            }
+        }
+        
+        // Permitir acceso con Enter
+        document.getElementById('accessCode').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                validateAccess();
+            }
+        });
+        
+        // Focus automático en el campo
+        document.getElementById('accessCode').focus();
+    </script>
+</body>
+</html>
