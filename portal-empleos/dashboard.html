@@ -3586,6 +3586,21 @@ const appointmentDate = new Date(year, month - 1, day);
             
             showNotification('Citas exportadas exitosamente', 'success');
         }
+
+// Función para formatear fechas correctamente en Puerto Rico
+function formatDateForPR(dateString) {
+    if (!dateString) return 'Sin fecha';
+    
+    // Si la fecha está en formato YYYY-MM-DD, crear fecha local
+    if (dateString.includes('-')) {
+        const [year, month, day] = dateString.split('-');
+        const localDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+        return localDate.toLocaleDateString('es-PR');
+    }
+    
+    // Si no, usar el formato original
+    return new Date(dateString).toLocaleDateString('es-PR');
+}
     </script>
 </body>
 </html>
