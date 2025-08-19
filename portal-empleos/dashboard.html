@@ -1289,7 +1289,7 @@ if (tabIndex !== -1) {
 
                 html += `
                     <tr>
-                        <td>${offer.today ? formatDateForPR(offer.today) : 'Sin fecha'}</td> fecha'}</td>
+                       <td>${offer.today ? new Date(offer.today + 'T00:00:00').toLocaleDateString() : 'Sin fecha'}</td>
                         <td><strong>${offer.companyName}</strong><br><small>${offer.contactPerson}</small></td>
                         <td>${offer.position}</td>
                         <td>${offer.location}</td>
