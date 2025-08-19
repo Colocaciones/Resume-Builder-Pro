@@ -2848,10 +2848,17 @@ function checkForNewItems() {
     const currentAppointments = appointments.length;
     
     // Verificar nuevas ofertas
-    if (currentOffers > lastCheckedOffers) {
-        // Tomar las últimas ofertas (las más nuevas)
-const newOffersCount = currentOffers - lastCheckedOffers;
-const newOffers = offers.slice(-newOffersCount);
+if (currentOffers > lastCheckedOffers) {
+    // Solo notificar ofertas creadas en las últimas 24 horas
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    
+    const recentOffers = offers.filter(offer => {
+        const offerDate = new Date(offer.createdAt || offer.today || '1900-01-01');
+        return offerDate > yesterday;
+    });
+    
+    const newOffers = recentOffers.slice(Math.max(0, recentOffers.length - (currentOffers - lastCheckedOffers)));
         newOffers.forEach(offer => {
             addNotification({
                 type: 'new-offer',
