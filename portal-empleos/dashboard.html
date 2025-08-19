@@ -473,6 +473,191 @@
         grid-template-columns: 1fr;
     }
 }
+
+/* Sistema de notificaciones dropdown */
+.notifications-container {
+    position: relative;
+    display: inline-block;
+}
+
+.notification-bell {
+    background: rgba(255,255,255,0.2);
+    color: white;
+    border: none;
+    padding: 10px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    font-size: 16px;
+}
+
+.notification-bell:hover {
+    background: rgba(255,255,255,0.3);
+}
+
+.notification-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: #ff4757;
+    color: white;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    font-size: 11px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: pulse 2s infinite;
+}
+
+.notifications-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    width: 350px;
+    max-height: 400px;
+    overflow-y: auto;
+    z-index: 1000;
+    display: none;
+    margin-top: 10px;
+    border: 1px solid #e2e8f0;
+}
+
+.notifications-dropdown.show {
+    display: block;
+    animation: dropdownSlideIn 0.3s ease;
+}
+
+.notifications-header {
+    padding: 15px 20px;
+    border-bottom: 1px solid #e2e8f0;
+    background: #f8f9fa;
+    border-radius: 10px 10px 0 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.notifications-header h4 {
+    margin: 0;
+    color: #2d3748;
+    font-size: 16px;
+}
+
+.mark-all-read {
+    background: none;
+    border: none;
+    color: #c8102e;
+    font-size: 12px;
+    cursor: pointer;
+    text-decoration: underline;
+}
+
+.notifications-list {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.notification-item {
+    padding: 15px 20px;
+    border-bottom: 1px solid #f1f3f4;
+    cursor: pointer;
+    transition: background 0.2s ease;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.notification-item:hover {
+    background: #f8f9fa;
+}
+
+.notification-item.unread {
+    background: #fff3cd;
+    border-left: 4px solid #ffc107;
+}
+
+.notification-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    color: white;
+    flex-shrink: 0;
+}
+
+.notification-icon.new-offer {
+    background: #28a745;
+}
+
+.notification-icon.new-application {
+    background: #17a2b8;
+}
+
+.notification-icon.new-participant {
+    background: #6f42c1;
+}
+
+.notification-content {
+    flex: 1;
+}
+
+.notification-title {
+    font-weight: 600;
+    color: #2d3748;
+    margin-bottom: 4px;
+    font-size: 14px;
+}
+
+.notification-message {
+    color: #6c757d;
+    font-size: 13px;
+    line-height: 1.4;
+    margin-bottom: 6px;
+}
+
+.notification-time {
+    color: #9ca3af;
+    font-size: 11px;
+}
+
+.no-notifications {
+    padding: 40px 20px;
+    text-align: center;
+    color: #6c757d;
+}
+
+.no-notifications i {
+    font-size: 32px;
+    margin-bottom: 10px;
+    opacity: 0.5;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+@keyframes dropdownSlideIn {
+    from { 
+        opacity: 0; 
+        transform: translateY(-10px); 
+    }
+    to { 
+        opacity: 1; 
+        transform: translateY(0); 
+    }
+}
     </style>
 </head>
 <body>
@@ -485,14 +670,31 @@
             </div>
         </div>
         <div class="header-right">
-            <div class="user-info">
-                <div style="font-weight: 600;">Administrador</div>
-                <div style="font-size: 12px; opacity: 0.8;">Oficina de Carreras y Colocaciones</div>
+    <div class="notifications-container">
+        <button class="notification-bell" onclick="toggleNotifications()">
+            <i class="fas fa-bell"></i>
+            <span class="notification-badge" id="notificationBadge" style="display: none;">0</span>
+        </button>
+        
+        <div class="notifications-dropdown" id="notificationsDropdown">
+            <div class="notifications-header">
+                <h4>Notificaciones</h4>
+                <button class="mark-all-read" onclick="markAllAsRead()">Marcar como leídas</button>
             </div>
-            <button class="logout-btn" onclick="logout()">
-                <i class="fas fa-sign-out-alt"></i> Salir
-            </button>
+            <div class="notifications-list" id="notificationsList">
+                <!-- Las notificaciones se generan dinámicamente -->
+            </div>
         </div>
+    </div>
+    
+    <div class="user-info">
+        <div style="font-weight: 600;">Administrador</div>
+        <div style="font-size: 12px; opacity: 0.8;">Oficina de Carreras y Colocaciones</div>
+    </div>
+    <button class="logout-btn" onclick="logout()">
+        <i class="fas fa-sign-out-alt"></i> Salir
+    </button>
+</div>
     </div>
 
     <div class="container">
@@ -848,11 +1050,19 @@
         let applications = [];
         let appointments = [];
 
+// Sistema de notificaciones
+let notifications = JSON.parse(localStorage.getItem('adminNotifications')) || [];
+let lastCheckedOffers = localStorage.getItem('lastCheckedOffers') ? parseInt(localStorage.getItem('lastCheckedOffers')) : 0;
+let lastCheckedParticipants = localStorage.getItem('lastCheckedParticipants') ? parseInt(localStorage.getItem('lastCheckedParticipants')) : 0;
+let lastCheckedApplications = localStorage.getItem('lastCheckedApplications') ? parseInt(localStorage.getItem('lastCheckedApplications')) : 0;
+let lastCheckedAppointments = localStorage.getItem('lastCheckedAppointments') ? parseInt(localStorage.getItem('lastCheckedAppointments')) : 0;
+
         // Inicializar dashboard
         document.addEventListener('DOMContentLoaded', async function() {
             isFirebaseInitialized = initializeFirebase();
             await loadAllData();
             updateStats();
+	    updateNotificationBadge();
             switchTab('offers');
             console.log('Dashboard Administrativo cargado correctamente');
         });
@@ -900,6 +1110,11 @@
                 applications = JSON.parse(localStorage.getItem('applications')) || [];
                 appointments = JSON.parse(localStorage.getItem('appointments')) || [];
             }
+// Verificar notificaciones después de cargar datos
+        setTimeout(() => {
+            checkForNewItems();
+        }, 1000);
+
         }
 
         // Actualizar estadísticas principales
@@ -2475,6 +2690,8 @@ async function saveOfferChanges(offerId) {
             }
             
             showNotification('Datos actualizados correctamente', 'success');
+// Verificar nuevas notificaciones
+            checkForNewItems();
         }
 
         // Cerrar sesión
@@ -2564,6 +2781,198 @@ async function saveOfferChanges(offerId) {
             }
         `;
         document.head.appendChild(style);
+// Funciones del sistema de notificaciones
+function toggleNotifications() {
+    const dropdown = document.getElementById('notificationsDropdown');
+    const isVisible = dropdown.classList.contains('show');
+    
+    if (isVisible) {
+        dropdown.classList.remove('show');
+    } else {
+        dropdown.classList.add('show');
+        loadNotifications();
+    }
+}
+
+function loadNotifications() {
+    const container = document.getElementById('notificationsList');
+    
+    if (notifications.length === 0) {
+        container.innerHTML = `
+            <div class="no-notifications">
+                <i class="fas fa-bell-slash"></i>
+                <p>No hay notificaciones nuevas</p>
+            </div>
+        `;
+        return;
+    }
+    
+    let html = '';
+    notifications.slice(0, 10).forEach(notification => {
+        const timeAgo = getTimeAgo(notification.timestamp);
+        const unreadClass = notification.read ? '' : 'unread';
+        
+        html += `
+            <div class="notification-item ${unreadClass}" onclick="markAsRead('${notification.id}')">
+                <div class="notification-icon ${notification.type}">
+                    <i class="${getNotificationIcon(notification.type)}"></i>
+                </div>
+                <div class="notification-content">
+                    <div class="notification-title">${notification.title}</div>
+                    <div class="notification-message">${notification.message}</div>
+                    <div class="notification-time">${timeAgo}</div>
+                </div>
+            </div>
+        `;
+    });
+    
+    container.innerHTML = html;
+}
+
+function checkForNewItems() {
+    const currentOffers = offers.length;
+    const currentParticipants = participants.length;
+    const currentApplications = applications.length;
+    const currentAppointments = appointments.length;
+    
+    // Verificar nuevas ofertas
+    if (currentOffers > lastCheckedOffers) {
+        const newCount = currentOffers - lastCheckedOffers;
+        addNotification({
+            type: 'new-offer',
+            title: `${newCount} Nueva${newCount > 1 ? 's' : ''} Oferta${newCount > 1 ? 's' : ''}`,
+            message: `Se ${newCount > 1 ? 'han registrado' : 'ha registrado'} ${newCount} nueva${newCount > 1 ? 's' : ''} oferta${newCount > 1 ? 's' : ''} de empleo`
+        });
+        lastCheckedOffers = currentOffers;
+        localStorage.setItem('lastCheckedOffers', lastCheckedOffers.toString());
+    }
+    
+    // Verificar nuevos participantes
+    if (currentParticipants > lastCheckedParticipants) {
+        const newCount = currentParticipants - lastCheckedParticipants;
+        addNotification({
+            type: 'new-participant',
+            title: `${newCount} Nuevo${newCount > 1 ? 's' : ''} Participante${newCount > 1 ? 's' : ''}`,
+            message: `Se ${newCount > 1 ? 'han registrado' : 'ha registrado'} ${newCount} nuevo${newCount > 1 ? 's' : ''} participante${newCount > 1 ? 's' : ''}`
+        });
+        lastCheckedParticipants = currentParticipants;
+        localStorage.setItem('lastCheckedParticipants', lastCheckedParticipants.toString());
+    }
+    
+    // Verificar nuevas aplicaciones
+    if (currentApplications > lastCheckedApplications) {
+        const newCount = currentApplications - lastCheckedApplications;
+        addNotification({
+            type: 'new-application',
+            title: `${newCount} Nueva${newCount > 1 ? 's' : ''} Solicitud${newCount > 1 ? 'es' : ''}`,
+            message: `Se ${newCount > 1 ? 'han recibido' : 'ha recibido'} ${newCount} nueva${newCount > 1 ? 's' : ''} solicitud${newCount > 1 ? 'es' : ''} de empleo`
+        });
+        lastCheckedApplications = currentApplications;
+        localStorage.setItem('lastCheckedApplications', lastCheckedApplications.toString());
+    }
+    
+    // Verificar nuevas citas
+    if (currentAppointments > lastCheckedAppointments) {
+        const newCount = currentAppointments - lastCheckedAppointments;
+        addNotification({
+            type: 'new-appointment',
+            title: `${newCount} Nueva${newCount > 1 ? 's' : ''} Cita${newCount > 1 ? 's' : ''}`,
+            message: `Se ${newCount > 1 ? 'han programado' : 'ha programado'} ${newCount} nueva${newCount > 1 ? 's' : ''} cita${newCount > 1 ? 's' : ''}`
+        });
+        lastCheckedAppointments = currentAppointments;
+        localStorage.setItem('lastCheckedAppointments', lastCheckedAppointments.toString());
+    }
+    
+    updateNotificationBadge();
+}
+
+function addNotification(notification) {
+    const newNotification = {
+        id: Date.now().toString(),
+        ...notification,
+        timestamp: new Date().toISOString(),
+        read: false
+    };
+    
+    notifications.unshift(newNotification);
+    
+    // Mantener solo las últimas 50 notificaciones
+    if (notifications.length > 50) {
+        notifications = notifications.slice(0, 50);
+    }
+    
+    localStorage.setItem('adminNotifications', JSON.stringify(notifications));
+    updateNotificationBadge();
+}
+
+function markAsRead(notificationId) {
+    const notification = notifications.find(n => n.id === notificationId);
+    if (notification) {
+        notification.read = true;
+        localStorage.setItem('adminNotifications', JSON.stringify(notifications));
+        updateNotificationBadge();
+        loadNotifications();
+    }
+}
+
+function markAllAsRead() {
+    notifications.forEach(notification => {
+        notification.read = true;
+    });
+    localStorage.setItem('adminNotifications', JSON.stringify(notifications));
+    updateNotificationBadge();
+    loadNotifications();
+}
+
+function updateNotificationBadge() {
+    const unreadCount = notifications.filter(n => !n.read).length;
+    const badge = document.getElementById('notificationBadge');
+    
+    if (unreadCount > 0) {
+        badge.textContent = unreadCount > 99 ? '99+' : unreadCount;
+        badge.style.display = 'flex';
+    } else {
+        badge.style.display = 'none';
+    }
+}
+
+function getNotificationIcon(type) {
+    const icons = {
+        'new-offer': 'fas fa-briefcase',
+        'new-participant': 'fas fa-user-plus',
+        'new-application': 'fas fa-paper-plane',
+        'new-appointment': 'fas fa-calendar-plus'
+    };
+    return icons[type] || 'fas fa-bell';
+}
+
+function getTimeAgo(timestamp) {
+    const now = new Date();
+    const time = new Date(timestamp);
+    const diffInMinutes = Math.floor((now - time) / (1000 * 60));
+    
+    if (diffInMinutes < 1) return 'Ahora mismo';
+    if (diffInMinutes < 60) return `Hace ${diffInMinutes} min`;
+    
+    const diffInHours = Math.floor(diffInMinutes / 60);
+    if (diffInHours < 24) return `Hace ${diffInHours}h`;
+    
+    const diffInDays = Math.floor(diffInHours / 24);
+    if (diffInDays < 7) return `Hace ${diffInDays}d`;
+    
+    return time.toLocaleDateString();
+}
+
+// Cerrar dropdown al hacer clic fuera
+document.addEventListener('click', function(event) {
+    const container = document.querySelector('.notifications-container');
+    const dropdown = document.getElementById('notificationsDropdown');
+    
+    if (!container.contains(event.target)) {
+        dropdown.classList.remove('show');
+    }
+});
+
 // Cargar tabla de citas
         function loadAppointmentsTable() {
             const container = document.getElementById('appointmentsTableContainer');
