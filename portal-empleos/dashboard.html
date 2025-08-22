@@ -802,6 +802,13 @@
                 <span class="stat-number" id="totalAppointments">0</span>
                 <div class="stat-label">Citas Programadas</div>
             </div>
+<div class="stat-card" style="border-left: 4px solid #28a745;">
+                <div class="stat-icon" style="color: #28a745;">
+                    <i class="fas fa-trophy"></i>
+                </div>
+                <span class="stat-number" id="totalPlacements">0</span>
+                <div class="stat-label">Colocados</div>
+            </div>
         </div>
 
         <!-- Contenido Principal -->
@@ -839,9 +846,12 @@
                         <i class="fas fa-calendar-alt"></i> Citas
                     </button>
                     <button class="tab" onclick="switchTab('pending')">
-                    <i class="fas fa-clock"></i> Solicitudes Pendientes
+                        <i class="fas fa-clock"></i> Solicitudes Pendientes
    		    <span class="pending-badge" id="pendingCount" style="background: #ff4757; color: white; border-radius: 50%; padding: 2px 6px; font-size: 10px; margin-left: 5px; display: none;">0</span>
 		    </button>
+                    <button class="tab" onclick="switchTab('placements')">
+                        <i class="fas fa-trophy"></i> Colocados
+                    </button>
                 </div>
 
                 <!-- Tab Ofertas -->
@@ -1084,6 +1094,53 @@
     </div>
 </div>
 
+<!-- Tab Colocados -->
+                <div class="tab-content" id="placementsContent">
+                    <div class="quick-stats">
+                        <div class="quick-stat">
+                            <div class="quick-stat-number" id="directPlacements">0</div>
+                            <div class="quick-stat-label">Seguimiento Directo</div>
+                        </div>
+                        <div class="quick-stat">
+                            <div class="quick-stat-number" id="indirectPlacements">0</div>
+                            <div class="quick-stat-label">Seguimiento Indirecto</div>
+                        </div>
+                        <div class="quick-stat">
+                            <div class="quick-stat-number" id="thisMonthPlacements">0</div>
+                            <div class="quick-stat-label">Este Mes</div>
+                        </div>
+                        <div class="quick-stat">
+                            <div class="quick-stat-number" id="placementRate">0%</div>
+                            <div class="quick-stat-label">Tasa de Colocación</div>
+                        </div>
+                    </div>
+
+                    <div class="search-filter-bar">
+                        <input type="text" class="search-input" id="placementsSearch" placeholder="🔍 Buscar colocados..." oninput="filterPlacements()">
+                        <select class="filter-select" id="placementsTypeFilter" onchange="filterPlacements()">
+                            <option value="">Todos los Tipos</option>
+                            <option value="directo">Seguimiento Directo</option>
+                            <option value="indirecto">Seguimiento Indirecto</option>
+                        </select>
+                        <select class="filter-select" id="placementsDateFilter" onchange="filterPlacements()">
+                            <option value="">Todas las Fechas</option>
+                            <option value="month">Este Mes</option>
+                            <option value="quarter">Este Trimestre</option>
+                            <option value="year">Este Año</option>
+                        </select>
+                        <button class="btn btn-success" onclick="showAddPlacementModal()">
+                            <i class="fas fa-plus"></i> Registrar Colocado
+                        </button>
+                        <button class="btn btn-primary" onclick="exportPlacementsData()">
+                            <i class="fas fa-file-excel"></i> Exportar
+                        </button>
+                    </div>
+
+                    <div id="placementsTableContainer">
+                        <!-- Tabla se genera dinámicamente -->
+                    </div>
+                </div>
+
     <!-- Modal para Ver Detalles -->
     <div id="detailsModal" class="modal">
         <div class="modal-content">
@@ -1102,6 +1159,140 @@
             </div>
         </div>
     </div>
+<!-- Modal para Registrar Colocado -->
+    <div id="placementModal" class="modal">
+        <div class="modal-content" style="max-width: 900px;">
+            <div class="modal-header">
+                <h3 id="placementModalTitle">Registrar Nuevo Colocado</h3>
+                <span class="close" onclick="closePlacementModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="placementForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Participante *</label>
+                            <input type="text" id="placement-participantName" required placeholder="Nombre completo">
+                        </div>
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input type="email" id="placement-email" placeholder="correo@ejemplo.com">
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Empresa donde fue colocado *</label>
+                            <input type="text" id="placement-company" required placeholder="Nombre de la empresa">
+                        </div>
+                        <div class="form-group">
+                            <label>Posición obtenida *</label>
+                            <input type="text" id="placement-position" required placeholder="Título del puesto">
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Fecha de colocación *</label>
+                            <input type="date" id="placement-date" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Tipo de colocación *</label>
+                            <select id="placement-trackingType" required>
+                                <option value="">Seleccionar...</option>
+                                <option value="directo">Seguimiento Directo</option>
+                                <option value="indirecto">Seguimiento Indirecto</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Tipo de posición *</label>
+                            <select id="placement-positionType" required>
+                                <option value="">Seleccionar...</option>
+                                <option value="part-time">Part Time</option>
+                                <option value="full-time">Full Time</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Modalidad *</label>
+                            <select id="placement-modality" required>
+                                <option value="">Seleccionar...</option>
+                                <option value="regular">Posición Regular</option>
+                                <option value="temporera">Posición Temporera</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Tipo de persona *</label>
+                            <select id="placement-personType" required onchange="toggleStudentFields()">
+                                <option value="">Seleccionar...</option>
+                                <option value="estudiante">Estudiante</option>
+                                <option value="exalumno">Exalumno</option>
+                                <option value="comunidad">Comunidad</option>
+                            </select>
+                        </div>
+                        <div class="form-group" id="studentIdGroup" style="display: none;">
+                            <label>ID de estudiante</label>
+                            <input type="text" id="placement-studentId" placeholder="ID del estudiante">
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Grado obtenido/en curso *</label>
+                            <select id="placement-degree" required>
+                                <option value="">Seleccionar...</option>
+                                <option value="bachillerato">Bachillerato</option>
+                                <option value="maestria">Maestría</option>
+                                <option value="asociado">Grado Asociado</option>
+                                <option value="doctorado">Doctorado</option>
+                                <option value="cuarto">Cuarto Año</option>
+                                <option value="certificado">Certificado Técnico</option>
+                                <option value="11mo">11mo o menos</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Concentración *</label>
+                            <input type="text" id="placement-concentration" required placeholder="Área de estudios">
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>División académica *</label>
+                            <select id="placement-division" required>
+                                <option value="">Seleccionar...</option>
+                                <option value="liberales">Artes Liberales</option>
+                                <option value="negocios">Negocios</option>
+                                <option value="tecnologia">Ciencias y Tecnología</option>
+                                <option value="salud">Ciencias de la Salud</option>
+                                <option value="tecnicos">Programas Técnicos</option>
+                            </select>
+                        </div>
+                        <div class="form-group" id="graduationDateGroup" style="display: none;">
+                            <label>Fecha de graduación</label>
+                            <input type="date" id="placement-graduationDate">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Notas adicionales</label>
+                        <textarea id="placement-notes" rows="3" placeholder="Información adicional sobre la colocación..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closePlacementModal()">Cancelar</button>
+                <button class="btn btn-success" onclick="savePlacement()">
+                    <i class="fas fa-save"></i> Guardar Colocado
+                </button>
+            </div>
+        </div>
+    </div>
+
 <script>
         // Configuración Firebase
         const firebaseConfig = {
@@ -1152,6 +1343,7 @@
         let participants = [];
         let applications = [];
         let appointments = [];
+        let placements = [];
 
 // Sistema de notificaciones
 let notifications = JSON.parse(localStorage.getItem('adminNotifications')) || [];
@@ -1203,6 +1395,13 @@ let lastCheckedAppointments = localStorage.getItem('lastCheckedAppointments') ? 
                        console.log('Citas cargadas desde Firebase:', appointments.length);
                    }
 
+// Cargar colocados desde Firebase
+                   const placementsResult = await FirebaseHelper.getDocs('placements');
+                   if (placementsResult.success) {
+                       placements = placementsResult.docs;
+                       console.log('Colocados cargados desde Firebase:', placements.length);
+                   }
+
                 } else {
                     throw new Error('Firebase no inicializado');
                 }
@@ -1213,6 +1412,7 @@ let lastCheckedAppointments = localStorage.getItem('lastCheckedAppointments') ? 
                 participants = JSON.parse(localStorage.getItem('participants')) || [];
                 applications = JSON.parse(localStorage.getItem('applications')) || [];
                 appointments = JSON.parse(localStorage.getItem('appointments')) || [];
+                placements = JSON.parse(localStorage.getItem('placements')) || [];
             }
 // Verificar notificaciones después de cargar datos
         setTimeout(() => {
@@ -1257,6 +1457,7 @@ let lastCheckedAppointments = localStorage.getItem('lastCheckedAppointments') ? 
             document.getElementById('totalApplications').textContent = pendingApplications;
             document.getElementById('totalCompanies').textContent = uniqueCompanies;
 document.getElementById('totalAppointments').textContent = appointments.length;
+document.getElementById('totalPlacements').textContent = placements.length;
         
         // Stats rápidas citas
 const todayAppointments = appointments.filter(app => {
@@ -1304,6 +1505,31 @@ const upcomingAppointments = appointments.filter(app => {
             document.getElementById('activeCompanies').textContent = uniqueCompanies;
 // Actualizar contador de pendientes en la interfaz
         updatePendingCount();
+
+// Stats para colocados
+        const directPlacements = placements.filter(p => p.trackingType === 'directo').length;
+        const indirectPlacements = placements.filter(p => p.trackingType === 'indirecto').length;
+        const thisMonthPlacements = placements.filter(p => {
+            const placementDate = new Date(p.placementDate);
+            return placementDate.getMonth() === today.getMonth() && 
+                   placementDate.getFullYear() === today.getFullYear();
+        }).length;
+        const totalParticipantsForRate = participants.length + placements.length;
+        const currentPlacementRate = totalParticipantsForRate > 0 ? Math.round((placements.length / totalParticipantsForRate) * 100) : 0;
+        
+        // Actualizar elementos de colocados
+        if (document.getElementById('directPlacements')) {
+            document.getElementById('directPlacements').textContent = directPlacements;
+        }
+        if (document.getElementById('indirectPlacements')) {
+            document.getElementById('indirectPlacements').textContent = indirectPlacements;
+        }
+        if (document.getElementById('thisMonthPlacements')) {
+            document.getElementById('thisMonthPlacements').textContent = thisMonthPlacements;
+        }
+        if (document.getElementById('placementRate')) {
+            document.getElementById('placementRate').textContent = currentPlacementRate + '%';
+        }
         
         // Stats para solicitudes pendientes
         const pendingAppsCount = applications.filter(app => app.status === 'pending').length;
@@ -1351,7 +1577,7 @@ function switchTab(tabName) {
     document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
     
     // Activar tab correspondiente
-    const tabIndex = ['offers', 'participants', 'applications', 'reports', 'appointments', 'pending'].indexOf(tabName);
+    const tabIndex = ['offers', 'participants', 'applications', 'reports', 'appointments', 'pending', 'placements'].indexOf(tabName);
     if (tabIndex !== -1) {
         document.querySelectorAll('.tab')[tabIndex].classList.add('active');
     }
@@ -1376,6 +1602,9 @@ function switchTab(tabName) {
             break;
         case 'pending':
             loadPendingApplicationsTable();
+            break;
+case 'placements':
+            loadPlacementsTable();
             break;
     }
 }
@@ -1589,7 +1818,6 @@ function switchTab(tabName) {
                         <td>${getStudentTypeLabel(application.participantData?.studentType || getParticipantData(application.participantId)?.studentType || 'N/A')}</td>
                         <td>${application.participantData?.concentration || getParticipantData(application.participantId)?.concentration || 'N/A'}</td>
                         <td>
-                            <td>
     <div class="actions">
         <button class="btn btn-info btn-small" onclick="viewApplicationDetails('${application.id}')" title="Ver detalles">
             <i class="fas fa-eye"></i>
@@ -1600,10 +1828,15 @@ function switchTab(tabName) {
             </button>
         ` : ''}
         ${application.status === 'approved_sent' ? `
-            <button class="btn btn-warning btn-small" onclick="viewReferralDetails('${application.id}')" title="Ver seguimiento">
-                <i class="fas fa-eye-slash"></i>
-            </button>
-        ` : ''}
+    <button class="btn btn-warning btn-small" onclick="viewReferralDetails('${application.id}')" title="Ver seguimiento">
+        <i class="fas fa-eye-slash"></i>
+    </button>
+` : ''}
+${application.status === 'rejected' ? `
+    <button class="btn btn-danger btn-small" onclick="viewRejectionDetails('${application.id}')" title="Ver razón del rechazo">
+        <i class="fas fa-times-circle"></i>
+    </button>
+` : ''}
         <button class="btn btn-danger btn-small" onclick="deleteApplication('${application.id}')" title="Eliminar">
             <i class="fas fa-trash"></i>
         </button>
@@ -1861,7 +2094,17 @@ function switchTab(tabName) {
                 <div style="margin-bottom: 20px;">
                     <h4 style="color: #c8102e; margin-bottom: 15px;">Detalles de la Solicitud</h4>
                     <p><strong>Fecha de Aplicación:</strong> ${new Date(application.appliedAt).toLocaleString()}</p>
-                    <p><strong>Estado:</strong> <span class="status-badge ${application.status === 'pending' ? 'status-pending' : application.status === 'processed' ? 'status-approved' : 'status-active'}">${application.status === 'pending' ? 'Pendiente' : application.status === 'processed' ? 'Procesada' : 'Referida'}</span></p>
+                    <p><strong>Estado:</strong> <span class="status-badge ${
+                        application.status === 'pending' ? 'status-pending' : 
+                        application.status === 'processed' ? 'status-approved' : 
+                        application.status === 'approved_sent' ? 'status-approved' : 
+                        application.status === 'rejected' ? 'status-expired' : 'status-active'
+                    }">${
+                        application.status === 'pending' ? 'Pendiente' : 
+                        application.status === 'processed' ? 'Procesada' : 
+                        application.status === 'approved_sent' ? 'Referido Enviado' : 
+                        application.status === 'rejected' ? 'Rechazada' : 'Referida'
+                    }</span></p>
                 </div>
                 
                 ${application.status === 'pending' ? `
@@ -2544,16 +2787,20 @@ localStorage.setItem('lastCheckedOffers', lastCheckedOffers.toString());
 
             filteredApplications.forEach(application => {
                 const statusLabels = {
-                    'pending': 'Pendiente',
-                    'processed': 'Procesada',
-                    'referred': 'Referida'
-                };
+    'pending': 'Pendiente',
+    'processed': 'Procesada',
+    'referred': 'Referida',
+    'approved_sent': 'Referido Enviado',
+    'rejected': 'Rechazada'
+};
 
                 const statusClasses = {
-                    'pending': 'status-pending',
-                    'processed': 'status-approved',
-                    'referred': 'status-active'
-                };
+    'pending': 'status-pending',
+    'processed': 'status-approved',
+    'referred': 'status-active',
+    'approved_sent': 'status-approved',
+    'rejected': 'status-expired'
+};
 
                 html += `
                     <tr>
@@ -2564,16 +2811,29 @@ localStorage.setItem('lastCheckedOffers', lastCheckedOffers.toString());
                         <td>${application.participantPhone}</td>
                         <td><span class="status-badge ${statusClasses[application.status]}">${statusLabels[application.status]}</span></td>
                         <td>
-                            <div class="actions">
-                                <button class="btn btn-info btn-small" onclick="viewApplicationDetails('${application.id}')" title="Ver detalles">
-                                    <i class="fas fa-eye"></i>
-                                </button>
-                                ${application.status === 'pending' ? `
-                                    <button class="btn btn-danger btn-small" onclick="deleteApplication('${application.id}')" title="Eliminar">
-    					<i class="fas fa-trash"></i>
-				</button>
-                                ` : ''}
-                            </div>
+                           <div class="actions">
+    <button class="btn btn-info btn-small" onclick="viewApplicationDetails('${application.id}')" title="Ver detalles">
+        <i class="fas fa-eye"></i>
+    </button>
+    ${application.status === 'pending' ? `
+        <button class="btn btn-success btn-small" onclick="processApplication('${application.id}')" title="Procesar">
+            <i class="fas fa-check"></i>
+        </button>
+    ` : ''}
+    ${application.status === 'approved_sent' ? `
+        <button class="btn btn-warning btn-small" onclick="viewReferralDetails('${application.id}')" title="Ver seguimiento">
+            <i class="fas fa-eye-slash"></i>
+        </button>
+    ` : ''}
+    ${application.status === 'rejected' ? `
+        <button class="btn btn-danger btn-small" onclick="viewRejectionDetails('${application.id}')" title="Ver razón del rechazo">
+            <i class="fas fa-times-circle"></i>
+        </button>
+    ` : ''}
+    <button class="btn btn-danger btn-small" onclick="deleteApplication('${application.id}')" title="Eliminar">
+        <i class="fas fa-trash"></i>
+    </button>
+</div>
                         </td>
                     </tr>
                 `;
@@ -2814,21 +3074,431 @@ localStorage.setItem('lastCheckedOffers', lastCheckedOffers.toString());
         }
 
         // Actualizar reportes
-        function updateReports() {
-            const container = document.getElementById('reportsContainer');
-            const period = document.getElementById('reportsDateFilter').value;
+       function updateReports() {
+    const container = document.getElementById('reportsContainer');
+    const period = document.getElementById('reportsDateFilter').value;
+    
+    container.innerHTML = `
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 25px;">
             
-            // Aquí se pueden agregar gráficos y estadísticas más detalladas
-            container.innerHTML = `
-                <div style="text-align: center; padding: 40px;">
-                    <h3>Reportes para el período: ${period}</h3>
-                    <p>Estadísticas detalladas en desarrollo...</p>
-                    <button class="btn btn-primary" onclick="generateMonthlyReport()">
-                        <i class="fas fa-file-pdf"></i> Generar Reporte PDF
-                    </button>
+            <!-- Reporte 1: Participantes Atendidos -->
+            <div class="report-card" style="background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); text-align: center;">
+                <div style="font-size: 48px; color: #28a745; margin-bottom: 15px;">
+                    <i class="fas fa-users"></i>
                 </div>
-            `;
+                <h3 style="color: #2d3748; margin-bottom: 15px;">Participantes Atendidos</h3>
+                <p style="color: #6c757d; margin-bottom: 20px;">Reporte completo de todos los participantes registrados en el sistema</p>
+                <div style="margin-bottom: 20px;">
+                    <span style="font-size: 24px; font-weight: bold; color: #28a745;">${participants.length}</span>
+                    <br><small style="color: #6c757d;">Total de participantes</small>
+                </div>
+                <button class="btn btn-success" onclick="generateParticipantsReport()" style="width: 100%;">
+                    <i class="fas fa-file-excel"></i> Generar Reporte Excel
+                </button>
+            </div>
+            
+            <!-- Reporte 2: Ofertas y Patronos -->
+            <div class="report-card" style="background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); text-align: center;">
+                <div style="font-size: 48px; color: #c8102e; margin-bottom: 15px;">
+                    <i class="fas fa-briefcase"></i>
+                </div>
+                <h3 style="color: #2d3748; margin-bottom: 15px;">Ofertas y Patronos</h3>
+                <p style="color: #6c757d; margin-bottom: 20px;">Reporte de ofertas de empleo y empresas patronas registradas</p>
+                <div style="margin-bottom: 10px;">
+                    <span style="font-size: 20px; font-weight: bold; color: #c8102e;">${offers.length}</span>
+                    <small style="color: #6c757d; display: block;">Ofertas totales</small>
+                </div>
+                <div style="margin-bottom: 20px;">
+                    <span style="font-size: 20px; font-weight: bold; color: #c8102e;">${[...new Set(offers.map(o => o.companyName))].length}</span>
+                    <small style="color: #6c757d; display: block;">Empresas únicas</small>
+                </div>
+                <button class="btn" onclick="generateOffersReport()" style="width: 100%; background: #c8102e; color: white;">
+                    <i class="fas fa-file-excel"></i> Generar Reporte Excel
+                </button>
+            </div>
+            
+            <!-- Reporte 3: Solicitudes (Referidos) -->
+            <div class="report-card" style="background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); text-align: center;">
+                <div style="font-size: 48px; color: #17a2b8; margin-bottom: 15px;">
+                    <i class="fas fa-paper-plane"></i>
+                </div>
+                <h3 style="color: #2d3748; margin-bottom: 15px;">Solicitudes (Referidos)</h3>
+                <p style="color: #6c757d; margin-bottom: 20px;">Reporte de todas las solicitudes procesadas y referidas a patronos</p>
+                <div style="margin-bottom: 20px;">
+                    <span style="font-size: 24px; font-weight: bold; color: #17a2b8;">${applications.length}</span>
+                    <br><small style="color: #6c757d;">Total de solicitudes</small>
+                </div>
+                <button class="btn btn-info" onclick="generateReferralsReport()" style="width: 100%;">
+                    <i class="fas fa-file-excel"></i> Generar Reporte Excel
+                </button>
+            </div>
+            
+            <!-- Reporte 4: Citas Manpower -->
+            <div class="report-card" style="background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); text-align: center;">
+                <div style="font-size: 48px; color: #6f42c1; margin-bottom: 15px;">
+                    <i class="fas fa-calendar-alt"></i>
+                </div>
+                <h3 style="color: #2d3748; margin-bottom: 15px;">Citas Atendidos (Manpower)</h3>
+                <p style="color: #6c757d; margin-bottom: 20px;">Reporte de todas las citas programadas y atendidas con Manpower</p>
+                <div style="margin-bottom: 20px;">
+                    <span style="font-size: 24px; font-weight: bold; color: #6f42c1;">${appointments.length}</span>
+                    <br><small style="color: #6c757d;">Total de citas</small>
+                </div>
+                <button class="btn" onclick="generateManpowerReport()" style="width: 100%; background: #6f42c1; color: white;">
+                    <i class="fas fa-file-excel"></i> Generar Reporte Excel
+                </button>
+            </div>
+            
+        </div>
+        
+        <div style="margin-top: 30px; text-align: center; padding: 20px; background: #f8f9fa; border-radius: 10px;">
+            <h4 style="color: #2d3748; margin-bottom: 15px;">📊 Reporte Consolidado</h4>
+            <p style="color: #6c757d; margin-bottom: 20px;">Generar un reporte completo con todos los datos del sistema</p>
+            <button class="btn btn-primary" onclick="generateConsolidatedReport()" style="padding: 12px 30px;">
+                <i class="fas fa-chart-bar"></i> Generar Reporte Consolidado
+            </button>
+        </div>
+    `;
+}
+
+// Generar reporte de participantes
+function generateParticipantsReport() {
+    if (participants.length === 0) {
+        showNotification('No hay participantes para reportar', 'warning');
+        return;
+    }
+
+    const data = participants.map(participant => ({
+        'Fecha Registro': new Date(participant.registeredAt).toLocaleDateString('es-ES'),
+        'Tipo Participante': participant.participantType === 'new' ? 'Nuevo' : 'Seguimiento',
+        'Nombre Completo': `${participant.firstName} ${participant.lastName}`,
+        'Email': participant.email,
+        'Teléfono': participant.phone,
+        'Ciudad': participant.city,
+        'Tipo Estudiante': getStudentTypeLabel(participant.studentType),
+        'Recinto': getCampusLabel(participant.campus),
+        'ID Estudiante': participant.studentId || 'N/A',
+        'Horario': participant.schedule === 'diurno' ? 'Diurno' : 'Nocturno',
+        'Año de Estudios': participant.studyYear,
+        'Concentración': participant.concentration,
+        'División Académica': participant.academicDivision || 'N/A',
+        'Grado Académico': participant.academicDegree || 'N/A',
+        'Candidato a Graduación': participant.graduationCandidate === 'yes' ? 'Sí' : 'No',
+        'Resume Disponible': participant.resume ? 'Sí' : 'No'
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Participantes Atendidos");
+    
+    const filename = `Reporte_Participantes_${new Date().toISOString().split('T')[0]}.xlsx`;
+    XLSX.writeFile(wb, filename);
+    
+    showNotification('Reporte de participantes generado exitosamente', 'success');
+}
+
+// Generar reporte de ofertas y patronos
+function generateOffersReport() {
+    if (offers.length === 0) {
+        showNotification('No hay ofertas para reportar', 'warning');
+        return;
+    }
+
+    // Hoja 1: Ofertas detalladas
+    const offersData = offers.map(offer => ({
+        'Fecha Publicación': new Date(offer.today || offer.createdAt).toLocaleDateString('es-ES'),
+        'Tipo Patrono': offer.patronType === 'new' ? 'Patrono Nuevo' : 'Patrono Existente',
+        'Empresa': offer.companyName,
+        'Contacto': offer.contactPerson,
+        'Posición Contacto': offer.contactPosition || 'N/A',
+        'Email Empresa': offer.email,
+        'Teléfono Empresa': offer.phone,
+        'Recibida Por': offer.receivedThrough || 'N/A',
+        'Posición Ofertada': offer.position,
+        'Tipo Posición': getTypeLabel(offer.positionType),
+        'Ubicación': offer.location,
+        'Salario': offer.salary,
+        'Fecha Límite': new Date(offer.deadline).toLocaleDateString('es-ES'),
+        'Estado Actual': getOfferStatus(offer.deadline) === 'expired' ? 'Vencida' : 
+                        getOfferStatus(offer.deadline) === 'expiring' ? 'Vence Pronto' : 'Activa',
+        'Descripción': offer.jobDescription || 'N/A',
+        'Requisitos': offer.requirements,
+        'Horarios': offer.schedule || 'N/A',
+        'Actividades Reclutamiento': offer.activities ? offer.activities.join(', ') : 'N/A',
+        'Notas': offer.notes || 'N/A'
+    }));
+
+    // Hoja 2: Resumen de patronos
+    const companiesMap = {};
+    offers.forEach(offer => {
+        if (!companiesMap[offer.companyName]) {
+            companiesMap[offer.companyName] = {
+                empresa: offer.companyName,
+                contacto: offer.contactPerson,
+                email: offer.email,
+                telefono: offer.phone,
+                totalOfertas: 0,
+                ofertasActivas: 0,
+                primeraOferta: new Date(offer.today || offer.createdAt),
+                ultimaOferta: new Date(offer.today || offer.createdAt)
+            };
         }
+        
+        companiesMap[offer.companyName].totalOfertas++;
+        if (getOfferStatus(offer.deadline) === 'active') {
+            companiesMap[offer.companyName].ofertasActivas++;
+        }
+        
+        const offerDate = new Date(offer.today || offer.createdAt);
+        if (offerDate < companiesMap[offer.companyName].primeraOferta) {
+            companiesMap[offer.companyName].primeraOferta = offerDate;
+        }
+        if (offerDate > companiesMap[offer.companyName].ultimaOferta) {
+            companiesMap[offer.companyName].ultimaOferta = offerDate;
+        }
+    });
+
+    const patronsData = Object.values(companiesMap).map(company => ({
+        'Empresa': company.empresa,
+        'Contacto Principal': company.contacto,
+        'Email': company.email,
+        'Teléfono': company.telefono,
+        'Total Ofertas': company.totalOfertas,
+        'Ofertas Activas': company.ofertasActivas,
+        'Primera Oferta': company.primeraOferta.toLocaleDateString('es-ES'),
+        'Última Oferta': company.ultimaOferta.toLocaleDateString('es-ES')
+    }));
+
+    // Crear workbook con múltiples hojas
+    const wb = XLSX.utils.book_new();
+    
+    const offersSheet = XLSX.utils.json_to_sheet(offersData);
+    XLSX.utils.book_append_sheet(wb, offersSheet, "Ofertas Detalladas");
+    
+    const patronsSheet = XLSX.utils.json_to_sheet(patronsData);
+    XLSX.utils.book_append_sheet(wb, patronsSheet, "Resumen Patronos");
+    
+    const filename = `Reporte_Ofertas_Patronos_${new Date().toISOString().split('T')[0]}.xlsx`;
+    XLSX.writeFile(wb, filename);
+    
+    showNotification('Reporte de ofertas y patronos generado exitosamente', 'success');
+}
+
+// Generar reporte de solicitudes (referidos)
+function generateReferralsReport() {
+    if (applications.length === 0) {
+        showNotification('No hay solicitudes para reportar', 'warning');
+        return;
+    }
+
+    const data = applications.map(application => {
+        const participant = getParticipantData(application.participantId);
+        const offer = offers.find(o => o.id === application.offerId);
+        
+        return {
+            'Fecha Solicitud': new Date(application.appliedAt).toLocaleDateString('es-ES'),
+            'Hora Solicitud': new Date(application.appliedAt).toLocaleTimeString('es-ES'),
+            'Participante': application.participantName,
+            'Email Participante': application.participantEmail,
+            'Teléfono Participante': application.participantPhone,
+            'Tipo Estudiante': getStudentTypeLabel(participant?.studentType),
+            'Recinto': getCampusLabel(participant?.campus),
+            'Concentración': participant?.concentration || 'N/A',
+            'Año Académico': participant?.studyYear || 'N/A',
+            'ID Estudiante': participant?.studentId || 'N/A',
+            'Empresa': application.companyName,
+            'Posición Aplicada': application.offerTitle,
+            'Contacto Empresa': offer?.contactPerson || 'N/A',
+            'Email Empresa': offer?.email || 'N/A',
+            'Teléfono Empresa': offer?.phone || 'N/A',
+            'Estado Solicitud': getApplicationStatusLabel(application.status),
+            'Fecha Procesamiento': application.processedAt ? new Date(application.processedAt).toLocaleDateString('es-ES') : 'N/A',
+            'Fecha Envío': application.adminReview?.sentAt ? new Date(application.adminReview.sentAt).toLocaleDateString('es-ES') : 'N/A',
+            'Decisión Admin': application.adminReview?.decision || 'N/A',
+            'Notas Admin': application.adminReview?.notes || 'N/A',
+            'Revisado Por': application.adminReview?.reviewedBy || 'N/A'
+        };
+    });
+
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Solicitudes y Referidos");
+    
+    const filename = `Reporte_Solicitudes_Referidos_${new Date().toISOString().split('T')[0]}.xlsx`;
+    XLSX.writeFile(wb, filename);
+    
+    showNotification('Reporte de solicitudes y referidos generado exitosamente', 'success');
+}
+
+// Función auxiliar para obtener etiqueta del estado de aplicación
+function getApplicationStatusLabel(status) {
+    const labels = {
+        'pending': 'Pendiente',
+        'processed': 'Procesada',
+        'referred': 'Referida',
+        'approved_sent': 'Referido Enviado',
+        'rejected': 'Rechazada'
+    };
+    return labels[status] || status;
+}
+
+// Generar reporte de citas Manpower
+function generateManpowerReport() {
+    if (appointments.length === 0) {
+        showNotification('No hay citas para reportar', 'warning');
+        return;
+    }
+
+    const data = appointments.map(appointment => {
+        // Formatear fecha de cita
+        const [year, month, day] = appointment.appointmentDate.split('-');
+        const appointmentDate = new Date(year, month - 1, day);
+        const formattedDate = appointmentDate.toLocaleDateString('es-ES');
+        
+        // Formatear hora
+        const [hours, minutes] = appointment.appointmentTime.split(':');
+        const hour12 = hours > 12 ? hours - 12 : (hours === '00' ? 12 : hours);
+        const ampm = hours >= 12 ? 'PM' : 'AM';
+        const formattedTime = `${hour12}:${minutes} ${ampm}`;
+
+        return {
+            'Fecha Registro': new Date(appointment.createdAt).toLocaleDateString('es-ES'),
+            'Tipo Participante': appointment.participantType === 'new' ? 'Nuevo' : 'Seguimiento',
+            'Nombre Completo': `${appointment.firstName} ${appointment.lastName}`,
+            'Email': appointment.email,
+            'Teléfono': appointment.phone,
+            'Ciudad': appointment.city,
+            'Tipo Estudiante': getStudentTypeLabel(appointment.studentType),
+            'Recinto': getCampusLabel(appointment.campus),
+            'ID Estudiante': appointment.studentId || 'N/A',
+            'Concentración': appointment.concentration,
+            'Fecha Cita': formattedDate,
+            'Hora Cita': formattedTime,
+            'Día Semana': appointmentDate.toLocaleDateString('es-ES', { weekday: 'long' }),
+            'Servicio': 'Orientación con Manpower',
+            'Estado Cita': getAppointmentStatusLabel(appointment.status),
+            'Resume Adjunto': appointment.hasResume ? 'Sí' : 'No',
+            'Descripción': appointment.description || 'N/A',
+            'Fecha Completada': appointment.completedAt ? new Date(appointment.completedAt).toLocaleDateString('es-ES') : 'N/A',
+            'Fecha Cancelada': appointment.cancelledAt ? new Date(appointment.cancelledAt).toLocaleDateString('es-ES') : 'N/A'
+        };
+    });
+
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Citas Manpower");
+    
+    const filename = `Reporte_Citas_Manpower_${new Date().toISOString().split('T')[0]}.xlsx`;
+    XLSX.writeFile(wb, filename);
+    
+    showNotification('Reporte de citas Manpower generado exitosamente', 'success');
+}
+
+// Función auxiliar para obtener etiqueta del estado de cita
+function getAppointmentStatusLabel(status) {
+    const labels = {
+        'scheduled': 'Programada',
+        'completed': 'Completada',
+        'cancelled': 'Cancelada'
+    };
+    return labels[status] || status;
+}
+
+// Generar reporte consolidado
+function generateConsolidatedReport() {
+    const wb = XLSX.utils.book_new();
+    
+    // Hoja 1: Resumen ejecutivo
+    const today = new Date();
+    const summaryData = [
+        { Métrica: 'Total de Participantes', Valor: participants.length },
+        { Métrica: 'Participantes Nuevos', Valor: participants.filter(p => p.participantType === 'new').length },
+        { Métrica: 'Participantes de Seguimiento', Valor: participants.filter(p => p.participantType === 'returning').length },
+        { Métrica: 'Total de Ofertas', Valor: offers.length },
+        { Métrica: 'Ofertas Activas', Valor: offers.filter(o => getOfferStatus(o.deadline) === 'active').length },
+        { Métrica: 'Ofertas Vencidas', Valor: offers.filter(o => getOfferStatus(o.deadline) === 'expired').length },
+        { Métrica: 'Empresas Únicas', Valor: [...new Set(offers.map(o => o.companyName))].length },
+        { Métrica: 'Total de Solicitudes', Valor: applications.length },
+        { Métrica: 'Solicitudes Pendientes', Valor: applications.filter(a => a.status === 'pending').length },
+        { Métrica: 'Referidos Enviados', Valor: applications.filter(a => a.status === 'approved_sent').length },
+        { Métrica: 'Solicitudes Rechazadas', Valor: applications.filter(a => a.status === 'rejected').length },
+        { Métrica: 'Total de Citas', Valor: appointments.length },
+        { Métrica: 'Citas Completadas', Valor: appointments.filter(a => a.status === 'completed').length },
+        { Métrica: 'Citas Programadas', Valor: appointments.filter(a => a.status === 'scheduled').length },
+        { Métrica: 'Total Colocados', Valor: placements.length },
+        { Métrica: 'Colocados Directos', Valor: placements.filter(p => p.trackingType === 'directo').length },
+        { Métrica: 'Colocados Indirectos', Valor: placements.filter(p => p.trackingType === 'indirecto').length },
+        { Métrica: 'Fecha del Reporte', Valor: today.toLocaleDateString('es-ES') }
+    ];
+    
+    const summarySheet = XLSX.utils.json_to_sheet(summaryData);
+    XLSX.utils.book_append_sheet(wb, summarySheet, "Resumen Ejecutivo");
+
+    // Hoja 2: Participantes (datos resumidos)
+    if (participants.length > 0) {
+        const participantsData = participants.map(p => ({
+            'Nombre': `${p.firstName} ${p.lastName}`,
+            'Email': p.email,
+            'Recinto': getCampusLabel(p.campus),
+            'Concentración': p.concentration,
+            'Tipo': p.participantType === 'new' ? 'Nuevo' : 'Seguimiento',
+            'Fecha Registro': new Date(p.registeredAt).toLocaleDateString('es-ES')
+        }));
+        const participantsSheet = XLSX.utils.json_to_sheet(participantsData);
+        XLSX.utils.book_append_sheet(wb, participantsSheet, "Participantes");
+    }
+
+    // Hoja 3: Ofertas (datos resumidos)
+    if (offers.length > 0) {
+        const offersData = offers.map(o => ({
+            'Empresa': o.companyName,
+            'Posición': o.position,
+            'Ubicación': o.location,
+            'Salario': o.salary,
+            'Estado': getOfferStatus(o.deadline) === 'expired' ? 'Vencida' : 
+                     getOfferStatus(o.deadline) === 'expiring' ? 'Vence Pronto' : 'Activa',
+            'Fecha Publicación': new Date(o.today || o.createdAt).toLocaleDateString('es-ES')
+        }));
+        const offersSheet = XLSX.utils.json_to_sheet(offersData);
+        XLSX.utils.book_append_sheet(wb, offersSheet, "Ofertas");
+    }
+
+    // Hoja 4: Solicitudes (datos resumidos)
+    if (applications.length > 0) {
+        const applicationsData = applications.map(a => ({
+            'Participante': a.participantName,
+            'Empresa': a.companyName,
+            'Posición': a.offerTitle,
+            'Estado': getApplicationStatusLabel(a.status),
+            'Fecha': new Date(a.appliedAt).toLocaleDateString('es-ES')
+        }));
+        const applicationsSheet = XLSX.utils.json_to_sheet(applicationsData);
+        XLSX.utils.book_append_sheet(wb, applicationsSheet, "Solicitudes");
+    }
+
+    // Hoja 5: Citas (datos resumidos)
+    if (appointments.length > 0) {
+        const appointmentsData = appointments.map(a => {
+            const [year, month, day] = a.appointmentDate.split('-');
+            const appointmentDate = new Date(year, month - 1, day);
+            return {
+                'Participante': `${a.firstName} ${a.lastName}`,
+                'Email': a.email,
+                'Recinto': getCampusLabel(a.campus),
+                'Fecha Cita': appointmentDate.toLocaleDateString('es-ES'),
+                'Estado': getAppointmentStatusLabel(a.status),
+                'Registro': new Date(a.createdAt).toLocaleDateString('es-ES')
+            };
+        });
+        const appointmentsSheet = XLSX.utils.json_to_sheet(appointmentsData);
+        XLSX.utils.book_append_sheet(wb, appointmentsSheet, "Citas");
+    }
+
+    const filename = `Reporte_Consolidado_UAGM_${today.toISOString().split('T')[0]}.xlsx`;
+    XLSX.writeFile(wb, filename);
+    
+    showNotification('Reporte consolidado generado exitosamente', 'success');
+}
 
         // Actualizar datos
         function refreshData() {
@@ -4640,6 +5310,722 @@ function viewReferralDetails(applicationId) {
     `;
     
     document.getElementById('detailsModal').style.display = 'flex';
+}
+
+// Ver detalles de rechazo
+function viewRejectionDetails(applicationId) {
+    const application = applications.find(app => app.id === applicationId);
+    if (!application) return;
+    
+    const participant = getParticipantData(application.participantId);
+    const offer = offers.find(o => o.id === application.offerId);
+    
+    document.getElementById('modalTitle').textContent = `Solicitud Rechazada: ${application.participantName}`;
+    document.getElementById('modalBody').innerHTML = `
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 20px;">
+            <div>
+                <h4 style="color: #dc3545; margin-bottom: 15px;">❌ Estado del Rechazo</h4>
+                <p><strong>Estado:</strong> <span class="status-badge status-expired">Rechazada</span></p>
+                <p><strong>Rechazada el:</strong> ${application.adminReview?.reviewedAt ? new Date(application.adminReview.reviewedAt).toLocaleString() : 'N/A'}</p>
+                <p><strong>Revisada por:</strong> ${application.adminReview?.reviewedBy || 'Administrador'}</p>
+                <p><strong>Empresa:</strong> ${application.companyName}</p>
+                <p><strong>Posición:</strong> ${application.offerTitle}</p>
+            </div>
+            <div>
+                <h4 style="color: #dc3545; margin-bottom: 15px;">👤 Datos del Candidato</h4>
+                <p><strong>Nombre:</strong> ${application.participantName}</p>
+                <p><strong>Tipo:</strong> ${getStudentTypeLabel(participant?.studentType)}</p>
+                <p><strong>Concentración:</strong> ${participant?.concentration || 'N/A'}</p>
+                <p><strong>Email:</strong> ${application.participantEmail}</p>
+                <p><strong>Teléfono:</strong> ${application.participantPhone}</p>
+            </div>
+        </div>
+        
+        <div style="margin-bottom: 20px; padding: 15px; background: #f8d7da; border-radius: 8px; border-left: 4px solid #dc3545;">
+            <h4 style="color: #721c24; margin-bottom: 10px;">📝 Razón del Rechazo</h4>
+            <p style="color: #721c24; white-space: pre-wrap;">${application.adminReview?.notes || 'No se proporcionó una razón específica.'}</p>
+        </div>
+        
+        <div style="margin-bottom: 20px; padding: 15px; background: #fff3cd; border-radius: 8px;">
+            <h4 style="color: #856404; margin-bottom: 10px;">ℹ️ Información Adicional</h4>
+            <p>• Esta solicitud fue evaluada y no cumplía con los requisitos</p>
+            <p>• El candidato puede aplicar a otras ofertas disponibles</p>
+            <p>• Se recomienda revisar los requisitos antes de futuras aplicaciones</p>
+        </div>
+    `;
+    
+    document.getElementById('detailsModal').style.display = 'flex';
+}
+
+// ============= FUNCIONES PARA MÓDULO DE COLOCADOS =============
+
+// Cargar tabla de colocados
+function loadPlacementsTable() {
+    const container = document.getElementById('placementsTableContainer');
+    
+    if (placements.length === 0) {
+        container.innerHTML = `
+            <div class="no-data">
+                <i class="fas fa-trophy"></i>
+                <h3>No hay colocados registrados</h3>
+                <p>Los participantes colocados aparecerán aquí</p>
+            </div>
+        `;
+        return;
+    }
+
+    let html = `
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Fecha Colocación</th>
+                    <th>Participante</th>
+                    <th>Empresa</th>
+                    <th>Posición</th>
+                    <th>Tipo Colocación</th>
+                    <th>Modalidad</th>
+                    <th>Grado</th>
+                    <th>División</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+
+    placements.forEach(placement => {
+        const trackingTypeLabels = {
+            'directo': 'Seguimiento Directo',
+            'indirecto': 'Seguimiento Indirecto'
+        };
+
+        const positionTypeLabels = {
+            'part-time': 'Part Time',
+            'full-time': 'Full Time'
+        };
+
+        const modalityLabels = {
+            'regular': 'Regular',
+            'temporera': 'Temporera'
+        };
+
+        const degreeLabels = {
+            'bachillerato': 'Bachillerato',
+            'maestria': 'Maestría',
+            'asociado': 'Grado Asociado',
+            'doctorado': 'Doctorado',
+            'cuarto': 'Cuarto Año',
+            'certificado': 'Certificado Técnico',
+            '11mo': '11mo o menos'
+        };
+
+        const divisionLabels = {
+            'liberales': 'Artes Liberales',
+            'negocios': 'Negocios',
+            'tecnologia': 'Ciencias y Tecnología',
+            'salud': 'Ciencias de la Salud',
+            'tecnicos': 'Programas Técnicos'
+        };
+
+        html += `
+            <tr>
+                <td>${formatLocalDate(placement.placementDate)}</td>
+                <td><strong>${placement.participantName}</strong><br><small>${placement.email || 'Sin email'}</small></td>
+                <td>${placement.company}</td>
+                <td>${placement.position}<br><small>${positionTypeLabels[placement.positionType]} - ${modalityLabels[placement.modality]}</small></td>
+                <td><span class="status-badge ${placement.trackingType === 'directo' ? 'status-approved' : 'status-active'}">${trackingTypeLabels[placement.trackingType]}</span></td>
+                <td>${modalityLabels[placement.modality]}</td>
+                <td>${degreeLabels[placement.degree]}</td>
+                <td>${divisionLabels[placement.division]}</td>
+                <td>
+                    <div class="actions">
+                        <button class="btn btn-info btn-small" onclick="viewPlacementDetails('${placement.id}')" title="Ver detalles">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button class="btn btn-warning btn-small" onclick="editPlacement('${placement.id}')" title="Editar">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-danger btn-small" onclick="deletePlacement('${placement.id}')" title="Eliminar">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    });
+
+    html += '</tbody></table>';
+    container.innerHTML = html;
+}
+
+// Mostrar modal para agregar colocado
+function showAddPlacementModal() {
+    document.getElementById('placementModalTitle').textContent = 'Registrar Nuevo Colocado';
+    document.getElementById('placementForm').reset();
+    
+    // Ocultar campos de estudiante por defecto
+    document.getElementById('studentIdGroup').style.display = 'none';
+    document.getElementById('graduationDateGroup').style.display = 'none';
+    
+    document.getElementById('placementModal').style.display = 'flex';
+}
+
+// Cerrar modal de colocado
+function closePlacementModal() {
+    document.getElementById('placementModal').style.display = 'none';
+    document.getElementById('placementForm').reset();
+}
+
+// Alternar campos de estudiante
+function toggleStudentFields() {
+    const personType = document.getElementById('placement-personType').value;
+    const studentIdGroup = document.getElementById('studentIdGroup');
+    const graduationDateGroup = document.getElementById('graduationDateGroup');
+    
+    if (personType === 'estudiante') {
+        studentIdGroup.style.display = 'block';
+        graduationDateGroup.style.display = 'block';
+        document.getElementById('placement-studentId').required = true;
+    } else {
+        studentIdGroup.style.display = 'none';
+        graduationDateGroup.style.display = 'none';
+        document.getElementById('placement-studentId').required = false;
+        document.getElementById('placement-studentId').value = '';
+        document.getElementById('placement-graduationDate').value = '';
+    }
+}
+
+// Guardar colocado
+async function savePlacement() {
+    const form = document.getElementById('placementForm');
+    if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+    }
+    
+    // Recopilar datos del formulario
+    const placementData = {
+        id: `placement_${Date.now()}`,
+        participantName: document.getElementById('placement-participantName').value,
+        email: document.getElementById('placement-email').value,
+        company: document.getElementById('placement-company').value,
+        position: document.getElementById('placement-position').value,
+        placementDate: document.getElementById('placement-date').value,
+        trackingType: document.getElementById('placement-trackingType').value,
+        positionType: document.getElementById('placement-positionType').value,
+        modality: document.getElementById('placement-modality').value,
+        personType: document.getElementById('placement-personType').value,
+        studentId: document.getElementById('placement-studentId').value,
+        degree: document.getElementById('placement-degree').value,
+        concentration: document.getElementById('placement-concentration').value,
+        division: document.getElementById('placement-division').value,
+        graduationDate: document.getElementById('placement-graduationDate').value,
+        notes: document.getElementById('placement-notes').value,
+        createdAt: new Date().toISOString(),
+        createdBy: 'admin@uagm.edu'
+    };
+    
+    try {
+        // Guardar en Firebase
+        if (isFirebaseInitialized) {
+            await db.collection('placements').add(placementData);
+            console.log('Colocado guardado en Firebase:', placementData.id);
+        }
+        
+        // Agregar a memoria local
+        placements.push(placementData);
+        
+        // Guardar en localStorage como respaldo
+        localStorage.setItem('placements', JSON.stringify(placements));
+        
+        // Actualizar interfaz
+        loadPlacementsTable();
+        updateStats();
+        closePlacementModal();
+        
+        showNotification('Colocado registrado exitosamente', 'success');
+        
+    } catch (error) {
+        console.error('Error guardando colocado:', error);
+        showNotification('Error guardando el colocado. Intenta de nuevo.', 'error');
+    }
+}
+
+// Ver detalles de colocado
+function viewPlacementDetails(placementId) {
+    const placement = placements.find(p => p.id === placementId);
+    if (!placement) return;
+
+    const trackingTypeLabels = {
+        'directo': 'Seguimiento Directo',
+        'indirecto': 'Seguimiento Indirecto'
+    };
+
+    const positionTypeLabels = {
+        'part-time': 'Part Time',
+        'full-time': 'Full Time'
+    };
+
+    const modalityLabels = {
+        'regular': 'Posición Regular',
+        'temporera': 'Posición Temporera'
+    };
+
+    const degreeLabels = {
+        'bachillerato': 'Bachillerato',
+        'maestria': 'Maestría',
+        'asociado': 'Grado Asociado',
+        'doctorado': 'Doctorado',
+        'cuarto': 'Cuarto Año',
+        'certificado': 'Certificado Técnico',
+        '11mo': '11mo o menos'
+    };
+
+    const divisionLabels = {
+        'liberales': 'Artes Liberales',
+        'negocios': 'Negocios',
+        'tecnologia': 'Ciencias y Tecnología',
+        'salud': 'Ciencias de la Salud',
+        'tecnicos': 'Programas Técnicos'
+    };
+
+    const personTypeLabels = {
+        'estudiante': 'Estudiante',
+        'exalumno': 'Exalumno',
+        'comunidad': 'Comunidad'
+    };
+
+    document.getElementById('modalTitle').textContent = `Colocado: ${placement.participantName}`;
+    document.getElementById('modalBody').innerHTML = `
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 20px;">
+            <div>
+                <h4 style="color: #28a745; margin-bottom: 15px;">👤 Información Personal</h4>
+                <p><strong>Nombre:</strong> ${placement.participantName}</p>
+                <p><strong>Email:</strong> ${placement.email || 'No proporcionado'}</p>
+                <p><strong>Tipo:</strong> ${personTypeLabels[placement.personType]}</p>
+                ${placement.studentId ? `<p><strong>ID Estudiante:</strong> ${placement.studentId}</p>` : ''}
+                ${placement.graduationDate ? `<p><strong>Fecha Graduación:</strong> ${new Date(placement.graduationDate).toLocaleDateString('es-ES')}</p>` : ''}
+            </div>
+            <div>
+                <h4 style="color: #28a745; margin-bottom: 15px;">🏢 Información del Empleo</h4>
+                <p><strong>Empresa:</strong> ${placement.company}</p>
+                <p><strong>Posición:</strong> ${placement.position}</p>
+                <p><strong>Fecha Colocación:</strong> ${formatLocalDate(placement.placementDate)}</p>
+                <p><strong>Tipo:</strong> ${positionTypeLabels[placement.positionType]}</p>
+                <p><strong>Modalidad:</strong> ${modalityLabels[placement.modality]}</p>
+            </div>
+        </div>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 20px;">
+            <div>
+                <h4 style="color: #28a745; margin-bottom: 15px;">🎓 Información Académica</h4>
+                <p><strong>Grado:</strong> ${degreeLabels[placement.degree]}</p>
+                <p><strong>Concentración:</strong> ${placement.concentration}</p>
+                <p><strong>División:</strong> ${divisionLabels[placement.division]}</p>
+            </div>
+            <div>
+                <h4 style="color: #28a745; margin-bottom: 15px;">📋 Seguimiento</h4>
+                <p><strong>Tipo de Colocación:</strong> <span class="status-badge ${placement.trackingType === 'directo' ? 'status-approved' : 'status-active'}">${trackingTypeLabels[placement.trackingType]}</span></p>
+                <p><strong>Registrado:</strong> ${new Date(placement.createdAt).toLocaleDateString('es-ES')}</p>
+                <p><strong>Por:</strong> ${placement.createdBy}</p>
+            </div>
+        </div>
+        
+        ${placement.notes ? `
+        <div style="margin-bottom: 20px;">
+            <h4 style="color: #28a745; margin-bottom: 10px;">📝 Notas Adicionales</h4>
+            <p style="background: #f8f9fa; padding: 15px; border-radius: 6px; white-space: pre-wrap;">${placement.notes}</p>
+        </div>
+        ` : ''}
+    `;
+
+    document.getElementById('detailsModal').style.display = 'flex';
+}
+
+// Editar colocado
+function editPlacement(placementId) {
+    const placement = placements.find(p => p.id === placementId);
+    if (!placement) return;
+
+    // Cambiar título del modal
+    document.getElementById('placementModalTitle').textContent = 'Editar Colocado';
+    
+    // Llenar formulario con datos existentes
+    document.getElementById('placement-participantName').value = placement.participantName;
+    document.getElementById('placement-email').value = placement.email || '';
+    document.getElementById('placement-company').value = placement.company;
+    document.getElementById('placement-position').value = placement.position;
+    document.getElementById('placement-date').value = placement.placementDate;
+    document.getElementById('placement-trackingType').value = placement.trackingType;
+    document.getElementById('placement-positionType').value = placement.positionType;
+    document.getElementById('placement-modality').value = placement.modality;
+    document.getElementById('placement-personType').value = placement.personType;
+    document.getElementById('placement-studentId').value = placement.studentId || '';
+    document.getElementById('placement-degree').value = placement.degree;
+    document.getElementById('placement-concentration').value = placement.concentration;
+    document.getElementById('placement-division').value = placement.division;
+    document.getElementById('placement-graduationDate').value = placement.graduationDate || '';
+    document.getElementById('placement-notes').value = placement.notes || '';
+    
+    // Mostrar/ocultar campos según tipo de persona
+    toggleStudentFields();
+    
+    // Cambiar función del botón guardar
+    const saveButton = document.querySelector('#placementModal .btn-success');
+    saveButton.innerHTML = '<i class="fas fa-save"></i> Actualizar Colocado';
+    saveButton.onclick = () => updatePlacement(placementId);
+    
+    document.getElementById('placementModal').style.display = 'flex';
+}
+
+// Actualizar colocado existente
+async function updatePlacement(placementId) {
+    const form = document.getElementById('placementForm');
+    if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+    }
+    
+    const updatedData = {
+        participantName: document.getElementById('placement-participantName').value,
+        email: document.getElementById('placement-email').value,
+        company: document.getElementById('placement-company').value,
+        position: document.getElementById('placement-position').value,
+        placementDate: document.getElementById('placement-date').value,
+        trackingType: document.getElementById('placement-trackingType').value,
+        positionType: document.getElementById('placement-positionType').value,
+        modality: document.getElementById('placement-modality').value,
+        personType: document.getElementById('placement-personType').value,
+        studentId: document.getElementById('placement-studentId').value,
+        degree: document.getElementById('placement-degree').value,
+        concentration: document.getElementById('placement-concentration').value,
+        division: document.getElementById('placement-division').value,
+        graduationDate: document.getElementById('placement-graduationDate').value,
+        notes: document.getElementById('placement-notes').value,
+        updatedAt: new Date().toISOString()
+    };
+    
+    try {
+        // Actualizar en Firebase
+        if (isFirebaseInitialized) {
+            const snapshot = await db.collection('placements')
+                .where('id', '==', placementId)
+                .get();
+            
+            if (!snapshot.empty) {
+                const batch = db.batch();
+                snapshot.docs.forEach(doc => {
+                    batch.update(doc.ref, updatedData);
+                });
+                await batch.commit();
+                console.log('Colocado actualizado en Firebase:', placementId);
+            }
+        }
+        
+        // Actualizar en memoria local
+        const placementIndex = placements.findIndex(p => p.id === placementId);
+        if (placementIndex !== -1) {
+            placements[placementIndex] = { ...placements[placementIndex], ...updatedData };
+        }
+        
+        // Actualizar localStorage
+        localStorage.setItem('placements', JSON.stringify(placements));
+        
+        // Restaurar botón y cerrar modal
+        const saveButton = document.querySelector('#placementModal .btn-success');
+        saveButton.innerHTML = '<i class="fas fa-save"></i> Guardar Colocado';
+        saveButton.onclick = savePlacement;
+        
+        // Actualizar interfaz
+        loadPlacementsTable();
+        updateStats();
+        closePlacementModal();
+        
+        showNotification('Colocado actualizado exitosamente', 'success');
+        
+    } catch (error) {
+        console.error('Error actualizando colocado:', error);
+        showNotification('Error actualizando el colocado. Intenta de nuevo.', 'error');
+    }
+}
+
+// Eliminar colocado
+async function deletePlacement(placementId) {
+    const placement = placements.find(p => p.id === placementId);
+    if (!placement) return;
+    
+    if (confirm(`¿Estás seguro de que quieres eliminar el registro de colocación de "${placement.participantName}"?`)) {
+        try {
+            // Eliminar de Firebase
+            if (isFirebaseInitialized) {
+                const snapshot = await db.collection('placements')
+                    .where('id', '==', placementId)
+                    .get();
+                
+                if (!snapshot.empty) {
+                    const batch = db.batch();
+                    snapshot.docs.forEach(doc => {
+                        batch.delete(doc.ref);
+                    });
+                    await batch.commit();
+                    console.log('Colocado eliminado de Firebase:', placementId);
+                }
+            }
+            
+            // Eliminar de memoria local
+            placements = placements.filter(p => p.id !== placementId);
+            
+            // Actualizar localStorage
+            localStorage.setItem('placements', JSON.stringify(placements));
+            
+            // Actualizar interfaz
+            loadPlacementsTable();
+            updateStats();
+            
+            showNotification('Colocado eliminado exitosamente', 'success');
+            
+        } catch (error) {
+            console.error('Error eliminando colocado:', error);
+            showNotification('Error eliminando el colocado. Intenta de nuevo.', 'error');
+        }
+    }
+}
+
+// Filtrar colocados
+function filterPlacements() {
+    const search = document.getElementById('placementsSearch').value.toLowerCase();
+    const typeFilter = document.getElementById('placementsTypeFilter').value;
+    const dateFilter = document.getElementById('placementsDateFilter').value;
+    
+    let filteredPlacements = placements;
+    
+    // Filtro de búsqueda
+    if (search) {
+        filteredPlacements = filteredPlacements.filter(placement => 
+            placement.participantName.toLowerCase().includes(search) ||
+            placement.company.toLowerCase().includes(search) ||
+            placement.position.toLowerCase().includes(search) ||
+            placement.concentration.toLowerCase().includes(search) ||
+            (placement.email && placement.email.toLowerCase().includes(search))
+        );
+    }
+    
+    // Filtro de tipo
+    if (typeFilter) {
+        filteredPlacements = filteredPlacements.filter(placement => 
+            placement.trackingType === typeFilter
+        );
+    }
+    
+    // Filtro de fecha
+    if (dateFilter) {
+        const today = new Date();
+        filteredPlacements = filteredPlacements.filter(placement => {
+            const placementDate = new Date(placement.placementDate);
+            
+            switch(dateFilter) {
+                case 'month':
+                    return placementDate.getMonth() === today.getMonth() && 
+                           placementDate.getFullYear() === today.getFullYear();
+                case 'quarter':
+                    const currentQuarter = Math.floor(today.getMonth() / 3);
+                    const placementQuarter = Math.floor(placementDate.getMonth() / 3);
+                    return placementQuarter === currentQuarter && 
+                           placementDate.getFullYear() === today.getFullYear();
+                case 'year':
+                    return placementDate.getFullYear() === today.getFullYear();
+                default:
+                    return true;
+            }
+        });
+    }
+    
+    displayFilteredPlacements(filteredPlacements);
+}
+
+// Mostrar colocados filtrados
+function displayFilteredPlacements(filteredPlacements) {
+    const container = document.getElementById('placementsTableContainer');
+    
+    if (filteredPlacements.length === 0) {
+        container.innerHTML = `
+            <div class="no-data">
+                <i class="fas fa-search"></i>
+                <h3>No se encontraron colocados</h3>
+                <p>No hay colocados que coincidan con los filtros aplicados</p>
+            </div>
+        `;
+        return;
+    }
+
+    let html = `
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Fecha Colocación</th>
+                    <th>Participante</th>
+                    <th>Empresa</th>
+                    <th>Posición</th>
+                    <th>Tipo Colocación</th>
+                    <th>Modalidad</th>
+                    <th>Grado</th>
+                    <th>División</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+
+    filteredPlacements.forEach(placement => {
+        const trackingTypeLabels = {
+            'directo': 'Seguimiento Directo',
+            'indirecto': 'Seguimiento Indirecto'
+        };
+
+        const positionTypeLabels = {
+            'part-time': 'Part Time',
+            'full-time': 'Full Time'
+        };
+
+        const modalityLabels = {
+            'regular': 'Regular',
+            'temporera': 'Temporera'
+        };
+
+        const degreeLabels = {
+            'bachillerato': 'Bachillerato',
+            'maestria': 'Maestría',
+            'asociado': 'Grado Asociado',
+            'doctorado': 'Doctorado',
+            'cuarto': 'Cuarto Año',
+            'certificado': 'Certificado Técnico',
+            '11mo': '11mo o menos'
+        };
+
+        const divisionLabels = {
+            'liberales': 'Artes Liberales',
+            'negocios': 'Negocios',
+            'tecnologia': 'Ciencias y Tecnología',
+            'salud': 'Ciencias de la Salud',
+            'tecnicos': 'Programas Técnicos'
+        };
+
+        html += `
+            <tr>
+                <td>${formatLocalDate(placement.placementDate)}</td>
+                <td><strong>${placement.participantName}</strong><br><small>${placement.email || 'Sin email'}</small></td>
+                <td>${placement.company}</td>
+                <td>${placement.position}<br><small>${positionTypeLabels[placement.positionType]} - ${modalityLabels[placement.modality]}</small></td>
+                <td><span class="status-badge ${placement.trackingType === 'directo' ? 'status-approved' : 'status-active'}">${trackingTypeLabels[placement.trackingType]}</span></td>
+                <td>${modalityLabels[placement.modality]}</td>
+                <td>${degreeLabels[placement.degree]}</td>
+                <td>${divisionLabels[placement.division]}</td>
+                <td>
+                    <div class="actions">
+                        <button class="btn btn-info btn-small" onclick="viewPlacementDetails('${placement.id}')" title="Ver detalles">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button class="btn btn-warning btn-small" onclick="editPlacement('${placement.id}')" title="Editar">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-danger btn-small" onclick="deletePlacement('${placement.id}')" title="Eliminar">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    });
+
+    html += '</tbody></table>';
+    container.innerHTML = html;
+}
+
+// Exportar datos de colocados
+function exportPlacementsData() {
+    if (placements.length === 0) {
+        showNotification('No hay colocados para exportar', 'warning');
+        return;
+    }
+
+    const data = placements.map(placement => {
+        const trackingTypeLabels = {
+            'directo': 'Seguimiento Directo',
+            'indirecto': 'Seguimiento Indirecto'
+        };
+
+        const positionTypeLabels = {
+            'part-time': 'Part Time',
+            'full-time': 'Full Time'
+        };
+
+        const modalityLabels = {
+            'regular': 'Posición Regular',
+            'temporera': 'Posición Temporera'
+        };
+
+        const degreeLabels = {
+            'bachillerato': 'Bachillerato',
+            'maestria': 'Maestría',
+            'asociado': 'Grado Asociado',
+            'doctorado': 'Doctorado',
+            'cuarto': 'Cuarto Año',
+            'certificado': 'Certificado Técnico',
+            '11mo': '11mo o menos'
+        };
+
+        const divisionLabels = {
+            'liberales': 'Artes Liberales',
+            'negocios': 'Negocios',
+            'tecnologia': 'Ciencias y Tecnología',
+            'salud': 'Ciencias de la Salud',
+            'tecnicos': 'Programas Técnicos'
+        };
+
+        const personTypeLabels = {
+            'estudiante': 'Estudiante',
+            'exalumno': 'Exalumno',
+            'comunidad': 'Comunidad'
+        };
+
+        return {
+            'Fecha Colocación': formatLocalDate(placement.placementDate),
+            'Participante': placement.participantName,
+            'Email': placement.email || 'No proporcionado',
+            'Empresa': placement.company,
+            'Posición': placement.position,
+            'Tipo Colocación': trackingTypeLabels[placement.trackingType],
+            'Tipo Posición': positionTypeLabels[placement.positionType],
+            'Modalidad': modalityLabels[placement.modality],
+            'Tipo Persona': personTypeLabels[placement.personType],
+            'ID Estudiante': placement.studentId || 'N/A',
+            'Grado': degreeLabels[placement.degree],
+            'Concentración': placement.concentration,
+            'División Académica': divisionLabels[placement.division],
+            'Fecha Graduación': placement.graduationDate ? new Date(placement.graduationDate).toLocaleDateString('es-ES') : 'N/A',
+            'Notas': placement.notes || 'N/A',
+            'Fecha Registro': new Date(placement.createdAt).toLocaleDateString('es-ES'),
+            'Registrado Por': placement.createdBy
+        };
+    });
+
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Colocados");
+    
+    const filename = `Reporte_Colocados_${new Date().toISOString().split('T')[0]}.xlsx`;
+    XLSX.writeFile(wb, filename);
+    
+    showNotification('Reporte de colocados exportado exitosamente', 'success');
+}
+
+// ============= FIN DE FUNCIONES PARA MÓDULO DE COLOCADOS =============
+
+// Función auxiliar para formatear fechas localmente
+function formatLocalDate(dateString) {
+    if (!dateString) return 'Sin fecha';
+    const [year, month, day] = dateString.split('-');
+    const localDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+    return localDate.toLocaleDateString('es-ES');
 }
     </script>
 </body>
