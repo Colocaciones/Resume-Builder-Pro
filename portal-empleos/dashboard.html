@@ -658,6 +658,70 @@
         transform: translateY(0); 
     }
 }
+
+/* Estilos para solicitudes pendientes */
+.pending-applications-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.application-review-card {
+    transition: all 0.3s ease;
+}
+
+.application-review-card:hover {
+    box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+    transform: translateY(-2px);
+}
+
+.decision-buttons button {
+    transition: all 0.3s ease;
+}
+
+.decision-buttons button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+.pending-badge {
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+/* Modal de email responsive */
+@media (max-width: 768px) {
+    .application-review-card > div {
+        grid-template-columns: 1fr !important;
+    }
+    
+    .modal-content {
+        width: 95% !important;
+        margin: 10px !important;
+    }
+}
+
+/* Estilos para vista previa de email */
+.email-preview {
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.resume-section {
+    border-left: 4px solid #17a2b8;
+}
+
+.instructions {
+    border-left: 4px solid #ffc107;
+}
+
+}
     </style>
 </head>
 <body>
@@ -771,9 +835,13 @@
                     <button class="tab" onclick="switchTab('reports')">
                         <i class="fas fa-chart-bar"></i> Reportes
                     </button>
-<button class="tab" onclick="switchTab('appointments')">
+                    <button class="tab" onclick="switchTab('appointments')">
                         <i class="fas fa-calendar-alt"></i> Citas
                     </button>
+                    <button class="tab" onclick="switchTab('pending')">
+                    <i class="fas fa-clock"></i> Solicitudes Pendientes
+   		    <span class="pending-badge" id="pendingCount" style="background: #ff4757; color: white; border-radius: 50%; padding: 2px 6px; font-size: 10px; margin-left: 5px; display: none;">0</span>
+		    </button>
                 </div>
 
                 <!-- Tab Ofertas -->
@@ -875,11 +943,13 @@
                     <div class="search-filter-bar">
                         <input type="text" class="search-input" id="applicationsSearch" placeholder="🔍 Buscar solicitudes..." oninput="filterApplications()">
                         <select class="filter-select" id="applicationsStatusFilter" onchange="filterApplications()">
-                            <option value="">Todos los Estados</option>
-                            <option value="pending">Pendientes</option>
-                            <option value="processed">Procesadas</option>
-                            <option value="referred">Referidas</option>
-                        </select>
+    <option value="">Todos los Estados</option>
+    <option value="pending">Pendientes</option>
+    <option value="processed">Procesadas</option>
+    <option value="referred">Referidas</option>
+    <option value="approved_sent">Referidos Enviados</option>
+    <option value="rejected">Rechazadas</option>
+</select>
                         <button class="btn btn-primary" onclick="exportApplicationsData()">
                             <i class="fas fa-file-excel"></i> Exportar
                         </button>
@@ -931,55 +1001,88 @@
                     </div>
                 </div>
 <!-- Tab Citas -->
-                <div class="tab-content" id="appointmentsContent">
-                    <div class="quick-stats">
-                        <div class="quick-stat">
-                            <div class="quick-stat-number" id="todayAppointments">0</div>
-                            <div class="quick-stat-label">Citas Hoy</div>
-                        </div>
-                        <div class="quick-stat">
-                            <div class="quick-stat-number" id="upcomingAppointments">0</div>
-                            <div class="quick-stat-label">Próximas Citas</div>
-                        </div>
-                        <div class="quick-stat">
-                            <div class="quick-stat-number" id="completedAppointments">0</div>
-                            <div class="quick-stat-label">Completadas</div>
-                        </div>
-                        <div class="quick-stat">
-                            <div class="quick-stat-number" id="manpowerAppointments">0</div>
-                            <div class="quick-stat-label">Con Manpower</div>
-                        </div>
-                    </div>
-
-                    <div class="search-filter-bar">
-                        <input type="text" class="search-input" id="appointmentsSearch" placeholder="🔍 Buscar citas..." oninput="filterAppointments()">
-                        <select class="filter-select" id="appointmentsStatusFilter" onchange="filterAppointments()">
-                            <option value="">Todos los Estados</option>
-                            <option value="scheduled">Programadas</option>
-                            <option value="completed">Completadas</option>
-                            <option value="cancelled">Canceladas</option>
-                        </select>
-                        <select class="filter-select" id="appointmentsDateFilter" onchange="filterAppointments()">
-                            <option value="">Todas las Fechas</option>
-                            <option value="today">Hoy</option>
-                            <option value="week">Esta Semana</option>
-                            <option value="month">Este Mes</option>
-                        </select>
-                        <button class="btn btn-primary" onclick="exportAppointmentsData()">
-                            <i class="fas fa-file-excel"></i> Exportar
-                        </button>
-                                </div>
-
-                                <div id="appointmentsTableContainer">
-                                    <!-- Tabla se genera dinámicamente -->
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+<div class="tab-content" id="appointmentsContent">
+    <div class="quick-stats">
+        <div class="quick-stat">
+            <div class="quick-stat-number" id="todayAppointments">0</div>
+            <div class="quick-stat-label">Citas Hoy</div>
+        </div>
+        <div class="quick-stat">
+            <div class="quick-stat-number" id="upcomingAppointments">0</div>
+            <div class="quick-stat-label">Próximas Citas</div>
+        </div>
+        <div class="quick-stat">
+            <div class="quick-stat-number" id="completedAppointments">0</div>
+            <div class="quick-stat-label">Completadas</div>
+        </div>
+        <div class="quick-stat">
+            <div class="quick-stat-number" id="manpowerAppointments">0</div>
+            <div class="quick-stat-label">Con Manpower</div>
         </div>
     </div>
+
+    <div class="search-filter-bar">
+        <input type="text" class="search-input" id="appointmentsSearch" placeholder="🔍 Buscar citas..." oninput="filterAppointments()">
+        <select class="filter-select" id="appointmentsStatusFilter" onchange="filterAppointments()">
+            <option value="">Todos los Estados</option>
+            <option value="scheduled">Programadas</option>
+            <option value="completed">Completadas</option>
+            <option value="cancelled">Canceladas</option>
+        </select>
+        <select class="filter-select" id="appointmentsDateFilter" onchange="filterAppointments()">
+            <option value="">Todas las Fechas</option>
+            <option value="today">Hoy</option>
+            <option value="week">Esta Semana</option>
+            <option value="month">Este Mes</option>
+        </select>
+        <button class="btn btn-primary" onclick="exportAppointmentsData()">
+            <i class="fas fa-file-excel"></i> Exportar
+        </button>
+    </div>
+
+    <div id="appointmentsTableContainer">
+        <!-- Tabla se genera dinámicamente -->
+    </div>
+</div>
+
+<!-- Tab Solicitudes Pendientes -->
+<div class="tab-content" id="pendingContent">
+    <div class="quick-stats">
+        <div class="quick-stat">
+            <div class="quick-stat-number" id="pendingApplications">0</div>
+            <div class="quick-stat-label">Pendientes Revisión</div>
+        </div>
+        <div class="quick-stat">
+            <div class="quick-stat-number" id="approvedToday">0</div>
+            <div class="quick-stat-label">Aprobadas Hoy</div>
+        </div>
+        <div class="quick-stat">
+            <div class="quick-stat-number" id="rejectedToday">0</div>
+            <div class="quick-stat-label">Rechazadas Hoy</div>
+        </div>
+        <div class="quick-stat">
+            <div class="quick-stat-number" id="avgReviewTime">0h</div>
+            <div class="quick-stat-label">Tiempo Promedio</div>
+        </div>
+    </div>
+
+    <div class="search-filter-bar">
+        <input type="text" class="search-input" id="pendingSearch" placeholder="🔍 Buscar solicitudes pendientes..." oninput="filterPendingApplications()">
+        <select class="filter-select" id="pendingDateFilter" onchange="filterPendingApplications()">
+            <option value="">Todas las Fechas</option>
+            <option value="today">Hoy</option>
+            <option value="week">Esta Semana</option>
+            <option value="month">Este Mes</option>
+        </select>
+        <button class="btn btn-primary" onclick="exportPendingData()">
+            <i class="fas fa-file-excel"></i> Exportar
+        </button>
+    </div>
+
+    <div id="pendingApplicationsContainer">
+        <!-- Las solicitudes pendientes se cargan aquí -->
+    </div>
+</div>
 
     <!-- Modal para Ver Detalles -->
     <div id="detailsModal" class="modal">
@@ -1059,13 +1162,14 @@ let lastCheckedAppointments = localStorage.getItem('lastCheckedAppointments') ? 
 
         // Inicializar dashboard
         document.addEventListener('DOMContentLoaded', async function() {
-            isFirebaseInitialized = initializeFirebase();
-            await loadAllData();
-            updateStats();
-	    updateNotificationBadge();
-            switchTab('offers');
-            console.log('Dashboard Administrativo cargado correctamente');
-        });
+    isFirebaseInitialized = initializeFirebase();
+    await loadAllData();
+    updateStats();
+    updateNotificationBadge();
+    updatePendingCount(); // ← AGREGAR ESTA LÍNEA
+    switchTab('offers');
+    console.log('Dashboard Administrativo cargado correctamente');
+});
 
        // Cargar todos los datos desde Firebase
         async function loadAllData() {
@@ -1198,6 +1302,32 @@ const upcomingAppointments = appointments.filter(app => {
             document.getElementById('placementRate').textContent = placementRate + '%';
             document.getElementById('avgApplications').textContent = avgApplications;
             document.getElementById('activeCompanies').textContent = uniqueCompanies;
+// Actualizar contador de pendientes en la interfaz
+        updatePendingCount();
+        
+        // Stats para solicitudes pendientes
+        const pendingAppsCount = applications.filter(app => app.status === 'pending').length;
+        const approvedToday = applications.filter(app => 
+            app.status === 'approved_sent' && 
+            new Date(app.adminReview?.reviewedAt || '').toDateString() === today.toDateString()
+        ).length;
+        const rejectedToday = applications.filter(app => 
+            app.status === 'rejected' && 
+            new Date(app.adminReview?.reviewedAt || '').toDateString() === today.toDateString()
+        ).length;
+        
+        if (document.getElementById('pendingApplications')) {
+            document.getElementById('pendingApplications').textContent = pendingAppsCount;
+        }
+        if (document.getElementById('approvedToday')) {
+            document.getElementById('approvedToday').textContent = approvedToday;
+        }
+        if (document.getElementById('rejectedToday')) {
+            document.getElementById('rejectedToday').textContent = rejectedToday;
+        }
+        if (document.getElementById('avgReviewTime')) {
+            document.getElementById('avgReviewTime').textContent = '2h'; // Puedes calcular esto después
+        }
         }
 
         // Obtener estado de oferta
@@ -1212,40 +1342,43 @@ const upcomingAppointments = appointments.filter(app => {
             return 'active';
         }
 
-        // Cambiar entre tabs
-        function switchTab(tabName) {
-            currentTab = tabName;
-            
-            // Actualizar tabs activos
-            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
-            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-            
-            // Activar tab correspondiente
-            const tabIndex = ['offers', 'participants', 'applications', 'reports', 'appointments'].indexOf(tabName);
-if (tabIndex !== -1) {
-    document.querySelectorAll('.tab')[tabIndex].classList.add('active');
+       // Cambiar entre tabs
+function switchTab(tabName) {
+    currentTab = tabName;
+    
+    // Actualizar tabs activos
+    document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+    
+    // Activar tab correspondiente
+    const tabIndex = ['offers', 'participants', 'applications', 'reports', 'appointments', 'pending'].indexOf(tabName);
+    if (tabIndex !== -1) {
+        document.querySelectorAll('.tab')[tabIndex].classList.add('active');
+    }
+    document.getElementById(tabName + 'Content').classList.add('active');
+    
+    // Cargar contenido específico
+    switch(tabName) {
+        case 'offers':
+            loadOffersTable();
+            break;
+        case 'participants':
+            loadParticipantsTable();
+            break;
+        case 'applications':
+            loadApplicationsTable();
+            break;
+        case 'reports':
+            updateReports();
+            break;
+        case 'appointments':
+            loadAppointmentsTable();
+            break;
+        case 'pending':
+            loadPendingApplicationsTable();
+            break;
+    }
 }
-            document.getElementById(tabName + 'Content').classList.add('active');
-            
-            // Cargar contenido específico
-            switch(tabName) {
-                case 'offers':
-                    loadOffersTable();
-                    break;
-                case 'participants':
-                    loadParticipantsTable();
-                    break;
-                case 'applications':
-                    loadApplicationsTable();
-                    break;
-                case 'reports':
-                    updateReports();
-                    break;
-                case 'appointments':
-                    loadAppointmentsTable();
-                    break;
-            }
-        }
 
         // Cargar tabla de ofertas
         function loadOffersTable() {
@@ -1420,6 +1553,8 @@ if (tabIndex !== -1) {
                             <th>Posición</th>
                             <th>Contacto</th>
                             <th>Estado</th>
+			    <th>Tipo Estudiante</th>
+                            <th>Concentración</th>
                             <th>Acciones</th>
                         </tr>
                     </thead>
@@ -1428,16 +1563,20 @@ if (tabIndex !== -1) {
 
             applications.forEach(application => {
                 const statusLabels = {
-                    'pending': 'Pendiente',
-                    'processed': 'Procesada',
-                    'referred': 'Referida'
-                };
+    'pending': 'Pendiente',
+    'processed': 'Procesada',
+    'referred': 'Referida',
+    'approved_sent': 'Referido Enviado',
+    'rejected': 'Rechazada'
+};
 
                 const statusClasses = {
-                    'pending': 'status-pending',
-                    'processed': 'status-approved',
-                    'referred': 'status-active'
-                };
+    'pending': 'status-pending',
+    'processed': 'status-approved',
+    'referred': 'status-active',
+    'approved_sent': 'status-approved',
+    'rejected': 'status-expired'
+};
 
                 html += `
                     <tr>
@@ -1447,6 +1586,8 @@ if (tabIndex !== -1) {
                         <td>${application.offerTitle}</td>
                         <td>${application.participantPhone}</td>
                         <td><span class="status-badge ${statusClasses[application.status]}">${statusLabels[application.status]}</span></td>
+                        <td>${getStudentTypeLabel(application.participantData?.studentType || getParticipantData(application.participantId)?.studentType || 'N/A')}</td>
+                        <td>${application.participantData?.concentration || getParticipantData(application.participantId)?.concentration || 'N/A'}</td>
                         <td>
                             <td>
     <div class="actions">
@@ -1456,6 +1597,11 @@ if (tabIndex !== -1) {
         ${application.status === 'pending' ? `
             <button class="btn btn-success btn-small" onclick="processApplication('${application.id}')" title="Procesar">
                 <i class="fas fa-check"></i>
+            </button>
+        ` : ''}
+        ${application.status === 'approved_sent' ? `
+            <button class="btn btn-warning btn-small" onclick="viewReferralDetails('${application.id}')" title="Ver seguimiento">
+                <i class="fas fa-eye-slash"></i>
             </button>
         ` : ''}
         <button class="btn btn-danger btn-small" onclick="deleteApplication('${application.id}')" title="Eliminar">
@@ -2521,17 +2667,21 @@ localStorage.setItem('lastCheckedOffers', lastCheckedOffers.toString());
                 return;
             }
 
-            const data = applications.map(application => ({
-                'Fecha Solicitud': new Date(application.appliedAt).toLocaleDateString(),
-                'Participante': application.participantName,
-                'Email Participante': application.participantEmail,
-                'Teléfono Participante': application.participantPhone,
-                'Empresa': application.companyName,
-                'Posición': application.offerTitle,
-                'Estado': application.status === 'pending' ? 'Pendiente' : 
-                         application.status === 'processed' ? 'Procesada' : 'Referida',
-                'Fecha Procesado': application.processedAt ? new Date(application.processedAt).toLocaleDateString() : ''
-            }));
+            const data = applications.map(application => {
+    const participant = getParticipantData(application.participantId);
+    return {
+        'Fecha Solicitud': new Date(application.appliedAt).toLocaleDateString(),
+        'Participante': application.participantName,
+        'Email Participante': application.participantEmail,
+        'Teléfono Participante': application.participantPhone,
+        'Empresa': application.companyName,
+        'Posición': application.offerTitle,
+        'Tipo Estudiante': getStudentTypeLabel(participant?.studentType),
+        'Concentración': participant?.concentration || 'N/A',
+        'Estado': statusLabels[application.status] || application.status,
+        'Fecha Procesado': application.processedAt ? new Date(application.processedAt).toLocaleDateString() : ''
+    };
+});
 
             const ws = XLSX.utils.json_to_sheet(data);
             const wb = XLSX.utils.book_new();
@@ -3600,6 +3750,896 @@ function formatDateForPR(dateString) {
     
     // Si no, usar el formato original
     return new Date(dateString).toLocaleDateString('es-PR');
+}
+
+// ============= NUEVAS FUNCIONES PARA SOLICITUDES PENDIENTES =============
+
+// Variables globales para el sistema manual
+let currentApplicationForEmail = null;
+
+// Cargar tabla de solicitudes pendientes
+function loadPendingApplicationsTable() {
+    const container = document.getElementById('pendingApplicationsContainer');
+    
+    // Filtrar solo aplicaciones pendientes
+    const pendingApps = applications.filter(app => app.status === 'pending');
+    
+    if (pendingApps.length === 0) {
+        container.innerHTML = `
+            <div class="no-data">
+                <i class="fas fa-clock"></i>
+                <h3>No hay solicitudes pendientes</h3>
+                <p>Todas las solicitudes han sido revisadas</p>
+            </div>
+        `;
+        return;
+    }
+
+    let html = '<div class="pending-applications-grid">';
+    
+    pendingApps.forEach(app => {
+        // Buscar datos completos del participante y oferta
+        const participant = app.participantData || participants.find(p => p.id === app.participantId);
+        const offer = app.offerData || offers.find(o => o.id === app.offerId);
+        
+        if (!participant || !offer) return;
+
+        html += `
+            <div class="application-review-card" style="border: 2px solid #e2e8f0; border-radius: 15px; padding: 20px; margin-bottom: 20px; background: white;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px;">
+                    
+                    <!-- CANDIDATO -->
+                    <div class="candidate-profile">
+                        <h4 style="color: #c8102e; margin-bottom: 15px;">👤 CANDIDATO</h4>
+                        <div class="candidate-info">
+                            <strong style="font-size: 16px;">${participant.firstName} ${participant.lastName}</strong>
+                            <p><i class="fas fa-envelope"></i> ${participant.email}</p>
+                            <p><i class="fas fa-phone"></i> ${participant.phone}</p>
+                            <p><i class="fas fa-graduation-cap"></i> ${participant.concentration}</p>
+                            <p><i class="fas fa-university"></i> ${getCampusLabel(participant.campus)} - ${participant.studyYear}° año</p>
+                            <p><i class="fas fa-user-graduate"></i> Graduación: ${participant.graduationCandidate === 'yes' ? 'Sí' : 'No'}</p>
+                            <p><i class="fas fa-id-card"></i> ID: ${participant.studentId}</p>
+                        </div>
+                        
+                        <div style="margin-top: 15px;">
+                            <button class="btn btn-info btn-small" onclick="viewResumeInModal('${participant.resume}', '${participant.firstName} ${participant.lastName}')">
+                                📄 Ver Resumé
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- OFERTA -->
+                    <div class="offer-details">
+                        <h4 style="color: #c8102e; margin-bottom: 15px;">💼 OFERTA</h4>
+                        <div class="offer-info">
+                            <strong style="font-size: 16px;">${offer.position}</strong>
+                            <p><i class="fas fa-building"></i> ${offer.companyName}</p>
+                            <p><i class="fas fa-user"></i> ${offer.contactPerson}</p>
+                            <p><i class="fas fa-envelope"></i> ${offer.email}</p>
+                            <p><i class="fas fa-phone"></i> ${offer.phone}</p>
+                            <p><i class="fas fa-map-marker-alt"></i> ${offer.location}</p>
+                            <p><i class="fas fa-dollar-sign"></i> ${offer.salary}</p>
+                            <p><i class="fas fa-clock"></i> ${getTypeLabel(offer.positionType)}</p>
+                            <p><i class="fas fa-calendar-alt"></i> Vence: ${new Date(offer.deadline).toLocaleDateString()}</p>
+                        </div>
+                        
+                        <div style="margin-top: 15px;">
+                            <button class="btn btn-secondary btn-small" onclick="viewOfferRequirements('${offer.id}')">
+                                📋 Ver Requisitos
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- DECISIÓN -->
+                    <div class="decision-section">
+                        <h4 style="color: #c8102e; margin-bottom: 15px;">🎯 DECISIÓN</h4>
+                        
+                        <div style="margin-bottom: 15px;">
+                            <p><strong>Aplicó:</strong> ${new Date(app.appliedAt).toLocaleDateString()} a las ${new Date(app.appliedAt).toLocaleTimeString()}</p>
+                        </div>
+                        
+                        <div class="decision-buttons" style="display: flex; flex-direction: column; gap: 10px;">
+                            <button class="btn btn-success" onclick="approveAndSendEmail('${app.id}')" style="width: 100%;">
+                                ✅ APROBAR Y ENVIAR
+                                <small style="display: block; font-weight: normal;">Preparar email para patrono</small>
+                            </button>
+                            
+                            <button class="btn btn-warning" onclick="approveWithNotes('${app.id}')" style="width: 100%;">
+                                📝 APROBAR CON NOTA
+                                <small style="display: block; font-weight: normal;">Agregar comentarios</small>
+                            </button>
+                            
+                            <button class="btn btn-danger" onclick="rejectApplicationWithReason('${app.id}')" style="width: 100%;">
+                                ❌ RECHAZAR
+                                <small style="display: block; font-weight: normal;">No cumple requisitos</small>
+                            </button>
+                        </div>
+                        
+                        <div style="margin-top: 15px;">
+                            <label style="font-size: 12px; color: #666;">Notas del administrador:</label>
+                            <textarea id="adminNotes-${app.id}" placeholder="Razones, recomendaciones..." style="width: 100%; height: 60px; font-size: 12px; padding: 8px; border: 1px solid #ddd; border-radius: 4px;"></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    
+    html += '</div>';
+    container.innerHTML = html;
+    
+    // Actualizar contador de pendientes
+    updatePendingCount();
+}
+
+// Función principal: Aprobar y preparar email
+function approveAndSendEmail(applicationId) {
+    const app = applications.find(a => a.id === applicationId);
+    if (!app) return;
+    
+    currentApplicationForEmail = app;
+    
+    // Obtener datos completos
+    const participant = app.participantData || participants.find(p => p.id === app.participantId);
+    const offer = app.offerData || offers.find(o => o.id === app.offerId);
+    const adminNotes = document.getElementById(`adminNotes-${applicationId}`).value;
+    
+    // Preparar datos del email
+    const emailData = {
+        to: offer.email,
+        cc: 'carreras_colocacionescu@uagm.edu',
+        subject: `Candidato referido para oferta de empleo: ${participant.firstName} ${participant.lastName} - ${offer.position}`,
+        body: generateEmailBody(participant, offer, adminNotes)
+    };
+    
+    // Mostrar modal de preparación de email
+    showEmailPreparationModal(emailData, participant.resume, applicationId);
+}
+
+// Generar el cuerpo del email
+function generateEmailBody(participant, offer, adminNotes = '') {
+    const campusLabels = {
+        'cupey': 'Recinto de Cupey',
+        'bayamon': 'Centro Universitario de Bayamón', 
+        'aguadilla': 'Centro Universitario de Aguadilla'
+    };
+    
+    const studentTypeLabels = {
+        'student': 'Estudiante',
+        'alumni': 'Exalumno',
+        'community': 'Comunidad'
+    };
+    
+    return `Estimado/a ${offer.contactPerson},
+
+Saludos cordiales desde la Oficina de Carreras y Colocaciones de la Universidad Ana G. Méndez Recinto de Cupey.
+
+Le refiero candidato para la posición de ${offer.position}:
+
+
+Información de candidato:
+- Nombre: ${participant.firstName} ${participant.lastName}
+- Email: ${participant.email}
+- Teléfono: ${participant.phone}
+- Ciudad: ${participant.city}
+
+
+${adminNotes ? `📝 NOTAS DEL EVALUADOR:
+${adminNotes}
+
+` : ''}Adjunto el resume del candidato para que sea evaluado.
+
+📞Puede contactar directamente al candidato a través del email o teléfono proporcionado.
+
+Si necesita información adicional o tiene alguna pregunta, no dude en contactarnos.
+
+Cordialmente,`;
+}
+
+// Modal de preparación de email
+function showEmailPreparationModal(emailData, resumeUrl, applicationId) {
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.style.display = 'flex';
+    modal.id = 'emailPreparationModal';
+    
+    modal.innerHTML = `
+        <div class="modal-content" style="max-width: 800px; max-height: 90vh; overflow-y: auto;">
+            <div class="modal-header">
+                <h3>📧 Preparar Email para Patrono</h3>
+                <span class="close" onclick="closeEmailModal()">&times;</span>
+            </div>
+            
+            <div class="modal-body">
+                <div class="email-preview">
+                    <h4>📋 Vista Previa del Email:</h4>
+                    <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 10px 0;">
+                        <p><strong>Para:</strong> ${emailData.to}</p>
+                        <p><strong>CC:</strong> ${emailData.cc}</p>
+                        <p><strong>Asunto:</strong> ${emailData.subject}</p>
+                    </div>
+                    
+                    <div style="background: #fff; border: 1px solid #ddd; padding: 15px; border-radius: 8px; max-height: 300px; overflow-y: auto; font-family: monospace; font-size: 11px; white-space: pre-wrap;">${emailData.body}</div>
+                </div>
+                
+                <div class="resume-section" style="margin: 20px 0; padding: 15px; background: #e3f2fd; border-radius: 8px;">
+                    <h4>📎 Resumé del Candidato:</h4>
+                    <p>El resumé se debe adjuntar manualmente:</p>
+                    <button class="btn btn-info" onclick="downloadResumeForAttachment('${resumeUrl}')">
+                        📄 Descargar Resumé para Adjuntar
+                    </button>
+                    <p style="font-size: 12px; color: #666; margin-top: 10px;">
+                        💡 Tip: Descarga el resumé primero, luego abre Outlook y adjúntalo manualmente.
+                    </p>
+                </div>
+                
+                <div class="instructions" style="background: #fff3cd; padding: 15px; border-radius: 8px; margin: 10px 0;">
+                    <h4>📝 Instrucciones:</h4>
+                    <ol>
+                        <li>Haz clic en "Descargar Resumé" arriba</li>
+                        <li>Haz clic en "Abrir Outlook" (se abrirá con el mensaje pre-escrito)</li>
+                        <li>Adjunta manualmente el resumé descargado</li>
+                        <li>Revisa el contenido si deseas hacer cambios</li>
+                        <li>Haz clic en "Enviar" en Outlook</li>
+                        <li>Vuelve aquí y marca como "Enviado"</li>
+                    </ol>
+                </div>
+            </div>
+            
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeEmailModal()">
+                    Cancelar
+                </button>
+                <button class="btn btn-primary" onclick="openOutlookWithEmail('${encodeURIComponent(JSON.stringify(emailData))}', '${applicationId}')">
+                    📧 Abrir Outlook
+                </button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+}
+
+// Abrir Outlook con el email preparado
+function openOutlookWithEmail(encodedEmailData, applicationId) {
+    const emailData = JSON.parse(decodeURIComponent(encodedEmailData));
+    
+    // Crear URL de mailto
+    const subject = encodeURIComponent(emailData.subject);
+    const body = encodeURIComponent(emailData.body);
+    const to = encodeURIComponent(emailData.to);
+    const cc = encodeURIComponent(emailData.cc);
+    
+    const mailtoUrl = `mailto:${to}?cc=${cc}&subject=${subject}&body=${body}`;
+    
+    // Abrir Outlook
+    window.location.href = mailtoUrl;
+    
+    // Mostrar confirmación después de 3 segundos
+    setTimeout(() => {
+        showSentConfirmation(applicationId);
+    }, 3000);
+}
+
+// Descargar resumé para adjuntar
+function downloadResumeForAttachment(resumeUrl) {
+    const link = document.createElement('a');
+    link.href = resumeUrl;
+    link.download = 'Resume_Candidato.pdf';
+    link.target = '_blank';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    showNotification('📄 Resumé descargado. Ahora puedes adjuntarlo en Outlook.', 'success');
+}
+
+// Confirmación de envío
+function showSentConfirmation(applicationId) {
+    const confirmModal = document.createElement('div');
+    confirmModal.className = 'modal';
+    confirmModal.style.display = 'flex';
+    
+    confirmModal.innerHTML = `
+        <div class="modal-content" style="max-width: 400px; text-align: center;">
+            <div class="modal-body">
+                <i class="fas fa-envelope" style="font-size: 48px; color: #c8102e; margin-bottom: 20px;"></i>
+                <h3>¿Email Enviado?</h3>
+                <p>¿Completaste el envío del email desde Outlook?</p>
+            </div>
+            
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="this.closest('.modal').remove()">
+                    No, cancelar
+                </button>
+                <button class="btn btn-success" onclick="markApplicationAsSent('${applicationId}'); this.closest('.modal').remove();">
+                    ✅ Sí, enviado
+                </button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(confirmModal);
+}
+
+// Marcar aplicación como enviada
+async function markApplicationAsSent(applicationId) {
+    try {
+        // Actualizar estado en Firebase
+        if (isFirebaseInitialized) {
+            const snapshot = await db.collection('applications')
+                .where('id', '==', applicationId)
+                .get();
+            
+            if (!snapshot.empty) {
+                const batch = db.batch();
+                snapshot.docs.forEach(doc => {
+                    batch.update(doc.ref, {
+                        status: 'approved_sent',
+                        adminReview: {
+                            reviewed: true,
+                            reviewedBy: 'admin@uagm.edu',
+                            reviewedAt: new Date().toISOString(),
+                            decision: 'approved',
+                            sentAt: new Date().toISOString()
+                        }
+                    });
+                });
+                await batch.commit();
+            }
+        }
+        
+        // Actualizar en memoria local
+        const application = applications.find(app => app.id === applicationId);
+        if (application) {
+            application.status = 'approved_sent';
+            application.adminReview = {
+                reviewed: true,
+                reviewedBy: 'admin@uagm.edu',
+                reviewedAt: new Date().toISOString(),
+                decision: 'approved',
+                sentAt: new Date().toISOString()
+            };
+        }
+        
+        // Crear registro de referido
+        await createReferralRecord(application);
+        
+        // Actualizar localStorage
+        localStorage.setItem('applications', JSON.stringify(applications));
+        
+        // Cerrar modals y actualizar interfaz
+        closeEmailModal();
+        loadPendingApplicationsTable();
+        updateStats();
+        
+        showNotification('✅ Email enviado y referido registrado exitosamente', 'success');
+        
+    } catch (error) {
+        console.error('Error marcando como enviado:', error);
+        showNotification('Error actualizando el estado. Intenta de nuevo.', 'error');
+    }
+}
+
+// Crear registro de referido
+async function createReferralRecord(application) {
+    const participant = application.participantData || participants.find(p => p.id === application.participantId);
+    const offer = application.offerData || offers.find(o => o.id === application.offerId);
+const referralData = {
+       id: `ref_${Date.now()}`,
+       applicationId: application.id,
+       participant: {
+           id: participant.id,
+           name: `${participant.firstName} ${participant.lastName}`,
+           email: participant.email,
+           phone: participant.phone,
+           studentId: participant.studentId,
+           campus: participant.campus,
+           concentration: participant.concentration,
+           resumeUrl: participant.resume
+       },
+       employer: {
+           companyName: offer.companyName,
+           contactPerson: offer.contactPerson,
+           contactEmail: offer.email,
+           phone: offer.phone,
+           position: offer.position
+       },
+       referral: {
+           referredAt: new Date().toISOString(),
+           emailSent: true,
+           emailSentAt: new Date().toISOString(),
+           resumeAttached: true,
+           status: 'sent'
+       },
+       tracking: {
+           emailOpened: false,
+           resumeDownloaded: false,
+           employerResponse: null,
+           lastUpdated: new Date().toISOString()
+       }
+   };
+
+   try {
+       // Guardar en Firebase
+       if (isFirebaseInitialized) {
+           await FirebaseHelper.saveDoc('referrals', referralData);
+       }
+       
+       // Guardar en localStorage
+       let referrals = JSON.parse(localStorage.getItem('referrals')) || [];
+       referrals.push(referralData);
+       localStorage.setItem('referrals', JSON.stringify(referrals));
+       
+   } catch (error) {
+       console.error('Error creando referido:', error);
+   }
+}
+
+// Rechazar aplicación con razón
+function rejectApplicationWithReason(applicationId) {
+   const app = applications.find(a => a.id === applicationId);
+   if (!app) return;
+   
+   const reason = document.getElementById(`adminNotes-${applicationId}`).value;
+   
+   if (!reason.trim()) {
+       showNotification('Por favor escribe una razón para el rechazo', 'warning');
+       document.getElementById(`adminNotes-${applicationId}`).focus();
+       return;
+   }
+   
+   if (confirm('¿Estás seguro de que quieres rechazar esta solicitud?')) {
+       rejectApplication(applicationId, reason);
+   }
+}
+
+// Rechazar aplicación
+async function rejectApplication(applicationId, reason) {
+   try {
+       // Actualizar en Firebase
+       if (isFirebaseInitialized) {
+           const snapshot = await db.collection('applications')
+               .where('id', '==', applicationId)
+               .get();
+           
+           if (!snapshot.empty) {
+               const batch = db.batch();
+               snapshot.docs.forEach(doc => {
+                   batch.update(doc.ref, {
+                       status: 'rejected',
+                       adminReview: {
+                           reviewed: true,
+                           reviewedBy: 'admin@uagm.edu',
+                           reviewedAt: new Date().toISOString(),
+                           decision: 'rejected',
+                           notes: reason
+                       }
+                   });
+               });
+               await batch.commit();
+           }
+       }
+       
+       // Actualizar en memoria local
+       const application = applications.find(app => app.id === applicationId);
+       if (application) {
+           application.status = 'rejected';
+           application.adminReview = {
+               reviewed: true,
+               reviewedBy: 'admin@uagm.edu',
+               reviewedAt: new Date().toISOString(),
+               decision: 'rejected',
+               notes: reason
+           };
+       }
+       
+       // Actualizar localStorage
+       localStorage.setItem('applications', JSON.stringify(applications));
+       
+       // Actualizar interfaz
+       loadPendingApplicationsTable();
+       updateStats();
+       
+       showNotification('Solicitud rechazada correctamente', 'success');
+       
+   } catch (error) {
+       console.error('Error rechazando aplicación:', error);
+       showNotification('Error rechazando la solicitud. Intenta de nuevo.', 'error');
+   }
+}
+
+// Aprobar con notas (similar al normal pero pide notas obligatorias)
+function approveWithNotes(applicationId) {
+   const adminNotes = document.getElementById(`adminNotes-${applicationId}`).value;
+   
+   if (!adminNotes.trim()) {
+       showNotification('Por favor escribe notas adicionales para el patrono', 'warning');
+       document.getElementById(`adminNotes-${applicationId}`).focus();
+       return;
+   }
+   
+   // Llamar a la función normal pero marcando que tiene notas
+   approveAndSendEmail(applicationId);
+}
+
+// Ver resumé en modal
+function viewResumeInModal(resumeUrl, candidateName) {
+   if (!resumeUrl || resumeUrl === 'uploading...') {
+       showNotification('Resumé no disponible', 'warning');
+       return;
+   }
+   
+   const modal = document.createElement('div');
+   modal.className = 'modal';
+   modal.style.display = 'flex';
+   
+   modal.innerHTML = `
+       <div class="modal-content" style="max-width: 90%; max-height: 90%;">
+           <div class="modal-header">
+               <h3>📄 Resumé de ${candidateName}</h3>
+               <span class="close" onclick="this.closest('.modal').remove()">&times;</span>
+           </div>
+           <div class="modal-body" style="text-align: center;">
+               <iframe src="${resumeUrl}" style="width: 100%; height: 600px; border: none;" frameborder="0"></iframe>
+               <div style="margin-top: 15px;">
+                   <a href="${resumeUrl}" target="_blank" class="btn btn-primary">
+                       🔗 Abrir en Nueva Pestaña
+                   </a>
+                   <button class="btn btn-info" onclick="downloadResumeForAttachment('${resumeUrl}')">
+                       📥 Descargar
+                   </button>
+               </div>
+           </div>
+       </div>
+   `;
+   
+   document.body.appendChild(modal);
+}
+
+// Ver requisitos de oferta
+function viewOfferRequirements(offerId) {
+   const offer = offers.find(o => o.id === offerId);
+   if (!offer) return;
+   
+   const modal = document.createElement('div');
+   modal.className = 'modal';
+   modal.style.display = 'flex';
+   
+   modal.innerHTML = `
+       <div class="modal-content" style="max-width: 600px;">
+           <div class="modal-header">
+               <h3>📋 Requisitos - ${offer.position}</h3>
+               <span class="close" onclick="this.closest('.modal').remove()">&times;</span>
+           </div>
+           <div class="modal-body">
+               <div style="margin-bottom: 20px;">
+                   <h4 style="color: #c8102e;">🏢 ${offer.companyName}</h4>
+                   <p><strong>Posición:</strong> ${offer.position}</p>
+                   <p><strong>Ubicación:</strong> ${offer.location}</p>
+                   <p><strong>Salario:</strong> ${offer.salary}</p>
+                   <p><strong>Tipo:</strong> ${getTypeLabel(offer.positionType)}</p>
+               </div>
+               
+               <div style="margin-bottom: 20px;">
+                   <h4 style="color: #c8102e;">📋 Requisitos de la Posición:</h4>
+                   <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; white-space: pre-wrap;">${offer.requirements}</div>
+               </div>
+               
+               ${offer.jobDescription ? `
+               <div style="margin-bottom: 20px;">
+                   <h4 style="color: #c8102e;">📝 Descripción del Puesto:</h4>
+                   <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; white-space: pre-wrap;">${offer.jobDescription}</div>
+               </div>
+               ` : ''}
+               
+               ${offer.schedule ? `
+               <div style="margin-bottom: 20px;">
+                   <h4 style="color: #c8102e;">⏰ Horarios:</h4>
+                   <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; white-space: pre-wrap;">${offer.schedule}</div>
+               </div>
+               ` : ''}
+           </div>
+           <div class="modal-footer">
+               <button class="btn btn-secondary" onclick="this.closest('.modal').remove()">Cerrar</button>
+           </div>
+       </div>
+   `;
+   
+   document.body.appendChild(modal);
+}
+
+// Cerrar modal de email
+function closeEmailModal() {
+   const modal = document.getElementById('emailPreparationModal');
+   if (modal) {
+       modal.remove();
+   }
+   // También cerrar cualquier otro modal de email
+   document.querySelectorAll('.modal').forEach(modal => {
+       if (modal.innerHTML.includes('Preparar Email')) {
+           modal.remove();
+       }
+   });
+}
+
+// Filtrar aplicaciones pendientes
+function filterPendingApplications() {
+   const search = document.getElementById('pendingSearch').value.toLowerCase();
+   const dateFilter = document.getElementById('pendingDateFilter').value;
+   
+   let filteredApps = applications.filter(app => app.status === 'pending');
+   
+   // Filtro de búsqueda
+   if (search) {
+       filteredApps = filteredApps.filter(app => {
+           const participant = app.participantData || participants.find(p => p.id === app.participantId);
+           const offer = app.offerData || offers.find(o => o.id === app.offerId);
+           
+           if (!participant || !offer) return false;
+           
+           return (
+               `${participant.firstName} ${participant.lastName}`.toLowerCase().includes(search) ||
+               participant.email.toLowerCase().includes(search) ||
+               participant.concentration.toLowerCase().includes(search) ||
+               offer.companyName.toLowerCase().includes(search) ||
+               offer.position.toLowerCase().includes(search)
+           );
+       });
+   }
+   
+   // Filtro de fecha
+   if (dateFilter) {
+       const today = new Date();
+       filteredApps = filteredApps.filter(app => {
+           const appDate = new Date(app.appliedAt);
+           
+           switch(dateFilter) {
+               case 'today':
+                   return appDate.toDateString() === today.toDateString();
+               case 'week':
+                   const weekAgo = new Date(today);
+                   weekAgo.setDate(today.getDate() - 7);
+                   return appDate >= weekAgo;
+               case 'month':
+                   return appDate.getMonth() === today.getMonth() && 
+                          appDate.getFullYear() === today.getFullYear();
+               default:
+                   return true;
+           }
+       });
+   }
+   
+   // Actualizar la vista con los resultados filtrados
+   displayFilteredPendingApplications(filteredApps);
+}
+
+// Mostrar aplicaciones pendientes filtradas
+function displayFilteredPendingApplications(filteredApps) {
+   const container = document.getElementById('pendingApplicationsContainer');
+   
+   if (filteredApps.length === 0) {
+       container.innerHTML = `
+           <div class="no-data">
+               <i class="fas fa-search"></i>
+               <h3>No se encontraron solicitudes</h3>
+               <p>No hay solicitudes pendientes que coincidan con los filtros</p>
+           </div>
+       `;
+       return;
+   }
+   
+   // Reutilizar la misma lógica de loadPendingApplicationsTable pero con filteredApps
+   let html = '<div class="pending-applications-grid">';
+   
+   filteredApps.forEach(app => {
+       const participant = app.participantData || participants.find(p => p.id === app.participantId);
+       const offer = app.offerData || offers.find(o => o.id === app.offerId);
+       
+       if (!participant || !offer) return;
+
+       html += `
+           <div class="application-review-card" style="border: 2px solid #e2e8f0; border-radius: 15px; padding: 20px; margin-bottom: 20px; background: white;">
+               <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px;">
+                   
+                   <!-- CANDIDATO -->
+                   <div class="candidate-profile">
+                       <h4 style="color: #c8102e; margin-bottom: 15px;">👤 CANDIDATO</h4>
+                       <div class="candidate-info">
+                           <strong style="font-size: 16px;">${participant.firstName} ${participant.lastName}</strong>
+                           <p><i class="fas fa-envelope"></i> ${participant.email}</p>
+                           <p><i class="fas fa-phone"></i> ${participant.phone}</p>
+                           <p><i class="fas fa-graduation-cap"></i> ${participant.concentration}</p>
+                           <p><i class="fas fa-university"></i> ${getCampusLabel(participant.campus)} - ${participant.studyYear}° año</p>
+                           <p><i class="fas fa-user-graduate"></i> Graduación: ${participant.graduationCandidate === 'yes' ? 'Sí' : 'No'}</p>
+                           <p><i class="fas fa-id-card"></i> ID: ${participant.studentId}</p>
+                       </div>
+                       
+                       <div style="margin-top: 15px;">
+                           <button class="btn btn-info btn-small" onclick="viewResumeInModal('${participant.resume}', '${participant.firstName} ${participant.lastName}')">
+                               📄 Ver Resumé
+                           </button>
+                       </div>
+                   </div>
+                   
+                   <!-- OFERTA -->
+                   <div class="offer-details">
+                       <h4 style="color: #c8102e; margin-bottom: 15px;">💼 OFERTA</h4>
+                       <div class="offer-info">
+                           <strong style="font-size: 16px;">${offer.position}</strong>
+                           <p><i class="fas fa-building"></i> ${offer.companyName}</p>
+                           <p><i class="fas fa-user"></i> ${offer.contactPerson}</p>
+                           <p><i class="fas fa-envelope"></i> ${offer.email}</p>
+                           <p><i class="fas fa-phone"></i> ${offer.phone}</p>
+                           <p><i class="fas fa-map-marker-alt"></i> ${offer.location}</p>
+                           <p><i class="fas fa-dollar-sign"></i> ${offer.salary}</p>
+                           <p><i class="fas fa-clock"></i> ${getTypeLabel(offer.positionType)}</p>
+                           <p><i class="fas fa-calendar-alt"></i> Vence: ${new Date(offer.deadline).toLocaleDateString()}</p>
+                       </div>
+                       
+                       <div style="margin-top: 15px;">
+                           <button class="btn btn-secondary btn-small" onclick="viewOfferRequirements('${offer.id}')">
+                               📋 Ver Requisitos
+                           </button>
+                       </div>
+                   </div>
+                   
+                   <!-- DECISIÓN -->
+                   <div class="decision-section">
+                       <h4 style="color: #c8102e; margin-bottom: 15px;">🎯 DECISIÓN</h4>
+                       
+                       <div style="margin-bottom: 15px;">
+                           <p><strong>Aplicó:</strong> ${new Date(app.appliedAt).toLocaleDateString()} a las ${new Date(app.appliedAt).toLocaleTimeString()}</p>
+                       </div>
+                       
+                       <div class="decision-buttons" style="display: flex; flex-direction: column; gap: 10px;">
+                           <button class="btn btn-success" onclick="approveAndSendEmail('${app.id}')" style="width: 100%;">
+                               ✅ APROBAR Y ENVIAR
+                               <small style="display: block; font-weight: normal;">Preparar email para patrono</small>
+                           </button>
+                           
+                           <button class="btn btn-warning" onclick="approveWithNotes('${app.id}')" style="width: 100%;">
+                               📝 APROBAR CON NOTA
+                               <small style="display: block; font-weight: normal;">Agregar comentarios</small>
+                           </button>
+                           
+                           <button class="btn btn-danger" onclick="rejectApplicationWithReason('${app.id}')" style="width: 100%;">
+                               ❌ RECHAZAR
+                               <small style="display: block; font-weight: normal;">No cumple requisitos</small>
+                           </button>
+                       </div>
+                       
+                       <div style="margin-top: 15px;">
+                           <label style="font-size: 12px; color: #666;">Notas del administrador:</label>
+                           <textarea id="adminNotes-${app.id}" placeholder="Razones, recomendaciones..." style="width: 100%; height: 60px; font-size: 12px; padding: 8px; border: 1px solid #ddd; border-radius: 4px;"></textarea>
+                       </div>
+                   </div>
+               </div>
+           </div>
+       `;
+   });
+   
+   html += '</div>';
+   container.innerHTML = html;
+}
+
+// Actualizar contador de pendientes
+function updatePendingCount() {
+   const pendingCount = applications.filter(app => app.status === 'pending').length;
+   const badge = document.getElementById('pendingCount');
+   
+   if (pendingCount > 0) {
+       badge.textContent = pendingCount;
+       badge.style.display = 'inline';
+   } else {
+       badge.style.display = 'none';
+   }
+}
+
+// Exportar datos pendientes
+function exportPendingData() {
+   const pendingApps = applications.filter(app => app.status === 'pending');
+   
+   if (pendingApps.length === 0) {
+       showNotification('No hay solicitudes pendientes para exportar', 'warning');
+       return;
+   }
+
+   const data = pendingApps.map(app => {
+       const participant = app.participantData || participants.find(p => p.id === app.participantId);
+       const offer = app.offerData || offers.find(o => o.id === app.offerId);
+       
+       return {
+           'Fecha Solicitud': new Date(app.appliedAt).toLocaleDateString(),
+           'Participante': `${participant.firstName} ${participant.lastName}`,
+           'Email': participant.email,
+           'Teléfono': participant.phone,
+           'Concentración': participant.concentration,
+           'Recinto': participant.campus,
+           'Año': participant.studyYear,
+           'Empresa': offer.companyName,
+           'Posición': offer.position,
+           'Contacto Empresa': offer.contactPerson,
+           'Email Empresa': offer.email,
+           'Estado': 'Pendiente Revisión'
+       };
+   });
+
+   const ws = XLSX.utils.json_to_sheet(data);
+   const wb = XLSX.utils.book_new();
+   XLSX.utils.book_append_sheet(wb, ws, "Solicitudes Pendientes");
+   
+   const filename = `Solicitudes_Pendientes_${new Date().toISOString().split('T')[0]}.xlsx`;
+   XLSX.writeFile(wb, filename);
+   
+   showNotification('Solicitudes pendientes exportadas exitosamente', 'success');
+}
+
+// Función auxiliar para obtener etiqueta del campus
+function getCampusLabel(campus) {
+   const labels = {
+       'cupey': 'Cupey',
+       'bayamon': 'Bayamón',
+       'aguadilla': 'Aguadilla'
+   };
+   return labels[campus] || campus;
+}
+
+// ============= FIN DE NUEVAS FUNCIONES =============
+
+// Función para obtener etiqueta del tipo de estudiante
+function getStudentTypeLabel(type) {
+    const labels = {
+        'student': 'Estudiante',
+        'alumni': 'Exalumno',
+        'community': 'Comunidad'
+    };
+    return labels[type] || type || 'N/A';
+}
+
+// Función para obtener datos del participante
+function getParticipantData(participantId) {
+    return participants.find(p => p.id === participantId) || null;
+}
+
+// Función para ver detalles de referido
+function viewReferralDetails(applicationId) {
+    const application = applications.find(app => app.id === applicationId);
+    if (!application) return;
+    
+    const participant = getParticipantData(application.participantId);
+    const offer = offers.find(o => o.id === application.offerId);
+    
+    document.getElementById('modalTitle').textContent = `Referido: ${application.participantName}`;
+    document.getElementById('modalBody').innerHTML = `
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 20px;">
+            <div>
+                <h4 style="color: #c8102e; margin-bottom: 15px;">📤 Estado del Referido</h4>
+                <p><strong>Estado:</strong> <span class="status-badge status-approved">Enviado al Patrono</span></p>
+                <p><strong>Enviado:</strong> ${application.adminReview?.sentAt ? new Date(application.adminReview.sentAt).toLocaleString() : 'N/A'}</p>
+                <p><strong>Empresa:</strong> ${application.companyName}</p>
+                <p><strong>Posición:</strong> ${application.offerTitle}</p>
+                <p><strong>Email Patrono:</strong> ${offer?.email || 'N/A'}</p>
+            </div>
+            <div>
+                <h4 style="color: #c8102e; margin-bottom: 15px;">👤 Datos del Candidato</h4>
+                <p><strong>Nombre:</strong> ${application.participantName}</p>
+                <p><strong>Tipo:</strong> ${getStudentTypeLabel(participant?.studentType)}</p>
+                <p><strong>Concentración:</strong> ${participant?.concentration || 'N/A'}</p>
+                <p><strong>Email:</strong> ${application.participantEmail}</p>
+                <p><strong>Teléfono:</strong> ${application.participantPhone}</p>
+            </div>
+        </div>
+        
+        <div style="margin-bottom: 20px; padding: 15px; background: #e8f5e8; border-radius: 8px;">
+            <h4 style="color: #28a745; margin-bottom: 10px;">✅ Acciones Completadas</h4>
+            <p>✓ Candidato pre-evaluado por UAGM</p>
+            <p>✓ Email enviado al patrono con resumé adjunto</p>
+            <p>✓ Datos de contacto proporcionados</p>
+        </div>
+    `;
+    
+    document.getElementById('detailsModal').style.display = 'flex';
 }
     </script>
 </body>
