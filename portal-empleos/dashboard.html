@@ -1273,7 +1273,7 @@
                             </select>
                         </div>
                         <div class="form-group" id="graduationDateGroup" style="display: none;">
-                            <label>Fecha de graduación</label>
+                            <label id="graduationDateLabel">Fecha de graduación</label>
                             <input type="date" id="placement-graduationDate">
                         </div>
                     </div>
@@ -5480,17 +5480,29 @@ function toggleStudentFields() {
     const personType = document.getElementById('placement-personType').value;
     const studentIdGroup = document.getElementById('studentIdGroup');
     const graduationDateGroup = document.getElementById('graduationDateGroup');
+    const graduationDateLabel = document.getElementById('graduationDateLabel');
+    const graduationDateInput = document.getElementById('placement-graduationDate');
     
     if (personType === 'estudiante') {
         studentIdGroup.style.display = 'block';
         graduationDateGroup.style.display = 'block';
+        graduationDateLabel.textContent = 'Fecha de graduación (estimada)';
         document.getElementById('placement-studentId').required = true;
+        graduationDateInput.required = false;
+    } else if (personType === 'exalumno') {
+        studentIdGroup.style.display = 'none';
+        graduationDateGroup.style.display = 'block';
+        graduationDateLabel.textContent = 'Fecha de graduación *';
+        document.getElementById('placement-studentId').required = false;
+        document.getElementById('placement-studentId').value = '';
+        graduationDateInput.required = true;
     } else {
         studentIdGroup.style.display = 'none';
         graduationDateGroup.style.display = 'none';
         document.getElementById('placement-studentId').required = false;
+        graduationDateInput.required = false;
         document.getElementById('placement-studentId').value = '';
-        document.getElementById('placement-graduationDate').value = '';
+        graduationDateInput.value = '';
     }
 }
 
@@ -5603,7 +5615,7 @@ function viewPlacementDetails(placementId) {
                 <p><strong>Email:</strong> ${placement.email || 'No proporcionado'}</p>
                 <p><strong>Tipo:</strong> ${personTypeLabels[placement.personType]}</p>
                 ${placement.studentId ? `<p><strong>ID Estudiante:</strong> ${placement.studentId}</p>` : ''}
-                ${placement.graduationDate ? `<p><strong>Fecha Graduación:</strong> ${new Date(placement.graduationDate).toLocaleDateString('es-ES')}</p>` : ''}
+                ${placement.graduationDate ? `<p><strong>Fecha Graduación:</strong> ${formatLocalDate(placement.graduationDate)}</p>` : ''}
             </div>
             <div>
                 <h4 style="color: #28a745; margin-bottom: 15px;">🏢 Información del Empleo</h4>
@@ -6001,7 +6013,7 @@ function exportPlacementsData() {
             'Grado': degreeLabels[placement.degree],
             'Concentración': placement.concentration,
             'División Académica': divisionLabels[placement.division],
-            'Fecha Graduación': placement.graduationDate ? new Date(placement.graduationDate).toLocaleDateString('es-ES') : 'N/A',
+            'Fecha Graduación': placement.graduationDate ? formatLocalDate(placement.graduationDate) : 'N/A',
             'Notas': placement.notes || 'N/A',
             'Fecha Registro': new Date(placement.createdAt).toLocaleDateString('es-ES'),
             'Registrado Por': placement.createdBy
