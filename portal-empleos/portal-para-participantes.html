@@ -965,76 +965,76 @@ function initializeFirebase() {
         }
 
         // Enviar registro
-        async function submitRegistration() {
-            const formData = {
-                id: Date.now().toString(),
-                participantType: document.getElementById('participantType').value,
-                firstName: document.getElementById('firstName').value,
-                lastName: document.getElementById('lastName').value,
-                phone: document.getElementById('phone').value,
-                email: document.getElementById('email').value,
-                city: document.getElementById('city').value,
-                studentType: document.getElementById('studentType').value,
-                campus: document.getElementById('campus').value,
-                studentId: document.getElementById('studentId').value,
-                schedule: document.getElementById('schedule').value,
-                studyYear: document.getElementById('studyYear').value,
-                concentration: document.getElementById('concentration').value,
-                graduationCandidate: document.getElementById('graduationCandidate').value,
-                academicDegree: document.getElementById('academicDegree').value,
-                academicDivision: document.getElementById('academicDivision').value,
-                resume: 'uploading...', // Se actualizará después de subir
-                registeredAt: new Date().toISOString()
-            };
+async function submitRegistration() {
+    const formData = {
+        id: Date.now().toString(),
+        participantType: document.getElementById('participantType').value,
+        firstName: document.getElementById('firstName').value,
+        lastName: document.getElementById('lastName').value,
+        phone: document.getElementById('phone').value,
+        email: document.getElementById('email').value,
+        city: document.getElementById('city').value,
+        studentType: document.getElementById('studentType').value,
+        campus: document.getElementById('campus').value,
+        studentId: document.getElementById('studentId').value,
+        schedule: document.getElementById('schedule').value,
+        studyYear: document.getElementById('studyYear').value,
+        concentration: document.getElementById('concentration').value,
+        graduationCandidate: document.getElementById('graduationCandidate').value,
+        academicDegree: document.getElementById('academicDegree').value,
+        academicDivision: document.getElementById('academicDivision').value,
+        resume: 'uploading...', // Se actualizará después de subir
+        registeredAt: new Date().toISOString()
+    };
 
-            try {
-                // Subir archivo de resumé a Storage
-                const resumeFile = document.getElementById('resume').files[0];
-                if (resumeFile) {
-                    const storageRef = storage.ref(`resumes/${formData.id}_${resumeFile.name}`);
-                    const uploadTask = await storageRef.put(resumeFile);
-                    const downloadURL = await uploadTask.ref.getDownloadURL();
-                    formData.resume = downloadURL;
-                    formData.resumeFileName = resumeFile.name;
-                    console.log('Resumé subido a Storage:', downloadURL);
-                }
-
-                // Intentar guardar en Firebase
-                if (isFirebaseInitialized) {
-                    const result = await FirebaseHelper.saveDoc('participants', formData);
-                    if (result.success) {
-                        console.log('Participante guardado en Firebase:', result.id);
-                        showNotification('¡Registro y resumé guardados en Firebase!', 'success');
-                    } else {
-                        throw new Error('Error de Firebase');
-                    }
-                } else {
-                    throw new Error('Firebase no inicializado');
-                }
-            } catch (error) {
-                console.error('Error con Firebase, usando localStorage:', error);
-                showNotification('Guardado localmente (Firebase falló)', 'warning');
-            }
-
-            // Guardar también en localStorage como respaldo
-            localStorage.setItem('currentUser', JSON.stringify(formData));
-            let participants = JSON.parse(localStorage.getItem('participants')) || [];
-            participants.push(formData);
-            localStorage.setItem('participants', JSON.stringify(participants));
-
-            currentUser = formData;
-
-            // Mostrar mensaje de éxito
-            document.getElementById('successMessage').style.display = 'block';
-            document.getElementById('offersTab').style.display = 'flex';
-            
-            showNotification('¡Registro completado exitosamente!', 'success');
-
-            // Cambiar a tab de ofertas después de 2 segundos
-            setTimeout(() => {
-                switchTab('offers');
-            }, 2000);
+    try {
+        // Subir archivo de resumé a Storage
+        const resumeFile = document.getElementById('resume').files[0];
+        if (resumeFile) {
+            const storageRef = storage.ref(`resumes/${formData.id}_${resumeFile.name}`);
+            const uploadTask = await storageRef.put(resumeFile);
+            const downloadURL = await uploadTask.ref.getDownloadURL();
+            formData.resume = downloadURL;
+            formData.resumeFileName = resumeFile.name;
+            console.log('Resumé subido a Storage:', downloadURL);
         }
+
+        // Intentar guardar en Firebase
+        if (isFirebaseInitialized) {
+            const result = await FirebaseHelper.saveDoc('participants', formData);
+            if (result.success) {
+                console.log('Participante guardado en Firebase:', result.id);
+                showNotification('¡Registro y resumé guardados en Firebase!', 'success');
+            } else {
+                throw new Error('Error de Firebase');
+            }
+        } else {
+            throw new Error('Firebase no inicializado');
+        }
+    } catch (error) {
+        console.error('Error con Firebase, usando localStorage:', error);
+        showNotification('Guardado localmente (Firebase falló)', 'warning');
+    }
+
+    // Guardar también en localStorage como respaldo
+    localStorage.setItem('currentUser', JSON.stringify(formData));
+    let participants = JSON.parse(localStorage.getItem('participants')) || [];
+    participants.push(formData);
+    localStorage.setItem('participants', JSON.stringify(participants));
+
+    currentUser = formData;
+
+    // Mostrar mensaje de éxito
+    document.getElementById('successMessage').style.display = 'block';
+    document.getElementById('offersTab').style.display = 'flex';
+    
+    showNotification('¡Registro completado exitosamente!', 'success');
+
+    // Cambiar a tab de ofertas después de 2 segundos
+    setTimeout(() => {
+        switchTab('offers');
+    }, 2000);
+}
 
        // Cargar ofertas desde Firebase
         async function loadOffers() {
@@ -1322,48 +1322,60 @@ function displayFilteredOffers(filteredOffers) {
         }
 
         // Aplicar a oferta
-        async function applyToOffer() {
-            if (!currentOffer || !currentUser) return;
+async function applyToOffer() {
+    if (!currentOffer || !currentUser) return;
 
-            // Crear aplicación
-            const application = {
-                id: Date.now().toString(),
-                offerId: currentOffer.id,
-                participantId: currentUser.id,
-                participantName: `${currentUser.firstName} ${currentUser.lastName}`,
-                participantEmail: currentUser.email,
-                participantPhone: currentUser.phone,
-                offerTitle: currentOffer.position,
-                companyName: currentOffer.companyName,
-                appliedAt: new Date().toISOString(),
-                status: 'pending'
-            };
-
-            try {
-                // Intentar guardar en Firebase
-                if (isFirebaseInitialized) {
-                    const result = await FirebaseHelper.saveDoc('applications', application);
-                    if (result.success) {
-                        console.log('Aplicación guardada en Firebase:', result.id);
-                        showNotification('¡Aplicación enviada a Firebase!', 'success');
-                    } else {
-                        throw new Error('Error de Firebase');
-                    }
-                } else {
-                    throw new Error('Firebase no inicializado');
-                }
-            } catch (error) {
-                console.error('Error con Firebase, usando localStorage:', error);
-                showNotification('Aplicación enviada (guardada localmente)', 'warning');
-            }
-
-            // Guardar también en localStorage como respaldo
-            let applications = JSON.parse(localStorage.getItem('applications')) || [];
-            applications.push(application);
-            localStorage.setItem('applications', JSON.stringify(applications));
-
-            closeOfferModal();
+    // Crear aplicación con estado PENDING (nuevo)
+    const application = {
+        id: Date.now().toString(),
+        offerId: currentOffer.id,
+        participantId: currentUser.id,
+        participantData: currentUser, // Datos completos del participante
+        offerData: currentOffer, // Datos completos de la oferta
+        participantName: `${currentUser.firstName} ${currentUser.lastName}`,
+        participantEmail: currentUser.email,
+        participantPhone: currentUser.phone,
+        offerTitle: currentOffer.position,
+        companyName: currentOffer.companyName,
+        appliedAt: new Date().toISOString(),
+        status: 'pending', // ← CAMBIO CLAVE: Inicia como pendiente
+        adminReview: {
+            reviewed: false,
+            reviewedBy: null,
+            reviewedAt: null,
+            decision: null,
+            notes: ''
         }
+    };
+
+    try {
+        // Intentar guardar en Firebase
+        if (isFirebaseInitialized) {
+            const result = await FirebaseHelper.saveDoc('applications', application);
+            if (result.success) {
+                console.log('Aplicación guardada en Firebase:', result.id);
+                showNotification('¡Aplicación enviada para revisión!', 'success');
+            } else {
+                throw new Error('Error de Firebase');
+            }
+        } else {
+            throw new Error('Firebase no inicializado');
+        }
+    } catch (error) {
+        console.error('Error con Firebase, usando localStorage:', error);
+        showNotification('Aplicación enviada (guardada localmente)', 'warning');
+    }
+
+    // Guardar también en localStorage como respaldo
+    let applications = JSON.parse(localStorage.getItem('applications')) || [];
+    applications.push(application);
+    localStorage.setItem('applications', JSON.stringify(applications));
+
+    closeOfferModal();
+    
+    // Mensaje actualizado
+    showNotification('Solicitud enviada para revisión por nuestro equipo', 'info');
+}
 
         // Sistema de notificaciones
         function showNotification(message, type = 'info') {
