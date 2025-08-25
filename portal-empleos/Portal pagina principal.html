@@ -48,6 +48,41 @@
             color: #6c757d;
             margin-bottom: 30px;
         }
+
+.institution-info {
+    margin-bottom: 20px;
+}
+
+.university-name {
+    font-size: 20px;
+    color: #c8102e;
+    font-weight: 600;
+    margin-bottom: 5px;
+}
+
+.campus-info {
+    font-size: 16px;
+    color: #495057;
+    font-style: italic;
+}
+
+.office-tags {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-bottom: 30px;
+    flex-wrap: wrap;
+}
+
+.office-tag {
+    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+    color: #495057;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 500;
+    border: 1px solid #e2e8f0;
+}
         
         .cards-container {
     display: grid;
@@ -250,14 +285,17 @@
 <body>
     <div class="container">
         <div class="header">
-           <img src="UAGM de color.png" alt="UAGM Logo" class="logo">
-            <h1 class="title">Portal de Empleos UAGM</h1>
-            <p class="subtitle">
-    Universidad Ana G. Méndez Recinto de Cupey<br>
-    Oficina de Carreras y Colocaciones<br>
-    Oficina de Becas e Internados
-</p>
-        </div>
+    <img src="UAGM de color.png" alt="UAGM Logo" class="logo">
+    <h1 class="title">Portal de Empleos</h1>
+    <div class="institution-info">
+        <div class="university-name">Universidad Ana G. Méndez</div>
+        <div class="campus-info">Recinto de Cupey</div>
+    </div>
+    <div class="office-tags">
+        <span class="office-tag">Oficina de Carreras y Colocaciones</span>
+        <span class="office-tag"> Oficina de Becas e Internados</span>
+    </div>
+</div>
 
         <div class="cards-container">
             <!-- Tarjeta Participantes -->
