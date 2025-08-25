@@ -50,11 +50,24 @@
         }
         
         .cards-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 30px;
-            margin-top: 40px;
-        }
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+    margin-top: 40px;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.resume-container {
+    display: flex;
+    justify-content: center;
+    margin-top: 30px;
+}
+
+.resume-card {
+    max-width: 300px;
+}
         
         .access-card {
             background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
@@ -212,7 +225,7 @@
             color: #6c757d;
         }
         
-        @media (max-width: 768px) {
+       @media (max-width: 768px) {
             .container {
                 padding: 20px;
                 margin: 20px;
@@ -221,6 +234,7 @@
             .cards-container {
                 grid-template-columns: 1fr;
                 gap: 20px;
+                max-width: 100%;
             }
             
             .title {
@@ -264,8 +278,32 @@
                 </p>
             </div>
 
-            <!-- Tarjeta Admin -->
-            <div class="access-card admin-card" onclick="openAdminLogin()">
+<!-- Tarjeta Internados -->
+            <div class="access-card" onclick="goToInternados()">
+                <div class="card-icon">
+                    <i class="fas fa-graduation-cap"></i>
+                </div>
+                <h3 class="card-title">Internados</h3>
+                <p class="card-description">
+                    Explora oportunidades de internados y prácticas profesionales para estudiantes
+                </p>
+            </div>
+
+ <!-- Resume Builder -->
+        <div class="resume-container">
+            <div class="access-card resume-card" onclick="goToResumeBuilder()" style="background: linear-gradient(135deg, #6f42c1 0%, #5a2d91 100%); color: white;">
+                <div class="card-icon" style="color: white;">
+                    <i class="fas fa-file-alt"></i>
+                </div>
+                <h3 class="card-title" style="color: white;">Resume Builder</h3>
+                <p class="card-description" style="color: rgba(255,255,255,0.9);">
+                    Crea tu currículum profesional con nuestra herramienta interactiva
+                </p>
+            </div>
+        </div>
+
+            <!-- Tarjeta Admin separado -->
+          <div class="access-card admin-card" onclick="openAdminLogin()" id="adminCard" style="display: none;">
                 <div class="card-icon">
                     <i class="fas fa-cog"></i>
                 </div>
@@ -275,17 +313,6 @@
                 </p>
             </div>
         </div>
-
-        <!-- Tarjeta Resume Builder -->
-            <div class="access-card" onclick="goToResumeBuilder()" style="background: linear-gradient(135deg, #6f42c1 0%, #5a2d91 100%); color: white;">
-                <div class="card-icon" style="color: white;">
-                    <i class="fas fa-file-alt"></i>
-                </div>
-                <h3 class="card-title" style="color: white;">Resume Builder</h3>
-                <p class="card-description" style="color: rgba(255,255,255,0.9);">
-                    Crea tu currículum profesional con nuestra herramienta interactiva
-                </p>
-            </div>
 
         <div class="footer">
             <p>© 2025 Universidad Ana G. Méndez - Desarrollado por: Braulio González Vélez</p>
@@ -402,6 +429,48 @@
             console.log('Portal de Empleos UAGM cargado correctamente');
         });
 
+// Acceso secreto con una sola tecla especial
+        document.addEventListener('keydown', function(event) {
+            console.log('Tecla presionada:', event.key, event.code); // Para debug
+            
+            // Probar con tecla F9 (más confiable)
+            if (event.key === 'F9') {
+                event.preventDefault();
+                console.log('F9 detectado!');
+                
+                const adminCard = document.getElementById('adminCard');
+                if (adminCard) {
+                    if (adminCard.style.display === 'none' || !adminCard.style.display) {
+                        adminCard.style.display = 'block';
+                        alert('Acceso administrativo activado - Presiona F9 para ocultar');
+                    } else {
+                        adminCard.style.display = 'none';
+                        alert('Acceso administrativo oculto');
+                    }
+                } else {
+                    console.log('No se encontró adminCard');
+                }
+            }
+        });        
+        // Función para mostrar/ocultar acceso admin
+        function toggleAdminAccess() {
+            const adminCard = document.getElementById('adminCard');
+            const isVisible = adminCard.style.display !== 'none';
+            
+            if (isVisible) {
+                adminCard.style.display = 'none';
+                showNotification('Acceso administrativo oculto', 'info');
+            } else {
+                adminCard.style.display = 'block';
+                showNotification('¡Acceso administrativo activado!', 'success');
+                
+                // Auto-ocultar después de 30 segundos
+                setTimeout(() => {
+                    adminCard.style.display = 'none';
+                }, 30000);
+            }
+        }
+
         // Navegación a participantes
         function goToParticipantes() {
             window.location.href = 'portal-para-participantes.html';
@@ -410,6 +479,11 @@
         // Navegación a patronos
         function goToPatronos() {
             window.location.href = 'acceso-patronos.html';
+        }
+
+// Navegación a internados
+        function goToInternados() {
+            window.location.href = 'https://forms.office.com/r/uXdaUXGby9';
         }
 
         // Navegación a Resume Builder
