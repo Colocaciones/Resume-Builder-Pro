@@ -1345,6 +1345,13 @@
         let appointments = [];
         let placements = [];
 
+// Arrays para datos eliminados (historial)
+let deletedOffers = JSON.parse(localStorage.getItem('deletedOffers')) || [];
+let deletedParticipants = JSON.parse(localStorage.getItem('deletedParticipants')) || [];
+let deletedApplications = JSON.parse(localStorage.getItem('deletedApplications')) || [];
+let deletedAppointments = JSON.parse(localStorage.getItem('deletedAppointments')) || [];
+let deletedPlacements = JSON.parse(localStorage.getItem('deletedPlacements')) || [];
+
 // Sistema de notificaciones
 let notifications = JSON.parse(localStorage.getItem('adminNotifications')) || [];
 let lastCheckedOffers = localStorage.getItem('lastCheckedOffers') ? parseInt(localStorage.getItem('lastCheckedOffers')) : 0;
@@ -1414,6 +1421,15 @@ let lastCheckedAppointments = localStorage.getItem('lastCheckedAppointments') ? 
                 appointments = JSON.parse(localStorage.getItem('appointments')) || [];
                 placements = JSON.parse(localStorage.getItem('placements')) || [];
             }
+
+// Cargar datos eliminados desde localStorage
+deletedOffers = JSON.parse(localStorage.getItem('deletedOffers')) || [];
+deletedParticipants = JSON.parse(localStorage.getItem('deletedParticipants')) || [];
+deletedApplications = JSON.parse(localStorage.getItem('deletedApplications')) || [];
+deletedAppointments = JSON.parse(localStorage.getItem('deletedAppointments')) || [];
+deletedPlacements = JSON.parse(localStorage.getItem('deletedPlacements')) || [];
+
+
 // Verificar notificaciones después de cargar datos
         setTimeout(() => {
             checkForNewItems();
@@ -2185,43 +2201,35 @@ async function deleteApplication(applicationId) {
     const application = applications.find(app => app.id === applicationId);
     if (!application) return;
     
-    if (confirm(`¿Estás seguro de que quieres eliminar la solicitud de "${application.participantName}" para "${application.offerTitle}"?`)) {
+    if (confirm(`¿Estás seguro de que quieres archivar la solicitud de "${application.participantName}" para "${application.offerTitle}"? Se mantendrá para reportes.`)) {
         try {
-            // Eliminar de Firebase
-            if (isFirebaseInitialized) {
-                const snapshot = await db.collection('applications')
-                    .where('id', '==', applicationId)
-                    .get();
-                
-                if (!snapshot.empty) {
-                    const batch = db.batch();
-                    snapshot.docs.forEach(doc => {
-                        batch.delete(doc.ref);
-                    });
-                    await batch.commit();
-                    console.log('Aplicación eliminada de Firebase:', applicationId);
-                }
-            }
+            // Agregar fecha de eliminación
+            application.deletedAt = new Date().toISOString();
+            application.deletedBy = 'admin@uagm.edu';
             
-            // Eliminar de memoria local
+            // Mover a archivo histórico
+            deletedApplications.push(application);
+            localStorage.setItem('deletedApplications', JSON.stringify(deletedApplications));
+            
+            // Eliminar de array activo
             applications = applications.filter(app => app.id !== applicationId);
             
-            // Actualizar localStorage como respaldo
+            // Actualizar localStorage de datos activos
             localStorage.setItem('applications', JSON.stringify(applications));
             
             // Actualizar interfaz
             updateStats();
             loadApplicationsTable();
             closeDetailsModal();
-            showNotification('Solicitud eliminada exitosamente', 'success');
+            showNotification('Solicitud archivada exitosamente (disponible en reportes)', 'success');
 
-// Ajustar contador de aplicaciones
-lastCheckedApplications = Math.max(0, applications.length);
-localStorage.setItem('lastCheckedApplications', lastCheckedApplications.toString());
+            // Ajustar contador de aplicaciones
+            lastCheckedApplications = Math.max(0, applications.length);
+            localStorage.setItem('lastCheckedApplications', lastCheckedApplications.toString());
             
         } catch (error) {
-            console.error('Error eliminando aplicación:', error);
-            showNotification('Error eliminando la solicitud. Intenta de nuevo.', 'error');
+            console.error('Error archivando aplicación:', error);
+            showNotification('Error archivando la solicitud. Intenta de nuevo.', 'error');
         }
     }
 }
@@ -2261,65 +2269,50 @@ localStorage.setItem('lastCheckedApplications', lastCheckedApplications.toString
     const participant = participants.find(p => p.id === participantId);
     if (!participant) return;
     
-    if (confirm(`¿Estás seguro de que quieres eliminar al participante "${participant.firstName} ${participant.lastName}"?`)) {
+    if (confirm(`¿Estás seguro de que quieres archivar al participante "${participant.firstName} ${participant.lastName}"? Se mantendrá para reportes.`)) {
         try {
-            // Eliminar de Firebase
-            if (isFirebaseInitialized) {
-                const snapshot = await db.collection('participants')
-                    .where('id', '==', participantId)
-                    .get();
-                
-                if (!snapshot.empty) {
-                    const batch = db.batch();
-                    snapshot.docs.forEach(doc => {
-                        batch.delete(doc.ref);
-                    });
-                    await batch.commit();
-                    console.log('Participante eliminado de Firebase:', participantId);
-                }
-            }
+            // Agregar fecha de eliminación
+            participant.deletedAt = new Date().toISOString();
+            participant.deletedBy = 'admin@uagm.edu';
             
-            // Eliminar de memoria local
+            // Mover a archivo histórico
+            deletedParticipants.push(participant);
+            localStorage.setItem('deletedParticipants', JSON.stringify(deletedParticipants));
+            
+            // Eliminar de array activo
             participants = participants.filter(p => p.id !== participantId);
             
-            // También eliminar aplicaciones relacionadas
+            // También archivar aplicaciones relacionadas
             const relatedApplications = applications.filter(app => app.participantId === participantId);
-            for (const app of relatedApplications) {
-                if (isFirebaseInitialized) {
-                    const appSnapshot = await db.collection('applications')
-                        .where('id', '==', app.id)
-                        .get();
-                    
-                    if (!appSnapshot.empty) {
-                        const batch = db.batch();
-                        appSnapshot.docs.forEach(doc => {
-                            batch.delete(doc.ref);
-                        });
-                        await batch.commit();
-                    }
-                }
-            }
+            relatedApplications.forEach(app => {
+                app.deletedAt = new Date().toISOString();
+                app.deletedBy = 'admin@uagm.edu';
+                app.deletionReason = 'Participante archivado';
+                deletedApplications.push(app);
+            });
             applications = applications.filter(app => app.participantId !== participantId);
+            localStorage.setItem('deletedApplications', JSON.stringify(deletedApplications));
             
-            // Actualizar localStorage como respaldo
+            // Actualizar localStorage de datos activos
             localStorage.setItem('participants', JSON.stringify(participants));
             localStorage.setItem('applications', JSON.stringify(applications));
             
             // Actualizar interfaz
             updateStats();
             loadParticipantsTable();
-            showNotification('Participante eliminado exitosamente', 'success');
+            showNotification('Participante archivado exitosamente (disponible en reportes)', 'success');
 
-// Ajustar contador de participantes  
-lastCheckedParticipants = Math.max(0, participants.length);
-localStorage.setItem('lastCheckedParticipants', lastCheckedParticipants.toString());
+            // Ajustar contador de participantes  
+            lastCheckedParticipants = Math.max(0, participants.length);
+            localStorage.setItem('lastCheckedParticipants', lastCheckedParticipants.toString());
             
         } catch (error) {
-            console.error('Error eliminando participante:', error);
-            showNotification('Error eliminando el participante. Intenta de nuevo.', 'error');
+            console.error('Error archivando participante:', error);
+            showNotification('Error archivando el participante. Intenta de nuevo.', 'error');
         }
     }
 }
+
         // Editar oferta (redirigir al gestor de ofertas)
         function editOffer(offerId) {
     const offer = offers.find(o => o.id === offerId);
@@ -2464,65 +2457,50 @@ async function saveOfferChanges(offerId) {
     const offer = offers.find(o => o.id === offerId);
     if (!offer) return;
     
-    if (confirm(`¿Estás seguro de que quieres eliminar la oferta "${offer.position}" de "${offer.companyName}"?`)) {
+    if (confirm(`¿Estás seguro de que quieres archivar la oferta "${offer.position}" de "${offer.companyName}"? Se mantendrá para reportes.`)) {
         try {
-            // Eliminar de Firebase
-            if (isFirebaseInitialized) {
-                const snapshot = await db.collection('jobOffers')
-                    .where('id', '==', offerId)
-                    .get();
-                
-                if (!snapshot.empty) {
-                    const batch = db.batch();
-                    snapshot.docs.forEach(doc => {
-                        batch.delete(doc.ref);
-                    });
-                    await batch.commit();
-                    console.log('Oferta eliminada de Firebase:', offerId);
-                }
-            }
+            // Agregar fecha de eliminación
+            offer.deletedAt = new Date().toISOString();
+            offer.deletedBy = 'admin@uagm.edu';
             
-            // Eliminar de memoria local
+            // Mover a archivo histórico
+            deletedOffers.push(offer);
+            localStorage.setItem('deletedOffers', JSON.stringify(deletedOffers));
+            
+            // Eliminar de arrays activos
             offers = offers.filter(o => o.id !== offerId);
             
-            // También eliminar aplicaciones relacionadas
+            // También archivar aplicaciones relacionadas
             const relatedApplications = applications.filter(app => app.offerId === offerId);
-            for (const app of relatedApplications) {
-                if (isFirebaseInitialized) {
-                    const appSnapshot = await db.collection('applications')
-                        .where('id', '==', app.id)
-                        .get();
-                    
-                    if (!appSnapshot.empty) {
-                        const batch = db.batch();
-                        appSnapshot.docs.forEach(doc => {
-                            batch.delete(doc.ref);
-                        });
-                        await batch.commit();
-                    }
-                }
-            }
+            relatedApplications.forEach(app => {
+                app.deletedAt = new Date().toISOString();
+                app.deletedBy = 'admin@uagm.edu';
+                app.deletionReason = 'Oferta archivada';
+                deletedApplications.push(app);
+            });
             applications = applications.filter(app => app.offerId !== offerId);
+            localStorage.setItem('deletedApplications', JSON.stringify(deletedApplications));
             
-            // Actualizar localStorage como respaldo
+            // Actualizar localStorage de datos activos
             localStorage.setItem('jobOffers', JSON.stringify(offers));
             localStorage.setItem('applications', JSON.stringify(applications));
             
             // Actualizar interfaz
             updateStats();
             loadOffersTable();
-            showNotification('Oferta eliminada exitosamente', 'success');
+            showNotification('Oferta archivada exitosamente (disponible en reportes)', 'success');
 
-// Ajustar contador de ofertas
-lastCheckedOffers = Math.max(0, offers.length);
-localStorage.setItem('lastCheckedOffers', lastCheckedOffers.toString());
+            // Ajustar contador de ofertas
+            lastCheckedOffers = Math.max(0, offers.length);
+            localStorage.setItem('lastCheckedOffers', lastCheckedOffers.toString());
             
         } catch (error) {
-            console.error('Error eliminando oferta:', error);
-            showNotification('Error eliminando la oferta. Intenta de nuevo.', 'error');
+            console.error('Error archivando oferta:', error);
+            showNotification('Error archivando la oferta. Intenta de nuevo.', 'error');
         }
     }
 }
+
 // Filtrar ofertas
         function filterOffers() {
             const search = document.getElementById('offersSearch').value.toLowerCase();
@@ -2850,7 +2828,8 @@ localStorage.setItem('lastCheckedOffers', lastCheckedOffers.toString());
                 return;
             }
 
-            const data = offers.map(offer => ({
+           const allOffers = [...offers, ...deletedOffers];
+const data = allOffers.map(offer => ({
                 'Fecha': new Date(offer.today).toLocaleDateString(),
                 'Tipo Patrono': offer.patronType === 'new' ? 'Nuevo' : 'Existente',
                 'Empresa': offer.companyName,
@@ -2890,7 +2869,8 @@ localStorage.setItem('lastCheckedOffers', lastCheckedOffers.toString());
                 return;
             }
 
-            const data = participants.map(participant => ({
+            const allParticipants = [...participants, ...deletedParticipants];
+const data = allParticipants.map(participant => ({
                 'Fecha Registro': new Date(participant.registeredAt).toLocaleDateString(),
                 'Tipo Participante': participant.participantType === 'new' ? 'Nuevo' : 'Seguimiento',
                 'Nombre': participant.firstName,
@@ -2927,7 +2907,8 @@ localStorage.setItem('lastCheckedOffers', lastCheckedOffers.toString());
                 return;
             }
 
-            const data = applications.map(application => {
+            const allApplications = [...applications, ...deletedApplications];
+const data = allApplications.map(application => {
     const participant = getParticipantData(application.participantId);
     return {
         'Fecha Solicitud': new Date(application.appliedAt).toLocaleDateString(),
@@ -2958,8 +2939,9 @@ localStorage.setItem('lastCheckedOffers', lastCheckedOffers.toString());
             const wb = XLSX.utils.book_new();
 
             // Ofertas
-            if (offers.length > 0) {
-                const offersData = offers.map(offer => ({
+            const allOffers = [...offers, ...deletedOffers];
+if (allOffers.length > 0) {
+    const offersData = allOffers.map(offer => ({
                     'Fecha': new Date(offer.today).toLocaleDateString(),
                     'Empresa': offer.companyName,
                     'Posición': offer.position,
@@ -2976,8 +2958,9 @@ localStorage.setItem('lastCheckedOffers', lastCheckedOffers.toString());
             }
 
             // Participantes
-            if (participants.length > 0) {
-                const participantsData = participants.map(participant => ({
+           const allParticipants = [...participants, ...deletedParticipants];
+if (allParticipants.length > 0) {
+    const participantsData = allParticipants.map(participant => ({
                     'Fecha Registro': new Date(participant.registeredAt).toLocaleDateString(),
                     'Nombre': `${participant.firstName} ${participant.lastName}`,
                     'Email': participant.email,
@@ -2991,8 +2974,9 @@ localStorage.setItem('lastCheckedOffers', lastCheckedOffers.toString());
             }
 
             // Solicitudes
-            if (applications.length > 0) {
-                const applicationsData = applications.map(application => ({
+            const allApplications = [...applications, ...deletedApplications];
+if (allApplications.length > 0) {
+    const applicationsData = allApplications.map(application => ({
                     'Fecha': new Date(application.appliedAt).toLocaleDateString(),
                     'Participante': application.participantName,
                     'Empresa': application.companyName,
@@ -3163,12 +3147,13 @@ localStorage.setItem('lastCheckedOffers', lastCheckedOffers.toString());
 
 // Generar reporte de participantes
 function generateParticipantsReport() {
-    if (participants.length === 0) {
+    const allParticipants = [...participants, ...deletedParticipants];
+if (allParticipants.length === 0) {
         showNotification('No hay participantes para reportar', 'warning');
         return;
     }
 
-    const data = participants.map(participant => ({
+    const data = allParticipants.map(participant => ({
         'Fecha Registro': new Date(participant.registeredAt).toLocaleDateString('es-ES'),
         'Tipo Participante': participant.participantType === 'new' ? 'Nuevo' : 'Seguimiento',
         'Nombre Completo': `${participant.firstName} ${participant.lastName}`,
@@ -3199,13 +3184,14 @@ function generateParticipantsReport() {
 
 // Generar reporte de ofertas y patronos
 function generateOffersReport() {
-    if (offers.length === 0) {
+   const allOffers = [...offers, ...deletedOffers];
+if (allOffers.length === 0) {
         showNotification('No hay ofertas para reportar', 'warning');
         return;
     }
 
     // Hoja 1: Ofertas detalladas
-    const offersData = offers.map(offer => ({
+    const offersData = allOffers.map(offer => ({
         'Fecha Publicación': new Date(offer.today || offer.createdAt).toLocaleDateString('es-ES'),
         'Tipo Patrono': offer.patronType === 'new' ? 'Patrono Nuevo' : 'Patrono Existente',
         'Empresa': offer.companyName,
@@ -3230,7 +3216,7 @@ function generateOffersReport() {
 
     // Hoja 2: Resumen de patronos
     const companiesMap = {};
-    offers.forEach(offer => {
+    allOffers.forEach(offer => {
         if (!companiesMap[offer.companyName]) {
             companiesMap[offer.companyName] = {
                 empresa: offer.companyName,
@@ -3286,12 +3272,13 @@ function generateOffersReport() {
 
 // Generar reporte de solicitudes (referidos)
 function generateReferralsReport() {
-    if (applications.length === 0) {
+    const allApplications = [...applications, ...deletedApplications];
+if (allApplications.length === 0) {
         showNotification('No hay solicitudes para reportar', 'warning');
         return;
     }
 
-    const data = applications.map(application => {
+  const data = allApplications.map(application => {
         const participant = getParticipantData(application.participantId);
         const offer = offers.find(o => o.id === application.offerId);
         
@@ -3344,12 +3331,13 @@ function getApplicationStatusLabel(status) {
 
 // Generar reporte de citas Manpower
 function generateManpowerReport() {
-    if (appointments.length === 0) {
+    const allAppointments = [...appointments, ...deletedAppointments];
+if (allAppointments.length === 0) {
         showNotification('No hay citas para reportar', 'warning');
         return;
     }
 
-    const data = appointments.map(appointment => {
+    const data = allAppointments.map(appointment => {
         // Formatear fecha de cita
         const [year, month, day] = appointment.appointmentDate.split('-');
         const appointmentDate = new Date(year, month - 1, day);
@@ -3411,14 +3399,14 @@ function generateConsolidatedReport() {
     // Hoja 1: Resumen ejecutivo
     const today = new Date();
     const summaryData = [
-        { Métrica: 'Total de Participantes', Valor: participants.length },
+        { Métrica: 'Total de Participantes', Valor: [...participants, ...deletedParticipants].length },
         { Métrica: 'Participantes Nuevos', Valor: participants.filter(p => p.participantType === 'new').length },
         { Métrica: 'Participantes de Seguimiento', Valor: participants.filter(p => p.participantType === 'returning').length },
-        { Métrica: 'Total de Ofertas', Valor: offers.length },
+        { Métrica: 'Total de Ofertas', Valor: [...offers, ...deletedOffers].length },
         { Métrica: 'Ofertas Activas', Valor: offers.filter(o => getOfferStatus(o.deadline) === 'active').length },
         { Métrica: 'Ofertas Vencidas', Valor: offers.filter(o => getOfferStatus(o.deadline) === 'expired').length },
         { Métrica: 'Empresas Únicas', Valor: [...new Set(offers.map(o => o.companyName))].length },
-        { Métrica: 'Total de Solicitudes', Valor: applications.length },
+        { Métrica: 'Total de Solicitudes', Valor: [...applications, ...deletedApplications].length },
         { Métrica: 'Solicitudes Pendientes', Valor: applications.filter(a => a.status === 'pending').length },
         { Métrica: 'Referidos Enviados', Valor: applications.filter(a => a.status === 'approved_sent').length },
         { Métrica: 'Solicitudes Rechazadas', Valor: applications.filter(a => a.status === 'rejected').length },
@@ -3435,8 +3423,9 @@ function generateConsolidatedReport() {
     XLSX.utils.book_append_sheet(wb, summarySheet, "Resumen Ejecutivo");
 
     // Hoja 2: Participantes (datos resumidos)
-    if (participants.length > 0) {
-        const participantsData = participants.map(p => ({
+    const allParticipants = [...participants, ...deletedParticipants];
+if (allParticipants.length > 0) {
+        const participantsData = allParticipants.map(p => ({
             'Nombre': `${p.firstName} ${p.lastName}`,
             'Email': p.email,
             'Recinto': getCampusLabel(p.campus),
@@ -3449,8 +3438,9 @@ function generateConsolidatedReport() {
     }
 
     // Hoja 3: Ofertas (datos resumidos)
-    if (offers.length > 0) {
-        const offersData = offers.map(o => ({
+    const allOffers = [...offers, ...deletedOffers];
+if (allOffers.length > 0) {
+        const offersData = allOffers.map(o => ({
             'Empresa': o.companyName,
             'Posición': o.position,
             'Ubicación': o.location,
@@ -3464,8 +3454,9 @@ function generateConsolidatedReport() {
     }
 
     // Hoja 4: Solicitudes (datos resumidos)
-    if (applications.length > 0) {
-        const applicationsData = applications.map(a => ({
+    const allApplications = [...applications, ...deletedApplications];
+if (allApplications.length > 0) {
+       const applicationsData = allApplications.map(a => ({
             'Participante': a.participantName,
             'Empresa': a.companyName,
             'Posición': a.offerTitle,
@@ -3477,8 +3468,9 @@ function generateConsolidatedReport() {
     }
 
     // Hoja 5: Citas (datos resumidos)
-    if (appointments.length > 0) {
-        const appointmentsData = appointments.map(a => {
+    const allAppointments = [...appointments, ...deletedAppointments];
+if (allAppointments.length > 0) {
+        const appointmentsData = allAppointments.map(a => {
             const [year, month, day] = a.appointmentDate.split('-');
             const appointmentDate = new Date(year, month - 1, day);
             return {
@@ -4142,48 +4134,41 @@ const formattedDate = appointmentDate.toLocaleDateString('es-ES', {
 
 // Eliminar cita completamente
         async function deleteAppointment(appointmentId) {
-            const appointment = appointments.find(app => app.id === appointmentId);
-            if (!appointment) return;
+    const appointment = appointments.find(app => app.id === appointmentId);
+    if (!appointment) return;
+    
+    if (confirm(`¿Estás seguro de que quieres archivar la cita de "${appointment.firstName} ${appointment.lastName}"? Se mantendrá para reportes.`)) {
+        try {
+            // Agregar fecha de eliminación
+            appointment.deletedAt = new Date().toISOString();
+            appointment.deletedBy = 'admin@uagm.edu';
             
-            if (confirm(`¿Estás seguro de que quieres eliminar permanentemente la cita de "${appointment.firstName} ${appointment.lastName}"?`)) {
-                try {
-                    // Buscar y eliminar de Firebase
-                    if (isFirebaseInitialized) {
-                        const snapshot = await db.collection('appointments')
-                            .where('id', '==', appointmentId)
-                            .get();
-                        
-                        if (!snapshot.empty) {
-                            const batch = db.batch();
-                            snapshot.docs.forEach(doc => {
-                                batch.delete(doc.ref);
-                            });
-                            await batch.commit();
-                            console.log('Cita eliminada de Firebase:', appointmentId);
-                        }
-                    }
-                    
-                    // Eliminar de memoria local
-                    appointments = appointments.filter(app => app.id !== appointmentId);
-                    
-                    // Actualizar localStorage como respaldo
-                    localStorage.setItem('appointments', JSON.stringify(appointments));
-                    
-                    // Actualizar interfaz
-                    updateStats();
-                    loadAppointmentsTable();
-                    showNotification('Cita eliminada permanentemente', 'success');
+            // Mover a archivo histórico
+            deletedAppointments.push(appointment);
+            localStorage.setItem('deletedAppointments', JSON.stringify(deletedAppointments));
+            
+            // Eliminar de array activo
+            appointments = appointments.filter(app => app.id !== appointmentId);
+            
+            // Actualizar localStorage de datos activos
+            localStorage.setItem('appointments', JSON.stringify(appointments));
+            
+            // Actualizar interfaz
+            updateStats();
+            loadAppointmentsTable();
+            showNotification('Cita archivada exitosamente (disponible en reportes)', 'success');
 
-// Ajustar contador de citas
-lastCheckedAppointments = Math.max(0, appointments.length);
-localStorage.setItem('lastCheckedAppointments', lastCheckedAppointments.toString());
-                    
-                } catch (error) {
-                    console.error('Error eliminando cita:', error);
-                    showNotification('Error eliminando la cita. Intenta de nuevo.', 'error');
-                }
-            }
+            // Ajustar contador de citas
+            lastCheckedAppointments = Math.max(0, appointments.length);
+            localStorage.setItem('lastCheckedAppointments', lastCheckedAppointments.toString());
+            
+        } catch (error) {
+            console.error('Error archivando cita:', error);
+            showNotification('Error archivando la cita. Intenta de nuevo.', 'error');
         }
+    }
+}
+
 // Filtrar citas
         function filterAppointments() {
             const search = document.getElementById('appointmentsSearch').value.toLowerCase();
@@ -4346,7 +4331,8 @@ const appointmentDate = new Date(year, month - 1, day);
                 return;
             }
 
-            const data = appointments.map(appointment => {
+            const allAppointments = [...appointments, ...deletedAppointments];
+const data = allAppointments.map(appointment => {
                 const campusLabels = {
                     'cupey': 'Recinto de Cupey',
                     'bayamon': 'Centro Universitario de Bayamón',
@@ -4833,7 +4819,7 @@ const referralData = {
    try {
        // Guardar en Firebase
        if (isFirebaseInitialized) {
-           await FirebaseHelper.saveDoc('referrals', referralData);
+           await db.collection('referrals').add(referralData);
        }
        
        // Guardar en localStorage
@@ -5765,39 +5751,31 @@ async function deletePlacement(placementId) {
     const placement = placements.find(p => p.id === placementId);
     if (!placement) return;
     
-    if (confirm(`¿Estás seguro de que quieres eliminar el registro de colocación de "${placement.participantName}"?`)) {
+    if (confirm(`¿Estás seguro de que quieres archivar el registro de colocación de "${placement.participantName}"? Se mantendrá para reportes.`)) {
         try {
-            // Eliminar de Firebase
-            if (isFirebaseInitialized) {
-                const snapshot = await db.collection('placements')
-                    .where('id', '==', placementId)
-                    .get();
-                
-                if (!snapshot.empty) {
-                    const batch = db.batch();
-                    snapshot.docs.forEach(doc => {
-                        batch.delete(doc.ref);
-                    });
-                    await batch.commit();
-                    console.log('Colocado eliminado de Firebase:', placementId);
-                }
-            }
+            // Agregar fecha de eliminación
+            placement.deletedAt = new Date().toISOString();
+            placement.deletedBy = 'admin@uagm.edu';
             
-            // Eliminar de memoria local
+            // Mover a archivo histórico
+            deletedPlacements.push(placement);
+            localStorage.setItem('deletedPlacements', JSON.stringify(deletedPlacements));
+            
+            // Eliminar de array activo
             placements = placements.filter(p => p.id !== placementId);
             
-            // Actualizar localStorage
+            // Actualizar localStorage de datos activos
             localStorage.setItem('placements', JSON.stringify(placements));
             
             // Actualizar interfaz
             loadPlacementsTable();
             updateStats();
             
-            showNotification('Colocado eliminado exitosamente', 'success');
+            showNotification('Colocado archivado exitosamente (disponible en reportes)', 'success');
             
         } catch (error) {
-            console.error('Error eliminando colocado:', error);
-            showNotification('Error eliminando el colocado. Intenta de nuevo.', 'error');
+            console.error('Error archivando colocado:', error);
+            showNotification('Error archivando el colocado. Intenta de nuevo.', 'error');
         }
     }
 }
@@ -5959,7 +5937,8 @@ function exportPlacementsData() {
         return;
     }
 
-    const data = placements.map(placement => {
+    const allPlacements = [...placements, ...deletedPlacements];
+const data = allPlacements.map(placement => {
         const trackingTypeLabels = {
             'directo': 'Seguimiento Directo',
             'indirecto': 'Seguimiento Indirecto'
