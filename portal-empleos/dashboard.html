@@ -883,6 +883,13 @@
                             <option value="expiring">Vencen Pronto</option>
                             <option value="expired">Vencidas</option>
                         </select>
+<select class="filter-select" id="offersSortFilter" onchange="filterOffers()">
+    <option value="">Ordenar por...</option>
+    <option value="newest">Más Recientes</option>
+    <option value="oldest">Más Antiguas</option>
+    <option value="deadline-asc">Vencen Primero</option>
+    <option value="deadline-desc">Vencen Último</option>
+</select>
                         <button class="btn btn-primary" onclick="exportOffersData()">
                             <i class="fas fa-file-excel"></i> Exportar
                         </button>
@@ -1293,6 +1300,97 @@
         </div>
     </div>
 
+<!-- Modal para Editar Cita -->
+<div id="editAppointmentModal" class="modal">
+    <div class="modal-content" style="max-width: 700px;">
+        <div class="modal-header">
+            <h3 id="editAppointmentModalTitle">Editar Cita</h3>
+            <span class="close" onclick="closeEditAppointmentModal()">&times;</span>
+        </div>
+        <div class="modal-body">
+            <form id="editAppointmentForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Nombre *</label>
+                        <input type="text" id="edit-firstName" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Apellidos *</label>
+                        <input type="text" id="edit-lastName" required>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Email *</label>
+                        <input type="email" id="edit-email" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Teléfono *</label>
+                        <input type="tel" id="edit-phone" required>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Nueva Fecha de Cita *</label>
+                        <input type="date" id="edit-appointmentDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Nueva Hora de Cita *</label>
+                        <select id="edit-appointmentTime" required>
+                            <option value="">Seleccionar hora...</option>
+                            <option value="09:00">9:00 AM</option>
+                            <option value="09:30">9:30 AM</option>
+                            <option value="10:00">10:00 AM</option>
+                            <option value="10:30">10:30 AM</option>
+                            <option value="11:00">11:00 AM</option>
+                            <option value="11:30">11:30 AM</option>
+                            <option value="13:00">1:00 PM</option>
+                            <option value="13:30">1:30 PM</option>
+                            <option value="14:00">2:00 PM</option>
+                            <option value="14:30">2:30 PM</option>
+                            <option value="15:00">3:00 PM</option>
+                            <option value="15:30">3:30 PM</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Concentración</label>
+                        <input type="text" id="edit-concentration">
+                    </div>
+                    <div class="form-group">
+                        <label>Recinto</label>
+                        <select id="edit-campus">
+                            <option value="cupey">Recinto de Cupey</option>
+                            <option value="bayamon">Centro Universitario de Bayamón</option>
+                            <option value="aguadilla">Centro Universitario de Aguadilla</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Razón del cambio *</label>
+                    <textarea id="edit-changeReason" rows="3" required placeholder="Ej: Participante no pudo asistir, conflicto de horarios, etc."></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label>Descripción adicional</label>
+                    <textarea id="edit-description" rows="2"></textarea>
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeEditAppointmentModal()">Cancelar</button>
+            <button class="btn btn-success" onclick="saveAppointmentChanges()">
+                <i class="fas fa-save"></i> Guardar Cambios
+            </button>
+        </div>
+    </div>
+</div>
+
 <script>
         // Configuración Firebase
         const firebaseConfig = {
@@ -1344,6 +1442,7 @@
         let applications = [];
         let appointments = [];
         let placements = [];
+let allOffersHistory = [];
 
 // Sistema de notificaciones
 let notifications = JSON.parse(localStorage.getItem('adminNotifications')) || [];
@@ -1356,9 +1455,10 @@ let lastCheckedAppointments = localStorage.getItem('lastCheckedAppointments') ? 
         document.addEventListener('DOMContentLoaded', async function() {
     isFirebaseInitialized = initializeFirebase();
     await loadAllData();
+    updateExpiredOffers(); 
     updateStats();
     updateNotificationBadge();
-    updatePendingCount(); // ← AGREGAR ESTA LÍNEA
+    updatePendingCount();
     switchTab('offers');
     console.log('Dashboard Administrativo cargado correctamente');
 });
@@ -1371,6 +1471,8 @@ let lastCheckedAppointments = localStorage.getItem('lastCheckedAppointments') ? 
                     const offersResult = await FirebaseHelper.getDocs('jobOffers');
                     if (offersResult.success) {
                         offers = offersResult.docs;
+ // Mantener histórico completo de todas las ofertas
+    allOffersHistory = [...offers];
                         console.log('Ofertas cargadas desde Firebase:', offers.length);
                     }
 
@@ -1421,7 +1523,23 @@ let lastCheckedAppointments = localStorage.getItem('lastCheckedAppointments') ? 
 
         }
 
-        // Actualizar estadísticas principales
+// Función para marcar ofertas vencidas en el histórico
+function updateExpiredOffers() {
+    const today = new Date();
+    
+    offers.forEach(offer => {
+        if (new Date(offer.deadline) < today) {
+            // Agregar al histórico si no está ya marcada como vencida
+            const existingInHistory = allOffersHistory.find(h => h.id === offer.id);
+            if (existingInHistory && !existingInHistory.expiredAt) {
+                existingInHistory.expiredAt = new Date().toISOString();
+                existingInHistory.status = 'expired';
+            }
+        }
+    });
+}        
+
+// Actualizar estadísticas principales
         function updateStats() {
             const today = new Date();
             
@@ -2465,6 +2583,18 @@ async function saveOfferChanges(offerId) {
     if (!offer) return;
     
     if (confirm(`¿Estás seguro de que quieres eliminar la oferta "${offer.position}" de "${offer.companyName}"?`)) {
+ // Asegurar que está en el histórico antes de eliminar
+    const existingInHistory = allOffersHistory.find(h => h.id === offerId);
+    if (!existingInHistory) {
+        allOffersHistory.push({
+            ...offer,
+            deletedAt: new Date().toISOString(),
+            deletedBy: 'admin'
+        });
+    } else if (!existingInHistory.deletedAt) {
+        existingInHistory.deletedAt = new Date().toISOString();
+        existingInHistory.deletedBy = 'admin';
+    }
         try {
             // Eliminar de Firebase
             if (isFirebaseInitialized) {
@@ -2527,6 +2657,7 @@ localStorage.setItem('lastCheckedOffers', lastCheckedOffers.toString());
         function filterOffers() {
             const search = document.getElementById('offersSearch').value.toLowerCase();
             const statusFilter = document.getElementById('offersStatusFilter').value;
+ 	    const sortFilter = document.getElementById('offersSortFilter').value;
             
             let filteredOffers = offers;
             
@@ -2546,6 +2677,23 @@ localStorage.setItem('lastCheckedOffers', lastCheckedOffers.toString());
                 });
             }
             
+// Ordenamiento
+if (sortFilter) {
+    filteredOffers.sort((a, b) => {
+        switch(sortFilter) {
+            case 'newest':
+                return new Date(b.today || b.createdAt || '1900-01-01') - new Date(a.today || a.createdAt || '1900-01-01');
+            case 'oldest':
+                return new Date(a.today || a.createdAt || '1900-01-01') - new Date(b.today || b.createdAt || '1900-01-01');
+            case 'deadline-asc':
+                return new Date(a.deadline) - new Date(b.deadline);
+            case 'deadline-desc':
+                return new Date(b.deadline) - new Date(a.deadline);
+            default:
+                return 0;
+        }
+    });
+}
             displayFilteredOffers(filteredOffers);
         }
 
@@ -2844,13 +2992,16 @@ localStorage.setItem('lastCheckedOffers', lastCheckedOffers.toString());
         }
 
         // Exportar datos de ofertas
-        function exportOffersData() {
-            if (offers.length === 0) {
-                showNotification('No hay ofertas para exportar', 'warning');
-                return;
-            }
+       function exportOffersData() {
+    // Usar histórico completo en lugar de solo ofertas activas
+    const dataToExport = allOffersHistory.length > 0 ? allOffersHistory : offers;
+    
+    if (dataToExport.length === 0) {
+        showNotification('No hay ofertas para exportar', 'warning');
+        return;
+    }
 
-            const data = offers.map(offer => ({
+    const data = dataToExport.map(offer => ({
                 'Fecha': new Date(offer.today).toLocaleDateString(),
                 'Tipo Patrono': offer.patronType === 'new' ? 'Nuevo' : 'Existente',
                 'Empresa': offer.companyName,
@@ -2864,8 +3015,12 @@ localStorage.setItem('lastCheckedOffers', lastCheckedOffers.toString());
                 'Salario': offer.salary,
                 'Ubicación': offer.location,
                 'Fecha Límite': new Date(offer.deadline).toLocaleDateString(),
-                'Estado': getOfferStatus(offer.deadline) === 'expired' ? 'Vencida' : 
-                         getOfferStatus(offer.deadline) === 'expiring' ? 'Vence Pronto' : 'Activa',
+               'Estado': offer.deletedAt ? 'ELIMINADA' : 
+         offer.expiredAt ? 'VENCIDA' : 
+         getOfferStatus(offer.deadline) === 'expired' ? 'Vencida' : 
+         getOfferStatus(offer.deadline) === 'expiring' ? 'Vence Pronto' : 'Activa',
+'Fecha Eliminación': offer.deletedAt ? new Date(offer.deletedAt).toLocaleDateString() : '',
+'Fecha Vencimiento Real': offer.expiredAt ? new Date(offer.expiredAt).toLocaleDateString() : '',
                 'Descripción': offer.jobDescription || '',
                 'Horarios': offer.schedule || '',
                 'Requisitos': offer.requirements,
@@ -4314,13 +4469,16 @@ const appointmentDate = new Date(year, month - 1, day);
                                     <i class="fas fa-eye"></i>
                                 </button>
                                 ${appointment.status === 'scheduled' ? `
-                                    <button class="btn btn-success btn-small" onclick="completeAppointment('${appointment.id}')" title="Marcar completada">
-                                        <i class="fas fa-check"></i>
-                                    </button>
-                                    <button class="btn btn-danger btn-small" onclick="cancelAppointment('${appointment.id}')" title="Cancelar">
-                                        <i class="fas fa-times"></i>
-                                    </button>
-                                ` : ''}
+    <button class="btn btn-warning btn-small" onclick="editAppointment('${appointment.id}')" title="Editar cita">
+        <i class="fas fa-edit"></i>
+    </button>
+    <button class="btn btn-success btn-small" onclick="completeAppointment('${appointment.id}')" title="Marcar completada">
+        <i class="fas fa-check"></i>
+    </button>
+    <button class="btn btn-danger btn-small" onclick="cancelAppointment('${appointment.id}')" title="Cancelar">
+        <i class="fas fa-times"></i>
+    </button>
+` : ''}
                                 ${appointment.hasResume ? `
                                     <button class="btn btn-warning btn-small" onclick="downloadAppointmentResume('${appointment.id}')" title="Descargar resumé">
                                         <i class="fas fa-download"></i>
@@ -6031,6 +6189,129 @@ function exportPlacementsData() {
 }
 
 // ============= FIN DE FUNCIONES PARA MÓDULO DE COLOCADOS =============
+
+// Variable global para la cita que se está editando
+let currentEditingAppointment = null;
+
+// Función para abrir modal de edición
+function editAppointment(appointmentId) {
+    const appointment = appointments.find(app => app.id === appointmentId);
+    if (!appointment) {
+        showNotification('Cita no encontrada', 'error');
+        return;
+    }
+    
+    currentEditingAppointment = appointment;
+    
+    // Llenar formulario con datos actuales
+    document.getElementById('edit-firstName').value = appointment.firstName;
+    document.getElementById('edit-lastName').value = appointment.lastName;
+    document.getElementById('edit-email').value = appointment.email;
+    document.getElementById('edit-phone').value = appointment.phone;
+    document.getElementById('edit-appointmentDate').value = appointment.appointmentDate;
+    document.getElementById('edit-appointmentTime').value = appointment.appointmentTime;
+    document.getElementById('edit-concentration').value = appointment.concentration || '';
+    document.getElementById('edit-campus').value = appointment.campus || 'cupey';
+    document.getElementById('edit-changeReason').value = '';
+    document.getElementById('edit-description').value = appointment.description || '';
+    
+    // Mostrar modal
+    document.getElementById('editAppointmentModal').style.display = 'flex';
+}
+
+// Función para cerrar modal de edición
+function closeEditAppointmentModal() {
+    document.getElementById('editAppointmentModal').style.display = 'none';
+    document.getElementById('editAppointmentForm').reset();
+    currentEditingAppointment = null;
+}
+
+// Función para guardar cambios
+async function saveAppointmentChanges() {
+    const form = document.getElementById('editAppointmentForm');
+    if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+    }
+    
+    if (!currentEditingAppointment) {
+        showNotification('Error: No hay cita seleccionada', 'error');
+        return;
+    }
+    
+    const changeReason = document.getElementById('edit-changeReason').value.trim();
+    if (!changeReason) {
+        showNotification('Por favor especifica la razón del cambio', 'warning');
+        document.getElementById('edit-changeReason').focus();
+        return;
+    }
+    
+    // Recopilar datos actualizados
+    const updatedData = {
+        firstName: document.getElementById('edit-firstName').value,
+        lastName: document.getElementById('edit-lastName').value,
+        email: document.getElementById('edit-email').value,
+        phone: document.getElementById('edit-phone').value,
+        appointmentDate: document.getElementById('edit-appointmentDate').value,
+        appointmentTime: document.getElementById('edit-appointmentTime').value,
+        concentration: document.getElementById('edit-concentration').value,
+        campus: document.getElementById('edit-campus').value,
+        description: document.getElementById('edit-description').value,
+        lastModified: new Date().toISOString(),
+        modificationHistory: [
+            ...(currentEditingAppointment.modificationHistory || []),
+            {
+                date: new Date().toISOString(),
+                reason: changeReason,
+                changes: {
+                    oldDate: currentEditingAppointment.appointmentDate,
+                    newDate: document.getElementById('edit-appointmentDate').value,
+                    oldTime: currentEditingAppointment.appointmentTime,
+                    newTime: document.getElementById('edit-appointmentTime').value
+                },
+                modifiedBy: 'admin@uagm.edu'
+            }
+        ]
+    };
+    
+    try {
+        // Actualizar en Firebase
+        if (isFirebaseInitialized) {
+            const snapshot = await db.collection('appointments')
+                .where('id', '==', currentEditingAppointment.id)
+                .get();
+            
+            if (!snapshot.empty) {
+                const batch = db.batch();
+                snapshot.docs.forEach(doc => {
+                    batch.update(doc.ref, updatedData);
+                });
+                await batch.commit();
+                console.log('Cita actualizada en Firebase:', currentEditingAppointment.id);
+            }
+        }
+        
+        // Actualizar en memoria local
+        const appointmentIndex = appointments.findIndex(app => app.id === currentEditingAppointment.id);
+        if (appointmentIndex !== -1) {
+            appointments[appointmentIndex] = { ...appointments[appointmentIndex], ...updatedData };
+        }
+        
+        // Actualizar localStorage
+        localStorage.setItem('appointments', JSON.stringify(appointments));
+        
+        // Actualizar interfaz
+        updateStats();
+        loadAppointmentsTable();
+        closeEditAppointmentModal();
+        
+        showNotification('Cita actualizada exitosamente', 'success');
+        
+    } catch (error) {
+        console.error('Error actualizando cita:', error);
+        showNotification('Error actualizando la cita. Intenta de nuevo.', 'error');
+    }
+}
 
 // Función auxiliar para formatear fechas localmente
 function formatLocalDate(dateString) {
