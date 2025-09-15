@@ -335,6 +335,25 @@
         let app, db, auth, storage;
         let isFirebaseInitialized = false;
 
+// Función para obtener fechas bloqueadas desde Firebase
+async function getBlockedDatesFromFirebase() {
+    try {
+        const snapshot = await db.collection('blocked_dates').get();
+        const firebaseBlockedDates = [];
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            if (data.date) {
+                firebaseBlockedDates.push(data.date);
+            }
+        });
+        console.log('Fechas bloqueadas obtenidas:', firebaseBlockedDates);
+        return firebaseBlockedDates;
+    } catch (error) {
+        console.error('Error obteniendo fechas bloqueadas:', error);
+        return [];
+    }
+}
+
         function initializeFirebase() {
             try {
                 app = firebase.initializeApp(firebaseConfig);
@@ -362,46 +381,69 @@
         };
 
         // Inicializar cuando se carga la página
-        document.addEventListener('DOMContentLoaded', function() {
-            isFirebaseInitialized = initializeFirebase();
-            generateWednesdayDates();
-            setupEventListeners();
-            console.log('Sistema de Citas cargado correctamente');
-        });
+document.addEventListener('DOMContentLoaded', async function() {
+    isFirebaseInitialized = initializeFirebase();
+    await generateWednesdayDates(); // Hacer async para esperar Firebase
+    setupEventListeners();
+    console.log('Sistema de Citas cargado correctamente');
+});
 
-// Generar fechas de miércoles disponibles
-        function generateWednesdayDates() {
-            const dateSelect = document.getElementById('appointmentDate');
-            const today = new Date();
-            const wednesdays = [];
+// Generar fechas de miércoles disponibles (excluyendo bloqueadas de Firebase)
+async function generateWednesdayDates() {
+    const dateSelect = document.getElementById('appointmentDate');
+    const today = new Date();
+    const wednesdays = [];
 
-            // Generar próximos 4 miércoles
-            for (let i = 0; i < 56; i++) { // 8 semanas
-                const date = new Date(today);
-                date.setDate(today.getDate() + i);
-                
-                if (date.getDay() === 3) { // Miércoles = 3
-                    wednesdays.push(date);
-                }
+    // Obtener fechas bloqueadas de Firebase
+    let blockedDatesFromFirebase = [];
+    if (isFirebaseInitialized) {
+        blockedDatesFromFirebase = await getBlockedDatesFromFirebase();
+    }
+
+    // Generar próximos miércoles (8 semanas)
+    for (let i = 0; i < 56; i++) {
+        const date = new Date(today);
+        date.setDate(today.getDate() + i);
+        
+        if (date.getDay() === 3) { // Miércoles = 3
+            const dateString = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+            
+            // Verificar si la fecha NO está bloqueada en Firebase
+            if (!blockedDatesFromFirebase.includes(dateString)) {
+                wednesdays.push({ date, dateString });
             }
-
-            // Agregar opciones al select
-            wednesdays.forEach(date => {
-                const option = document.createElement('option');
-                const dateString = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-                const displayDate = date.toLocaleDateString('es-ES', {
-                    weekday: 'long',
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric'
-                });
-                
-                option.value = dateString;
-                option.textContent = displayDate;
-                dateSelect.appendChild(option);
-            });
         }
+    }
 
+    // Limpiar opciones anteriores
+    dateSelect.innerHTML = '<option value="">Seleccionar miércoles...</option>';
+
+    // Agregar opciones disponibles al select
+    wednesdays.forEach(({ date, dateString }) => {
+        const option = document.createElement('option');
+        const displayDate = date.toLocaleDateString('es-ES', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+        
+        option.value = dateString;
+        option.textContent = displayDate;
+        dateSelect.appendChild(option);
+    });
+
+    // Si no hay fechas disponibles
+    if (wednesdays.length === 0) {
+        const option = document.createElement('option');
+        option.value = '';
+        option.textContent = 'No hay fechas disponibles';
+        option.disabled = true;
+        dateSelect.appendChild(option);
+    }
+
+    console.log(`Se generaron ${wednesdays.length} miércoles disponibles`);
+}
         // Generar horarios disponibles
         async function generateTimeSlots() {
     const timeSelect = document.getElementById('appointmentTime');
@@ -822,5 +864,6 @@ const dateObj = new Date(year, month - 1, day);
 </body>
 
 </html>
+
 
 
