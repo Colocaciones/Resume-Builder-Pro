@@ -1779,8 +1779,11 @@ case 'placements':
                         <td><span class="status-badge ${statusClass}">${statusText}</span></td>
                         <td>
                             <div class="actions">
-                                <button class="btn btn-info btn-small" onclick="viewOfferDetails('${offer.id}')" title="Ver detalles">
-                                    <i class="fas fa-eye"></i>
+                                 <button class="btn btn-info btn-small" onclick="viewOfferDetails('${offer.id}')" title="Ver detalles">
+                                     <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="btn btn-success btn-small" onclick="generateOfferPDF('${offer.id}')" title="Generar PDF">
+                                     <i class="fas fa-file-pdf"></i>
                                 </button>
                                 <button class="btn btn-warning btn-small" onclick="editOffer('${offer.id}')" title="Editar">
                                     <i class="fas fa-edit"></i>
@@ -1788,7 +1791,7 @@ case 'placements':
                                 <button class="btn btn-danger btn-small" onclick="deleteOffer('${offer.id}')" title="Eliminar">
                                     <i class="fas fa-trash"></i>
                                 </button>
-                            </div>
+                             </div>
                         </td>
                     </tr>
                 `;
@@ -2751,6 +2754,9 @@ if (sortFilter) {
     <div class="actions">
         <button class="btn btn-info btn-small" onclick="viewOfferDetails('${offer.id}')" title="Ver detalles">
             <i class="fas fa-eye"></i>
+        </button>
+        <button class="btn btn-success btn-small" onclick="generateOfferPDF('${offer.id}')" title="Generar PDF">
+            <i class="fas fa-file-pdf"></i>
         </button>
         <button class="btn btn-warning btn-small" onclick="editOffer('${offer.id}')" title="Editar">
             <i class="fas fa-edit"></i>
@@ -6319,6 +6325,254 @@ function formatLocalDate(dateString) {
     const [year, month, day] = dateString.split('-');
     const localDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
     return localDate.toLocaleDateString('es-ES');
+}
+
+// Función para generar PDF de la oferta de un patrono específico
+function generateOfferPDF(offerId) {
+    const offer = offers.find(o => o.id === offerId);
+    if (!offer) {
+        showNotification('Oferta no encontrada', 'error');
+        return;
+    }
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    
+    let yPos = 20;
+    const margin = 20;
+    const lineHeight = 6;
+    
+    // Función auxiliar para agregar texto
+    function addText(text, x, y, fontSize = 10, style = 'normal') {
+        doc.setFontSize(fontSize);
+        doc.setFont('helvetica', style);
+        doc.text(text, x, y);
+    }
+    
+    // Función auxiliar para agregar línea separadora
+    function addLine(y) {
+        doc.setDrawColor(200, 200, 200);
+        doc.setLineWidth(0.5);
+        doc.line(margin, y, 190, y);
+    }
+
+    // ENCABEZADO
+    doc.setTextColor(200, 16, 46);
+    addText('UNIVERSIDAD ANA G. MÉNDEZ', margin, yPos, 16, 'bold');
+    yPos += 10;
+    addText('OFICINA DE CARRERAS Y COLOCACIONES', margin, yPos, 14, 'bold');
+    yPos += 8;
+    addText('REGISTRO DE OFERTA DE EMPLEO - PATRONO', margin, yPos, 14, 'bold');
+    yPos += 15;
+    
+    doc.setTextColor(0, 0, 0);
+    addText('Fecha de generación: ' + new Date().toLocaleDateString('es-ES'), margin, yPos, 10);
+    addText('ID de Oferta: ' + offer.id, 120, yPos, 10);
+    yPos += 10;
+    addLine(yPos);
+    yPos += 15;
+
+    // INFORMACIÓN GENERAL
+    doc.setTextColor(200, 16, 46);
+    addText('INFORMACIÓN GENERAL', margin, yPos, 12, 'bold');
+    yPos += 10;
+    doc.setTextColor(0, 0, 0);
+    
+    addText('Fecha de Solicitud:', margin, yPos, 10, 'bold');
+    addText(offer.today ? new Date(offer.today).toLocaleDateString('es-ES') : 'No especificada', 100, yPos);
+    yPos += lineHeight;
+    
+    addText('Tipo de Patrono:', margin, yPos, 10, 'bold');
+    addText(offer.patronType === 'new' ? 'Patrono Nuevo' : offer.patronType === 'existing' ? 'Patrono Existente' : 'No especificado', 100, yPos);
+    yPos += lineHeight;
+    
+    addText('Nombre de la Empresa:', margin, yPos, 10, 'bold');
+    addText(offer.companyName || 'No especificado', 100, yPos);
+    yPos += 15;
+
+    // INFORMACIÓN DE CONTACTO
+    doc.setTextColor(200, 16, 46);
+    addText('INFORMACIÓN DE CONTACTO', margin, yPos, 12, 'bold');
+    yPos += 10;
+    doc.setTextColor(0, 0, 0);
+    
+    addText('Persona de Contacto:', margin, yPos, 10, 'bold');
+    addText(offer.contactPerson || 'No especificado', 100, yPos);
+    yPos += lineHeight;
+    
+    addText('Posición que Ocupa:', margin, yPos, 10, 'bold');
+    addText(offer.contactPosition || 'No especificado', 100, yPos);
+    yPos += lineHeight;
+    
+    addText('Teléfono:', margin, yPos, 10, 'bold');
+    addText(offer.phone || 'No especificado', 100, yPos);
+    yPos += lineHeight;
+    
+    addText('Correo Electrónico:', margin, yPos, 10, 'bold');
+    addText(offer.email || 'No especificado', 100, yPos);
+    yPos += lineHeight;
+    
+    addText('Oferta Recibida A Través De:', margin, yPos, 10, 'bold');
+    const receivedLabels = {'email': 'Correo electrónico', 'presencial': 'Presencial', 'telefono': 'Teléfono'};
+    addText(receivedLabels[offer.receivedThrough] || 'No especificado', 100, yPos);
+    yPos += 15;
+
+    // INFORMACIÓN DEL PUESTO
+    doc.setTextColor(200, 16, 46);
+    addText('INFORMACIÓN DEL PUESTO', margin, yPos, 12, 'bold');
+    yPos += 10;
+    doc.setTextColor(0, 0, 0);
+    
+    addText('Posición Solicitada:', margin, yPos, 10, 'bold');
+    addText(offer.position || 'No especificado', 100, yPos);
+    yPos += lineHeight;
+    
+    // Descripción del empleo (texto largo)
+    if (offer.jobDescription && offer.jobDescription.trim()) {
+        addText('Descripción de Empleo:', margin, yPos, 10, 'bold');
+        yPos += lineHeight;
+        const lines = doc.splitTextToSize(offer.jobDescription, 160);
+        doc.text(lines, margin + 5, yPos);
+        yPos += lines.length * 4 + 5;
+    }
+    
+    // Horarios
+    if (offer.schedule && offer.schedule.trim()) {
+        addText('Horarios y Días de Trabajo:', margin, yPos, 10, 'bold');
+        yPos += lineHeight;
+        const lines = doc.splitTextToSize(offer.schedule, 160);
+        doc.text(lines, margin + 5, yPos);
+        yPos += lines.length * 4 + 5;
+    }
+    
+    // Requisitos (texto largo)
+    if (offer.requirements && offer.requirements.trim()) {
+        addText('Requisitos de la Posición:', margin, yPos, 10, 'bold');
+        yPos += lineHeight;
+        const lines = doc.splitTextToSize(offer.requirements, 160);
+        doc.text(lines, margin + 5, yPos);
+        yPos += lines.length * 4 + 10;
+    }
+
+    // Verificar si necesitamos nueva página
+    if (yPos > 250) {
+        doc.addPage();
+        yPos = 20;
+    }
+
+    // DETALLES DEL EMPLEO
+    doc.setTextColor(200, 16, 46);
+    addText('DETALLES DEL EMPLEO', margin, yPos, 12, 'bold');
+    yPos += 10;
+    doc.setTextColor(0, 0, 0);
+    
+    addText('Tipo de Posición:', margin, yPos, 10, 'bold');
+    const positionLabels = {'part-time': 'Part-Time', 'full-time': 'Full-Time', 'regular': 'Empleo Regular', 'temporary': 'Empleo Temporero'};
+    addText(positionLabels[offer.positionType] || 'No especificado', 100, yPos);
+    yPos += lineHeight;
+    
+    addText('Salario a Ofrecer:', margin, yPos, 10, 'bold');
+    addText(offer.salary || 'No especificado', 100, yPos);
+    yPos += lineHeight;
+    
+    addText('Localización:', margin, yPos, 10, 'bold');
+    addText(offer.location || 'No especificado', 100, yPos);
+    yPos += lineHeight;
+    
+    addText('Fecha Límite:', margin, yPos, 10, 'bold');
+    addText(offer.deadline ? new Date(offer.deadline).toLocaleDateString('es-ES') : 'No especificado', 100, yPos);
+    yPos += lineHeight;
+    
+    // Estado de la oferta
+    addText('Estado Actual:', margin, yPos, 10, 'bold');
+    const status = getOfferStatus(offer.deadline);
+    const statusText = status === 'expired' ? 'Vencida' : status === 'expiring' ? 'Vence Pronto' : 'Activa';
+    addText(statusText, 100, yPos);
+    yPos += 15;
+
+    // ACTIVIDADES DE RECLUTAMIENTO
+    doc.setTextColor(200, 16, 46);
+    addText('ACTIVIDADES DE RECLUTAMIENTO', margin, yPos, 12, 'bold');
+    yPos += 10;
+    doc.setTextColor(0, 0, 0);
+    
+    addText('Actividades Seleccionadas:', margin, yPos, 10, 'bold');
+    yPos += lineHeight;
+    
+    if (offer.activities && offer.activities.length > 0) {
+        const activityLabels = {
+            'feria': 'Ferias de Empleo',
+            'mesas': 'Mesas de reclutamiento',
+            'talleres': 'Ofrecimiento de Talleres',
+            'no': 'No participan en actividades'
+        };
+        
+        offer.activities.forEach(activity => {
+            addText('• ' + (activityLabels[activity] || activity), margin + 5, yPos);
+            yPos += lineHeight;
+        });
+    } else {
+        addText('• Ninguna actividad seleccionada', margin + 5, yPos);
+        yPos += lineHeight;
+    }
+    yPos += 10;
+
+    // INFORMACIÓN ADICIONAL
+    if (offer.notes && offer.notes.trim()) {
+        doc.setTextColor(200, 16, 46);
+        addText('INFORMACIÓN ADICIONAL', margin, yPos, 12, 'bold');
+        yPos += 10;
+        doc.setTextColor(0, 0, 0);
+        
+        addText('Notas Adicionales:', margin, yPos, 10, 'bold');
+        yPos += lineHeight;
+        const lines = doc.splitTextToSize(offer.notes, 160);
+        doc.text(lines, margin + 5, yPos);
+        yPos += lines.length * 4 + 10;
+    }
+
+    // ESTADÍSTICAS DE LA OFERTA (información adicional del sistema)
+    if (yPos > 240) {
+        doc.addPage();
+        yPos = 20;
+    }
+    
+    doc.setTextColor(200, 16, 46);
+    addText('ESTADÍSTICAS DEL SISTEMA', margin, yPos, 12, 'bold');
+    yPos += 10;
+    doc.setTextColor(0, 0, 0);
+    
+    // Contar aplicaciones para esta oferta
+    const offerApplications = applications.filter(app => app.offerId === offer.id);
+    addText('Total de Aplicaciones:', margin, yPos, 10, 'bold');
+    addText(offerApplications.length.toString(), 100, yPos);
+    yPos += lineHeight;
+    
+    addText('Fecha de Registro:', margin, yPos, 10, 'bold');
+    addText(offer.createdAt ? new Date(offer.createdAt).toLocaleDateString('es-ES') : 'No disponible', 100, yPos);
+    yPos += lineHeight;
+    
+    if (offer.updatedAt && offer.updatedAt !== offer.createdAt) {
+        addText('Última Actualización:', margin, yPos, 10, 'bold');
+        addText(new Date(offer.updatedAt).toLocaleDateString('es-ES'), 100, yPos);
+        yPos += lineHeight;
+    }
+
+    // PIE DE PÁGINA
+    yPos = 270; // Posición fija para el pie
+    addLine(yPos - 5);
+    doc.setFontSize(8);
+    doc.setTextColor(100, 100, 100);
+    addText('Documento generado por el Sistema Administrativo - Portal de Empleos UAGM', margin, yPos);
+    addText('Generado el: ' + new Date().toLocaleString('es-ES'), margin, yPos + 5);
+
+    // Generar y descargar el PDF
+    const companyNameClean = (offer.companyName || 'Sin_Nombre').replace(/[^a-zA-Z0-9]/g, '_');
+    const positionClean = (offer.position || 'Sin_Posicion').replace(/[^a-zA-Z0-9]/g, '_');
+    const fileName = `Oferta_${companyNameClean}_${positionClean}_${new Date().toISOString().split('T')[0]}.pdf`;
+    
+    doc.save(fileName);
+    showNotification('PDF generado: ' + fileName, 'success');
 }
     </script>
 </body>
