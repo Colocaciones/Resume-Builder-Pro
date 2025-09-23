@@ -2403,25 +2403,7 @@ localStorage.setItem('lastCheckedApplications', lastCheckedApplications.toString
             // Eliminar de memoria local
             participants = participants.filter(p => p.id !== participantId);
             
-            // También eliminar aplicaciones relacionadas
-            const relatedApplications = applications.filter(app => app.participantId === participantId);
-            for (const app of relatedApplications) {
-                if (isFirebaseInitialized) {
-                    const appSnapshot = await db.collection('applications')
-                        .where('id', '==', app.id)
-                        .get();
-                    
-                    if (!appSnapshot.empty) {
-                        const batch = db.batch();
-                        appSnapshot.docs.forEach(doc => {
-                            batch.delete(doc.ref);
-                        });
-                        await batch.commit();
-                    }
-                }
-            }
-            applications = applications.filter(app => app.participantId !== participantId);
-            
+                        
             // Actualizar localStorage como respaldo
             localStorage.setItem('participants', JSON.stringify(participants));
             localStorage.setItem('applications', JSON.stringify(applications));
@@ -2618,25 +2600,7 @@ async function saveOfferChanges(offerId) {
             // Eliminar de memoria local
             offers = offers.filter(o => o.id !== offerId);
             
-            // También eliminar aplicaciones relacionadas
-            const relatedApplications = applications.filter(app => app.offerId === offerId);
-            for (const app of relatedApplications) {
-                if (isFirebaseInitialized) {
-                    const appSnapshot = await db.collection('applications')
-                        .where('id', '==', app.id)
-                        .get();
-                    
-                    if (!appSnapshot.empty) {
-                        const batch = db.batch();
-                        appSnapshot.docs.forEach(doc => {
-                            batch.delete(doc.ref);
-                        });
-                        await batch.commit();
-                    }
-                }
-            }
-            applications = applications.filter(app => app.offerId !== offerId);
-            
+           
             // Actualizar localStorage como respaldo
             localStorage.setItem('jobOffers', JSON.stringify(offers));
             localStorage.setItem('applications', JSON.stringify(applications));
