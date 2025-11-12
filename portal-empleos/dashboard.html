@@ -1788,6 +1788,9 @@ case 'placements':
                                 <button class="btn btn-warning btn-small" onclick="editOffer('${offer.id}')" title="Editar">
                                     <i class="fas fa-edit"></i>
                                 </button>
+				<button class="btn btn-warning btn-small" onclick="generatePromoURL('${offer.id}')" title="Generar URL promocional">
+    				    <i class="fas fa-bullhorn"></i>
+				</button>
                                 <button class="btn btn-danger btn-small" onclick="deleteOffer('${offer.id}')" title="Eliminar">
                                     <i class="fas fa-trash"></i>
                                 </button>
@@ -2562,6 +2565,104 @@ async function saveOfferChanges(offerId) {
     }
 }
 
+// ===== SISTEMA DE PROMOCIÓN DE OFERTAS =====
+function generatePromoURL(offerId) {
+    const offer = offers.find(o => o.id === offerId);
+    if (!offer) return;
+    
+    const baseURL = window.location.origin + window.location.pathname.replace('dashboard.html', 'portal-para-participantes.html');
+    const promoURL = `${baseURL}?promo=${offerId}`;
+    
+    showPromoURLModal(offer, promoURL);
+}
+
+function showPromoURLModal(offer, promoURL) {
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.style.display = 'flex';
+    modal.id = 'promoURLModal';
+    
+    modal.innerHTML = `
+        <div class="modal-content" style="max-width: 700px;">
+            <div class="modal-header">
+                <h3>🎯 URL Promocional Generada</h3>
+                <span class="close" onclick="closePromoModal()">&times;</span>
+            </div>
+            
+            <div class="modal-body">
+                <div style="background: #e3f2fd; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                    <h4 style="color: #1565c0; margin-bottom: 10px;">📋 Información de la Oferta</h4>
+                    <p><strong>Empresa:</strong> ${offer.companyName}</p>
+                    <p><strong>Posición:</strong> ${offer.position}</p>
+                    <p><strong>Ubicación:</strong> ${offer.location}</p>
+                    <p><strong>Salario:</strong> ${offer.salary}</p>
+                </div>
+                
+                <div style="background: #f3e5f5; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                    <h4 style="color: #7b1fa2; margin-bottom: 10px;">🔗 URL Promocional</h4>
+                    <div style="background: white; padding: 10px; border-radius: 4px; border: 1px solid #ddd; word-break: break-all; font-family: monospace; font-size: 12px;">
+                        ${promoURL}
+                    </div>
+                    <button class="btn btn-info" onclick="copyToClipboard('${promoURL}')" style="margin-top: 10px;">
+                        📋 Copiar URL
+                    </button>
+                </div>
+                
+                <div style="background: #e8f5e8; padding: 15px; border-radius: 8px;">
+                    <h4 style="color: #2e7d32; margin-bottom: 10px;">📧 Template de Email</h4>
+                    <textarea id="emailTemplate" style="width: 100%; height: 200px; font-size: 12px; font-family: Arial;" readonly>Asunto: 🚀 Oportunidad de Empleo - ${offer.position} en ${offer.companyName}
+
+Estimado/a candidato/a,
+
+¡Tenemos una excelente oportunidad laboral que puede interesarte!
+
+🏢 EMPRESA: ${offer.companyName}
+💼 POSICIÓN: ${offer.position}
+📍 UBICACIÓN: ${offer.location}
+💰 SALARIO: ${offer.salary}
+
+📋 Para aplicar y ver todos los detalles:
+👉 ${promoURL}
+
+Esta oferta fue seleccionada especialmente y está disponible por tiempo limitado.
+
+¡No pierdas esta oportunidad!
+
+Saludos,
+Oficina de Carreras y Colocaciones
+Universidad Ana G. Méndez</textarea>
+                    <button class="btn btn-success" onclick="copyEmailTemplate()" style="margin-top: 10px;">
+                        📧 Copiar Template
+                    </button>
+                </div>
+            </div>
+            
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closePromoModal()">Cerrar</button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+}
+
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(() => {
+        showNotification('URL copiada al portapapeles!', 'success');
+    });
+}
+
+function copyEmailTemplate() {
+    const template = document.getElementById('emailTemplate').value;
+    navigator.clipboard.writeText(template).then(() => {
+        showNotification('Template de email copiado!', 'success');
+    });
+}
+
+function closePromoModal() {
+    const modal = document.getElementById('promoURLModal');
+    if (modal) modal.remove();
+}
         // Eliminar oferta
         async function deleteOffer(offerId) {
     const offer = offers.find(o => o.id === offerId);
@@ -2725,6 +2826,9 @@ if (sortFilter) {
         <button class="btn btn-warning btn-small" onclick="editOffer('${offer.id}')" title="Editar">
             <i class="fas fa-edit"></i>
         </button>
+	<button class="btn btn-warning btn-small" onclick="generatePromoURL('${offer.id}')" title="Generar URL promocional">
+    	    <i class="fas fa-bullhorn"></i>
+	</button>
         <button class="btn btn-danger btn-small" onclick="deleteOffer('${offer.id}')" title="Eliminar">
             <i class="fas fa-trash"></i>
         </button>
