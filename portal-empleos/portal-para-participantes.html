@@ -755,6 +755,60 @@
         let currentUser = null;
         let currentOffer = null;
         let offers = [];
+let promoOfferId = null; // Variable global para promoción
+
+// ===== SISTEMA DE PROMOCIÓN DE OFERTAS =====
+function checkForPromotion() {
+    const urlParams = new URLSearchParams(window.location.search);
+    promoOfferId = urlParams.get('promo');
+    
+    if (promoOfferId) {
+        console.log('Modo promoción para oferta:', promoOfferId);
+        
+        // Buscar la oferta después de que las ofertas se hayan cargado
+        setTimeout(() => {
+            const promoOffer = offers.find(offer => offer.id === promoOfferId);
+            
+            if (promoOffer) {
+                switchTab('register');
+                updateHeaderForPromotion(promoOffer);
+                document.getElementById('offersTab').style.display = 'none';
+            } else {
+                console.log('Oferta no encontrada:', promoOfferId);
+            }
+        }, 1000); // Esperar 1 segundo para que se carguen las ofertas
+    }
+}
+
+function updateHeaderForPromotion(offer) {
+    const welcomeSection = document.querySelector('.welcome-section');
+    welcomeSection.innerHTML = `
+        <div style="background: linear-gradient(135deg, #c8102e 0%, #8b0b1f 100%); color: white; padding: 25px; border-radius: 15px; margin-bottom: 30px;">
+            <h2 style="color: white; margin-bottom: 15px;">Solicitud para referido
+            <div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 8px;">
+                <h3 style="color: white; margin-bottom: 10px;">${offer.position}</h3>
+                <p style="font-size: 16px; margin-bottom: 5px; color: white;"><strong>Empresa:</strong> ${offer.companyName}</p>
+                <p style="font-size: 16px; margin-bottom: 5px; color: white;"><strong>Ubicación:</strong> ${offer.location}</p>
+		<p style="font-size: 16px; margin-bottom: 5px; color: white;"><strong></strong> ${offer.schedule}</p>
+            </div>
+            <div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 8px; margin-top: 15px;">
+    <h4 style="color: white; margin-bottom: 10px; font-size: 16px;">Requisitos de la Posición:</h4>
+    <p style="font-size: 14px; color: white; line-height: 1.5; margin: 0;">${offer.requirements}</p>
+        </div>
+    `;
+    
+    // Ocultar completamente el tab de ofertas
+    document.getElementById('offersTab').style.display = 'none';
+    
+    // Bloquear la función switchTab para ofertas
+    window.originalSwitchTab = window.switchTab;
+    window.switchTab = function(tabName) {
+        if (tabName === 'offers' && promoOfferId) {
+            return; // No permitir ir al tab de ofertas
+        }
+        window.originalSwitchTab(tabName);
+    };
+}
 
 function initializeFirebase() {
             try {
@@ -796,16 +850,14 @@ function initializeFirebase() {
             }
         };
 
-        // Inicializar cuando se carga la página
-         document.addEventListener('DOMContentLoaded', async function() {
-            isFirebaseInitialized = initializeFirebase();
-            await loadOffers();
-            setupFileUpload();
-            setupConditionalFields();
-            
-            
-            
-            console.log('Portal Participantes cargado correctamente');
+        document.addEventListener('DOMContentLoaded', async function() {
+    isFirebaseInitialized = initializeFirebase();
+    await loadOffers();
+    setupFileUpload();
+    setupConditionalFields();
+    checkForPromotion(); // MOVER AQUÍ
+    console.log('Portal Participantes cargado correctamente');
+
         });
 
         // Volver a página principal
@@ -1023,6 +1075,9 @@ async function submitRegistration() {
     localStorage.setItem('participants', JSON.stringify(participants));
 
     currentUser = formData;
+if (promoOfferId) {
+    createAutoApplication(formData, promoOfferId);
+}
 
     // Mostrar mensaje de éxito
     document.getElementById('successMessage').style.display = 'block';
@@ -1036,6 +1091,67 @@ async function submitRegistration() {
     }, 2000);
 }
 
+async function createAutoApplication(participantData, offerId) {
+    const offer = offers.find(o => o.id === offerId);
+    if (!offer) return;
+    
+    const autoApplication = {
+        id: Date.now().toString() + '_auto',
+        offerId: offerId,
+        participantId: participantData.id,
+        participantData: participantData,
+        offerData: offer,
+        participantName: `${participantData.firstName} ${participantData.lastName}`,
+        participantEmail: participantData.email,
+        participantPhone: participantData.phone,
+        offerTitle: offer.position,
+        companyName: offer.companyName,
+        appliedAt: new Date().toISOString(),
+        status: 'pending',
+        source: 'promotional_link',
+        adminReview: {
+            reviewed: false,
+            reviewedBy: null,
+            reviewedAt: null,
+            decision: null,
+            notes: 'Aplicación automática vía enlace promocional'
+        }
+    };
+    
+    try {
+        if (isFirebaseInitialized) {
+            const result = await FirebaseHelper.saveDoc('applications', autoApplication);
+            if (result.success) {
+                console.log('Aplicación automática guardada:', result.id);
+            }
+        }
+        
+        let applications = JSON.parse(localStorage.getItem('applications')) || [];
+        applications.push(autoApplication);
+        localStorage.setItem('applications', JSON.stringify(applications));
+        
+        showNotification('¡Aplicación enviada automáticamente!', 'success');
+
+        
+    } catch (error) {
+        console.error('Error:', error);
+    }
+// Mostrar mensaje final y bloquear navegación
+        setTimeout(() => {
+            const offer = offers.find(o => o.id === offerId);
+            document.querySelector('.welcome-section').innerHTML = `
+                <div style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; padding: 30px; border-radius: 15px; text-align: center;">
+                    <i class="fas fa-check-circle" style="font-size: 48px; margin-bottom: 20px;"></i>
+                    <h2 style="color: white; margin-bottom: 15px;">¡Solicitud Completada!</h2>
+                    <p style="font-size: 16px; margin-bottom: 10px;">Tu aplicación para <strong>${offer.position}</strong> en <strong>${offer.companyName}</strong> ha sido enviada.</p>
+                    <p style="font-size: 14px; opacity: 0.9;">Nuestro equipo revisará tu perfil y se pondrá en contacto contigo pronto.</p>
+                </div>
+            `;
+            
+            // Ocultar el formulario
+            document.getElementById('registerContent').style.display = 'none';
+        }, 2000);
+}
        // Cargar ofertas desde Firebase
         async function loadOffers() {
             try {
