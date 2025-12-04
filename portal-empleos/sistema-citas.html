@@ -177,6 +177,66 @@
         </div>
 
         <div class="main-content">
+            <!-- **PANEL DE ADMINISTRADOR (Solo visible después de login)** -->
+            <div id="adminPanel" style="display: none; background: #f8f9fa; padding: 20px; border-radius: 10px; margin-bottom: 20px; border: 2px solid #c8102e;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <h3 style="margin: 0; color: #c8102e;">
+                        <i class="fas fa-shield-alt"></i> Panel de Administrador
+                    </h3>
+                    <button onclick="adminLogout()" style="padding: 8px 16px; background: #dc3545; color: white; border: none; border-radius: 6px; cursor: pointer;">
+                        <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+                    </button>
+                </div>
+                <div style="margin-top: 15px; text-align: center;">
+                    <button type="button" id="toggleModeBtn" onclick="toggleWaitlistMode()" 
+                            style="padding: 12px 24px; background: #ff9800; color: white; border: none; 
+                                   border-radius: 8px; font-weight: 600; cursor: pointer; 
+                                   transition: all 0.3s ease; display: inline-flex; align-items: center; gap: 10px;">
+                        <i class="fas fa-list"></i> Cambiar a Modo Lista de Espera
+                    </button>
+                </div>
+            </div>
+
+            <!-- **BOTÓN DE LOGIN (Discreto en la esquina)** -->
+            <div id="adminLoginBtn" style="position: fixed; bottom: 20px; right: 20px; z-index: 999;">
+                <button onclick="showAdminLogin()" 
+                        style="width: 50px; height: 50px; border-radius: 50%; background: #c8102e; 
+                               color: white; border: none; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+                               display: flex; align-items: center; justify-content: center;">
+                    <i class="fas fa-key" style="font-size: 20px;"></i>
+                </button>
+            </div>
+
+            <!-- **MODAL DE LOGIN** -->
+            <div id="adminLoginModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+                                             background: rgba(0,0,0,0.7); z-index: 1000; align-items: center; justify-content: center;">
+                <div style="background: white; padding: 30px; border-radius: 15px; max-width: 400px; width: 90%;">
+                    <h3 style="margin-top: 0; color: #c8102e; text-align: center;">
+                        <i class="fas fa-lock"></i> Acceso Administrativo
+                    </h3>
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; margin-bottom: 8px; font-weight: 600;">Contraseña:</label>
+                        <input type="password" id="adminPassword" 
+                               style="width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px;"
+                               placeholder="Ingresa la contraseña"
+                               onkeypress="if(event.key==='Enter') adminLogin()">
+                    </div>
+                    <div style="display: flex; gap: 10px;">
+                        <button onclick="adminLogin()" 
+                                style="flex: 1; padding: 12px; background: #c8102e; color: white; border: none; 
+                                       border-radius: 8px; font-weight: 600; cursor: pointer;">
+                            <i class="fas fa-sign-in-alt"></i> Entrar
+                        </button>
+                        <button onclick="closeAdminLogin()" 
+                                style="flex: 1; padding: 12px; background: #6c757d; color: white; border: none; 
+                                       border-radius: 8px; font-weight: 600; cursor: pointer;">
+                            <i class="fas fa-times"></i> Cancelar
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- **MENSAJE DE ÉXITO** -->
             <div class="success-message" id="successMessage">
                 <i class="fas fa-check-circle" style="font-size: 24px; margin-bottom: 10px;"></i>
                 <h3>¡Cita Registrada Exitosamente!</h3>
@@ -184,6 +244,7 @@
             </div>
 
             <form id="appointmentForm">
+
                 <!-- Información Personal -->
                 <div class="section-title">
                     <i class="fas fa-user"></i>
@@ -334,6 +395,7 @@
         // Variables globales Firebase
         let app, db, auth, storage;
         let isFirebaseInitialized = false;
+        let isWaitlistModeEnabled = false; 
 
 // Función para obtener fechas bloqueadas desde Firebase
 async function getBlockedDatesFromFirebase() {
@@ -383,16 +445,24 @@ async function getBlockedDatesFromFirebase() {
         // Inicializar cuando se carga la página
 document.addEventListener('DOMContentLoaded', async function() {
     isFirebaseInitialized = initializeFirebase();
-    await generateWednesdayDates(); // Hacer async para esperar Firebase
+    
+    // **MODIFICADO: Cargar el modo desde Firebase primero**
+    await loadAppointmentMode();
+    
     setupEventListeners();
-    console.log('Sistema de Citas cargado correctamente');
+    checkAdminSession();
+    console.log('✅ Sistema de Citas cargado correctamente');
 });
-
-// Generar fechas de miércoles disponibles (excluyendo bloqueadas de Firebase)
 async function generateWednesdayDates() {
     const dateSelect = document.getElementById('appointmentDate');
     const today = new Date();
     const wednesdays = [];
+
+    // **MODIFICADO: Solo retornar si está en modo lista de espera**
+    if (isWaitlistModeEnabled) {
+        console.log('⏸️ Modo lista de espera activo - no generar fechas');
+        return;
+    }
 
     // Obtener fechas bloqueadas de Firebase
     let blockedDatesFromFirebase = [];
@@ -444,6 +514,153 @@ async function generateWednesdayDates() {
 
     console.log(`Se generaron ${wednesdays.length} miércoles disponibles`);
 }
+
+// **NUEVA FUNCIÓN: Activar modo lista de espera**
+function enableWaitlistMode() {
+    const dateGroup = document.getElementById('appointmentDate').closest('.form-group');
+    const timeGroup = document.getElementById('appointmentTime').closest('.form-group');
+    
+    // Ocultar campos de fecha/hora
+    dateGroup.style.display = 'none';
+    timeGroup.style.display = 'none';
+    
+    // Remover required
+    document.getElementById('appointmentDate').removeAttribute('required');
+    document.getElementById('appointmentTime').removeAttribute('required');
+    
+    // Limpiar valores
+    document.getElementById('appointmentDate').value = '';
+    document.getElementById('appointmentTime').value = '';
+    
+    // Mostrar mensaje de lista de espera si no existe
+    if (!document.getElementById('waitlistMessage')) {
+        const waitlistMessage = document.createElement('div');
+        waitlistMessage.id = 'waitlistMessage';
+        waitlistMessage.style.cssText = `
+            background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        `;
+        waitlistMessage.innerHTML = `
+            <i class="fas fa-clock" style="font-size: 24px; margin-bottom: 10px;"></i>
+            <h3>Modo Lista de Espera Activado</h3>
+            <p>Los participantes se registrarán en lista de espera y serán contactados cuando haya disponibilidad.</p>
+        `;
+        
+        // Insertar después de la sección "Información de la Cita"
+        const serviceTypeGroup = document.getElementById('serviceType').closest('.form-group');
+        serviceTypeGroup.parentNode.insertBefore(waitlistMessage, serviceTypeGroup.nextSibling);
+    }
+    
+    // Cambiar texto del botón
+    const submitBtn = document.querySelector('.btn-primary');
+    submitBtn.innerHTML = '<i class="fas fa-list"></i> Registrar en Lista de Espera';
+}
+
+// **NUEVA FUNCIÓN: Desactivar modo lista de espera**
+function disableWaitlistMode() {
+    const dateGroup = document.getElementById('appointmentDate').closest('.form-group');
+    const timeGroup = document.getElementById('appointmentTime').closest('.form-group');
+    
+    // Mostrar campos de fecha/hora
+    dateGroup.style.display = 'block';
+    timeGroup.style.display = 'block';
+    
+    // Restaurar required
+    document.getElementById('appointmentDate').setAttribute('required', '');
+    document.getElementById('appointmentTime').setAttribute('required', '');
+    
+    // Eliminar mensaje de lista de espera si existe
+    const existingMessage = document.getElementById('waitlistMessage');
+    if (existingMessage) {
+        existingMessage.remove();
+    }
+    
+    // Restaurar texto del botón
+    const submitBtn = document.querySelector('.btn-primary');
+    submitBtn.innerHTML = '<i class="fas fa-calendar-plus"></i> Registrar Cita';
+}
+
+// **FUNCIÓN: Toggle entre modos (CON FIREBASE)**
+async function toggleWaitlistMode() {
+    isWaitlistModeEnabled = !isWaitlistModeEnabled;
+    
+    // **Guardar el estado en Firebase para que sea global**
+    try {
+        await db.collection('system_settings').doc('appointment_mode').set({
+            isWaitlistMode: isWaitlistModeEnabled,
+            updatedAt: new Date().toISOString(),
+            updatedBy: 'admin'
+        });
+        console.log('✅ Modo guardado en Firebase:', isWaitlistModeEnabled);
+    } catch (error) {
+        console.error('❌ Error guardando modo en Firebase:', error);
+    }
+    
+    // Actualizar el botón de toggle
+    const toggleBtn = document.getElementById('toggleModeBtn');
+    if (isWaitlistModeEnabled) {
+        toggleBtn.innerHTML = '<i class="fas fa-calendar-alt"></i> Cambiar a Modo Citas Normal';
+        toggleBtn.style.background = '#28a745';
+        enableWaitlistMode();
+        showNotification('Sistema de citas DESACTIVADO - Modo lista de espera activado', 'info');
+    } else {
+        toggleBtn.innerHTML = '<i class="fas fa-list"></i> Cambiar a Modo Lista de Espera';
+        toggleBtn.style.background = '#ff9800';
+        disableWaitlistMode();
+        await generateWednesdayDates();
+        showNotification('Sistema de citas ACTIVADO - Usuarios pueden agendar', 'success');
+    }
+    
+    console.log('🔄 Modo cambiado a:', isWaitlistModeEnabled ? 'Lista de Espera (DESACTIVADO)' : 'Normal (ACTIVADO)');
+}
+
+// **FUNCIÓN: Leer modo desde Firebase al cargar la página**
+async function loadAppointmentMode() {
+    try {
+        const doc = await db.collection('system_settings').doc('appointment_mode').get();
+        
+        if (doc.exists) {
+            const data = doc.data();
+            isWaitlistModeEnabled = data.isWaitlistMode || false;
+            
+            console.log('📥 Modo cargado desde Firebase:', isWaitlistModeEnabled ? 'Lista de Espera' : 'Normal');
+            
+            // Aplicar el modo correspondiente
+            if (isWaitlistModeEnabled) {
+                enableWaitlistMode();
+                
+                // Si el admin está logueado, actualizar su botón
+                const isAdmin = sessionStorage.getItem('isAdmin');
+                if (isAdmin === 'true') {
+                    const toggleBtn = document.getElementById('toggleModeBtn');
+                    if (toggleBtn) {
+                        toggleBtn.innerHTML = '<i class="fas fa-calendar-alt"></i> Cambiar a Modo Citas Normal';
+                        toggleBtn.style.background = '#28a745';
+                    }
+                }
+            } else {
+                disableWaitlistMode();
+                await generateWednesdayDates();
+            }
+        } else {
+            console.log('📝 Creando configuración inicial en Firebase...');
+            await db.collection('system_settings').doc('appointment_mode').set({
+                isWaitlistMode: false,
+                updatedAt: new Date().toISOString(),
+                updatedBy: 'system'
+            });
+            await generateWednesdayDates();
+        }
+    } catch (error) {
+        console.error('❌ Error cargando modo desde Firebase:', error);
+        await generateWednesdayDates();
+    }
+}
+
         // Generar horarios disponibles
         async function generateTimeSlots() {
     const timeSelect = document.getElementById('appointmentTime');
@@ -586,20 +803,25 @@ function toggleAcademicFields() {
             submitAppointment();
         }
 
-        // Validar formulario
-function validateForm() {
+        function validateForm() {
     const studentType = document.getElementById('studentType').value;
     
     // Campos básicos siempre requeridos
     const basicRequiredFields = [
         'participantType', 'firstName', 'lastName', 'phone', 'email', 'city',
-        'studentType', 'concentration', 'serviceType', 'appointmentDate', 'appointmentTime'
+        'studentType', 'concentration', 'serviceType'
     ];
     
-    // Si es estudiante, también requerir campus
-    const requiredFields = studentType === 'student' 
-        ? [...basicRequiredFields, 'campus']
-        : basicRequiredFields;
+    // **MODIFICADO: Solo requerir fecha/hora si NO está en modo lista de espera**
+    let requiredFields = [...basicRequiredFields];
+    
+    if (!isWaitlistModeEnabled) {
+        requiredFields.push('appointmentDate', 'appointmentTime');
+    }
+    
+    if (studentType === 'student') {
+        requiredFields.push('campus');
+    }
 
     for (let fieldId of requiredFields) {
         const field = document.getElementById(fieldId);
@@ -675,16 +897,19 @@ const appointmentData = {
     
     // Información de la cita
     serviceType: document.getElementById('serviceType').value,
-    appointmentDate: document.getElementById('appointmentDate').value,
-    appointmentTime: document.getElementById('appointmentTime').value,
+    
+    // **MODIFICADO: Usar valores reales o "Por definir"**
+    appointmentDate: document.getElementById('appointmentDate').value || 'Por definir',
+    appointmentTime: document.getElementById('appointmentTime').value || 'Por definir',
     description: document.getElementById('description').value,
     
-    // Resume URL (nuevo)
+    // Resume URL
     resumeUrl: resumeUrl,
     hasResume: resumeUrl !== null,
     
-    // Metadata
-    status: 'scheduled',
+    // **MODIFICADO: Marcar status según el modo**
+    status: isWaitlistModeEnabled ? 'waitlist' : 'scheduled',
+    isWaitlist: isWaitlistModeEnabled,
     createdAt: new Date().toISOString(),
     source: 'sistema-citas'
 };
@@ -710,45 +935,64 @@ await sendConfirmationEmail(appointmentData);
             }
         }
 
-        // Mostrar mensaje de éxito
         function showSuccessMessage(appointmentData) {
-            const [year, month, day] = appointmentData.appointmentDate.split('-');
-const dateObj = new Date(year, month - 1, day);
-            const displayDate = dateObj.toLocaleDateString('es-ES', {
-                weekday: 'long',
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-            });
+    let detailsHTML = `
+        <strong>${appointmentData.isWaitlist ? 'Registro en Lista de Espera' : 'Detalles de tu cita'}:</strong><br>
+        👤 ${appointmentData.firstName} ${appointmentData.lastName}<br>
+    `;
+    
+    if (!appointmentData.isWaitlist && appointmentData.appointmentDate !== 'Por definir') {
+        const [year, month, day] = appointmentData.appointmentDate.split('-');
+        const dateObj = new Date(year, month - 1, day);
+        const displayDate = dateObj.toLocaleDateString('es-ES', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
 
-            // Convertir hora a formato 12 horas
-            const [hours, minutes] = appointmentData.appointmentTime.split(':');
-            const hour12 = hours > 12 ? hours - 12 : (hours === '00' ? 12 : hours);
-            const ampm = hours >= 12 ? 'PM' : 'AM';
-            const displayTime = `${hour12}:${minutes} ${ampm}`;
+        const [hours, minutes] = appointmentData.appointmentTime.split(':');
+        const hour12 = hours > 12 ? hours - 12 : (hours === '00' ? 12 : hours);
+        const ampm = hours >= 12 ? 'PM' : 'AM';
+        const displayTime = `${hour12}:${minutes} ${ampm}`;
 
-            document.getElementById('appointmentDetails').innerHTML = `
-    <strong>Detalles de tu cita:</strong><br>
-    📅 ${displayDate}<br>
-    🕒 ${displayTime}<br>
-    👤 ${appointmentData.firstName} ${appointmentData.lastName}<br>
-    ${appointmentData.hasResume ? '<br>📎 Resume enviado correctamente<br>' : ''}<br>
+        detailsHTML += `
+            📅 ${displayDate}<br>
+            🕒 ${displayTime}<br>
+        `;
+    } else {
+        detailsHTML += `
+            <br><strong>⏳ Estás en lista de espera</strong><br>
+            Te contactaremos pronto para asignar tu cita.<br>
+        `;
+    }
 
-    <div style="background: rgba(255,255,255,0.2); padding: 15px; border-radius: 8px; margin-top: 15px;">
-        <strong>📍 Ubicación:</strong><br>
-        Oficina de Carreras y Colocaciones<br>
-        Edificio Extensión Morales Carrión<br><br>
-        
-        <strong>📧 Cambios o consultas:</strong><br>
-        <a href="mailto:brgonzalez@uagm.edu" style="color: white; text-decoration: underline;">brgonzalez@uagm.edu</a>
-    </div>
-`;
+    if (appointmentData.hasResume) {
+        detailsHTML += '<br>📎 Resume enviado correctamente<br>';
+    }
 
-            document.getElementById('successMessage').style.display = 'block';
-            document.getElementById('appointmentForm').style.display = 'none';
+    detailsHTML += `
+        <div style="background: rgba(255,255,255,0.2); padding: 15px; border-radius: 8px; margin-top: 15px;">
+            <strong>📍 Ubicación:</strong><br>
+            Oficina de Carreras y Colocaciones<br>
+            Edificio Extensión Morales Carrión<br><br>
+            
+            <strong>📧 Cambios o consultas:</strong><br>
+            <a href="mailto:brgonzalez@uagm.edu" style="color: white; text-decoration: underline;">brgonzalez@uagm.edu</a>
+        </div>
+    `;
 
-            showNotification('¡Cita registrada exitosamente!', 'success');
-        }
+    document.getElementById('appointmentDetails').innerHTML = detailsHTML;
+    document.getElementById('successMessage').style.display = 'block';
+    document.getElementById('appointmentForm').style.display = 'none';
+
+    showNotification(
+        appointmentData.isWaitlist 
+            ? '¡Registrado en lista de espera!' 
+            : '¡Cita registrada exitosamente!', 
+        'success'
+    );
+}
 
 // Mostrar notificación
 function showNotification(message, type = 'info') {
@@ -822,6 +1066,68 @@ function showNotification(message, type = 'info') {
         }
     }, 5000);
 }
+
+// **SISTEMA DE AUTENTICACIÓN DE ADMINISTRADOR**
+
+// ⚠️ CAMBIA ESTA CONTRASEÑA POR LA QUE QUIERAS
+const ADMIN_PASSWORD = 'umetempleo';
+
+// Verificar si ya está logueado al cargar la página
+function checkAdminSession() {
+    const isAdmin = sessionStorage.getItem('isAdmin');
+    if (isAdmin === 'true') {
+        showAdminPanel();
+    }
+}
+
+// Mostrar modal de login
+function showAdminLogin() {
+    document.getElementById('adminLoginModal').style.display = 'flex';
+    document.getElementById('adminPassword').focus();
+}
+
+// Cerrar modal de login
+function closeAdminLogin() {
+    document.getElementById('adminLoginModal').style.display = 'none';
+    document.getElementById('adminPassword').value = '';
+}
+
+// Intentar login
+function adminLogin() {
+    const password = document.getElementById('adminPassword').value;
+    
+    if (password === ADMIN_PASSWORD) {
+        // Login exitoso
+        sessionStorage.setItem('isAdmin', 'true');
+        showAdminPanel();
+        closeAdminLogin();
+        showNotification('Acceso administrativo activado', 'success');
+    } else {
+        // Contraseña incorrecta
+        showNotification('Contraseña incorrecta', 'error');
+        document.getElementById('adminPassword').value = '';
+        document.getElementById('adminPassword').focus();
+    }
+}
+
+// Mostrar panel de administrador
+function showAdminPanel() {
+    document.getElementById('adminPanel').style.display = 'block';
+    document.getElementById('adminLoginBtn').style.display = 'none';
+}
+
+// Cerrar sesión
+function adminLogout() {
+    sessionStorage.removeItem('isAdmin');
+    document.getElementById('adminPanel').style.display = 'none';
+    document.getElementById('adminLoginBtn').style.display = 'block';
+    
+    // **ELIMINADO: Ya NO cambiar el modo al cerrar sesión**
+    // El modo se mantiene como está (activado o desactivado)
+    
+    showNotification('Sesión administrativa cerrada', 'info');
+}
+
 // Enviar email de confirmación
 async function sendConfirmationEmail(appointmentData) {
     try {
@@ -866,7 +1172,6 @@ const dateObj = new Date(year, month - 1, day);
 </body>
 
 </html>
-
 
 
 
