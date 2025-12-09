@@ -684,6 +684,147 @@
     }
 }
 
+/* FOOTER PRINCIPAL */
+.main-footer {
+    background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
+    color: white;
+    padding: 60px 40px 20px;
+}
+
+.footer-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 40px;
+    margin-bottom: 40px;
+}
+
+.footer-column {
+    animation: fadeInUp 0.8s ease;
+}
+
+.footer-logo {
+    height: 80px;
+    margin-bottom: 20px;
+    background: white;
+    padding: 10px;
+    border-radius: 10px;
+}
+
+.footer-description {
+    font-size: 14px;
+    line-height: 1.6;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.footer-title {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 20px;
+    color: #c8102e;
+    border-bottom: 2px solid #c8102e;
+    padding-bottom: 10px;
+}
+
+.footer-links,
+.footer-contact,
+.footer-hours {
+    list-style: none;
+    padding: 0;
+}
+
+.footer-links li,
+.footer-contact li,
+.footer-hours li {
+    margin-bottom: 12px;
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.footer-links a,
+.footer-contact a {
+    color: rgba(255, 255, 255, 0.8);
+    text-decoration: none;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+}
+
+.footer-links a:hover,
+.footer-contact a:hover {
+    color: #c8102e;
+    transform: translateX(5px);
+}
+
+.footer-links i,
+.footer-contact i,
+.footer-hours i {
+    margin-right: 10px;
+    color: #c8102e;
+    width: 20px;
+}
+
+.footer-social {
+    text-align: center;
+    padding: 30px 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.footer-social a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 45px;
+    height: 45px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    color: white;
+    font-size: 20px;
+    margin: 0 10px;
+    transition: all 0.3s ease;
+}
+
+.footer-social a:hover {
+    background: #c8102e;
+    transform: translateY(-5px);
+}
+
+.footer-bottom {
+    text-align: center;
+    padding-top: 20px;
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.footer-bottom p {
+    margin: 5px 0;
+}
+
+/* Responsive Footer */
+@media (max-width: 768px) {
+    .main-footer {
+        padding: 40px 20px 20px;
+    }
+    
+    .footer-content {
+        grid-template-columns: 1fr;
+        gap: 30px;
+    }
+    
+    .footer-logo {
+        height: 60px;
+    }
+    
+    .footer-social a {
+        width: 40px;
+        height: 40px;
+        font-size: 18px;
+        margin: 0 5px;
+    }
+}
+
 /* SERVICES SECTION */
 .services-section {
     padding: 80px 40px;
@@ -937,9 +1078,62 @@
     </div>
 </section>
 
-        <div class="footer">
-            <p>© 2025 Universidad Ana G. Méndez - Desarrollado por: Braulio González Vélez</p>
+        <footer class="main-footer">
+    <div class="footer-content">
+        <!-- Columna 1: Logo e Info -->
+        <div class="footer-column">
+            <img src="UAGM de color.png" alt="UAGM Logo" class="footer-logo">
+            <p class="footer-description">
+                Oficina de Carreras y Colocaciones<br>
+                Universidad Ana G. Méndez
+            </p>
         </div>
+
+        <!-- Columna 2: Enlaces Rápidos -->
+        <div class="footer-column">
+            <h3 class="footer-title">Enlaces Rápidos</h3>
+            <ul class="footer-links">
+                <li><a href="https://uagm.edu/es" target="_blank"><i class="fas fa-home"></i> Portal Principal UAGM</a></li>
+                <li><a href="https://uagm.edu/es/admisiones" target="_blank"><i class="fas fa-user-graduate"></i> Admisiones</a></li>
+                <li><a href="https://uagm.edu/es/vida-estudiantil/servicios-estudiantiles" target="_blank"><i class="fas fa-hands-helping"></i> Servicios Estudiantiles</a></li>
+<li><a href="https://miuagm.uagm.edu" target="_blank"><i class="fas fa-hands-helping"></i> Portal de Estudiantes</a></li>
+                <li><a href="https://jobs.uagm.edu/" target="_blank"><i class="fas fa-briefcase"></i> Empleos Internos UAGM</a></li>
+            </ul>
+        </div>
+
+        <!-- Columna 3: Contacto -->
+        <div class="footer-column">
+            <h3 class="footer-title">Contacto</h3>
+            <ul class="footer-contact">
+                <li><i class="fas fa-envelope"></i> <a href="mailto:brgonzalez@uagm.edu">brgonzalez@uagm.edu</a></li>
+                <li><i class="fas fa-phone"></i> (787) 766-1717 Ext. 3470</li>
+                <li><i class="fas fa-map-marker-alt"></i> Recinto de Cupey<br></li>
+            </ul>
+        </div>
+
+        <!-- Columna 4: Horarios -->
+        <div class="footer-column">
+            <h3 class="footer-title">Horarios de Oficina</h3>
+            <ul class="footer-hours">
+                <li><i class="fas fa-clock"></i> Lunes - Viernes 8:00 AM - 5:00 PM</li> 
+            </ul>
+        </div>
+    </div>
+
+    <!-- Redes Sociales -->
+    <div class="footer-social">
+        <a href=<a href="https://facebook.com/uagmoficial/?locale=es_LA" target="_blank" title="Facebook"><i class="fab fa-facebook"></i></a>
+        <a href="#" target="_blank" title="Instagram"><i class="fab fa-instagram"></i></a>
+        <a href="#" target="_blank" title="LinkedIn"><i class="fab fa-linkedin"></i></a>
+        <a href="#" target="_blank" title="Twitter"><i class="fab fa-twitter"></i></a>
+    </div>
+
+    <!-- Copyright -->
+    <div class="footer-bottom">
+        <p>© 2025 Universidad Ana G. Méndez - Todos los derechos reservados</p>
+        <p>Desarrollado por: Braulio González Vélez</p>
+    </div>
+</footer>
     </div>
 
     <!-- Modal Login Admin -->
