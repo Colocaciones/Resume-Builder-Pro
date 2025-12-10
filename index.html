@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>UAGM Resume Builder Pro - Oficina de Carreras y Colocaciones Cupey</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+<!-- Scripts Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
     <style>
         * {
             margin: 0;
@@ -12,140 +16,379 @@
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            background: linear-gradient(135deg, #f5f5f5 0%, #e2e8f0 100%);
-            min-height: 100vh;
-        }
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+}
 
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-        }
+.container {
+    background: white;
+    width: 100%;
+    max-width: 100%;
+    padding: 0;
+}
 
-        .header {
-            text-align: center;
-            background: linear-gradient(135deg, #c8102e 0%, #8b0b1f 100%);
-            color: white;
-            padding: 40px;
-            border-radius: 15px;
-            margin-bottom: 20px;
-        }
+        
+        /* HERO SECTION */
+.hero-section {
+    position: relative;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
 
-        .header h1 {
-            font-size: 3.5rem;
-            font-weight: bold;
-            margin-bottom: 10px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-            animation: fadeInUp 1s ease-out;
-        }
+.hero-background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+}
 
-        .header .subtitle {
-            font-size: 1.5rem;
-            margin-bottom: 30px;
-            opacity: 0.9;
-            animation: fadeInUp 1s ease-out 0.2s both;
-        }
+.hero-slide {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-size: cover;
+    background-position: center;
+    opacity: 0;
+    transition: opacity 2s ease-in-out;
+}
 
-        .header .institution {
-            font-size: 1.2rem;
-            font-weight: 600;
-            background: rgba(255,255,255,0.15);
-            padding: 10px 20px;
-            border-radius: 25px;
-            display: inline-block;
-            animation: fadeInUp 1s ease-out 0.4s both;
-            border: 1px solid rgba(255,255,255,0.2);
-        }
+.hero-slide.active {
+    opacity: 1;
+}
 
-        .main-content {
-            background: white;
-            border-radius: 20px;
-            padding: 50px;
-            margin: 40px 0;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-            animation: fadeInUp 1s ease-out 0.6s both;
-        }
+.hero-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg"><circle cx="50" cy="50" r="2" fill="white" opacity="0.1"/></svg>');
+    animation: float 20s linear infinite;
+    z-index: 2;
+}
 
-        .hero-section {
-            text-align: center;
-            margin-bottom: 60px;
-        }
+@keyframes float {
+    from { transform: translateY(0); }
+    to { transform: translateY(-100px); }
+}
 
-        .hero-section h2 {
-            font-size: 2.5rem;
-            color: #2d3748;
-            margin-bottom: 20px;
-        }
+.hero-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    z-index: 3;
+}
 
-        .hero-section p {
-            font-size: 1.3rem;
-            color: #718096;
-            max-width: 800px;
-            margin: 0 auto 30px;
-        }
+.hero-content {
+    position: relative;
+    z-index: 10;
+    text-align: center;
+    color: white;
+    padding: 50px 40px;
+    animation: fadeInUp 1s ease;
+    background: rgba(0, 0, 0, 0.2);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    max-width: 1000px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
 
-        .cta-button {
-            background: linear-gradient(135deg, #c8102e, #8b0b1f);
-            color: white;
-            padding: 20px 40px;
-            font-size: 1.3rem;
-            font-weight: bold;
-            border: none;
-            border-radius: 50px;
-            cursor: pointer;
-            text-decoration: none;
-            display: inline-block;
-            transition: all 0.3s ease;
-            box-shadow: 0 10px 20px rgba(200, 16, 46, 0.3);
-        }
+.hero-logo {
+    height: 120px;
+    margin-bottom: 30px;
+    filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
+    animation: pulse 2s ease-in-out infinite;
+}
 
-        .cta-button:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 15px 30px rgba(200, 16, 46, 0.4);
-        }
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
 
-        .features-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 40px;
-            margin: 60px 0;
-        }
+.hero-title {
+    font-size: 48px;
+    font-weight: 800;
+    margin-bottom: 15px;
+    text-shadow: 2px 2px 8px rgba(0,0,0,0.4);
+    letter-spacing: 1px;
+}
 
-        .feature-card {
-            background: #ffffff;
-            padding: 30px;
-            border-radius: 15px;
-            text-align: center;
-            transition: transform 0.3s ease;
-            border: 2px solid #e2e8f0;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-        }
+.hero-subtitle {
+    font-size: 22px;
+    margin-bottom: 30px;
+    font-weight: 300;
+    text-shadow: 1px 1px 4px rgba(0,0,0,0.4);
+}
 
-        .feature-card:hover {
-            transform: translateY(-5px);
-            border-color: #c8102e;
-            box-shadow: 0 8px 25px rgba(200, 16, 46, 0.15);
-        }
+.hero-institution {
+    font-size: 18px;
+    font-weight: 600;
+    background: rgba(255,255,255,0.15);
+    padding: 10px 20px;
+    border-radius: 25px;
+    display: inline-block;
+    border: 1px solid rgba(255,255,255,0.2);
+    margin-bottom: 30px;
+}
 
-        .feature-icon {
-            font-size: 3rem;
-            margin-bottom: 20px;
-            display: block;
-        }
+.hero-cta {
+    background: linear-gradient(135deg, #c8102e, #8b0b1f);
+    color: white;
+    padding: 18px 45px;
+    font-size: 18px;
+    font-weight: bold;
+    border: none;
+    border-radius: 50px;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+    transition: all 0.3s ease;
+    box-shadow: 0 10px 25px rgba(200, 16, 46, 0.4);
+    margin-top: 20px;
+}
 
-        .feature-card h3 {
-            font-size: 1.5rem;
-            color: #2d3748;
-            margin-bottom: 15px;
-        }
+.hero-cta:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 15px 35px rgba(200, 16, 46, 0.5);
+}
 
-        .feature-card p {
-            color: #718096;
-            font-size: 1.1rem;
-        }
+.scroll-indicator {
+    position: absolute;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: white;
+    font-size: 30px;
+    animation: bounce 2s infinite;
+    cursor: pointer;
+    z-index: 10;
+}
+
+@keyframes bounce {
+    0%, 20%, 50%, 80%, 100% { transform: translateX(-50%) translateY(0); }
+    40% { transform: translateX(-50%) translateY(-10px); }
+    60% { transform: translateX(-50%) translateY(-5px); }
+}
+
+/* Responsive Hero */
+@media (max-width: 768px) {
+    .hero-title { font-size: 32px; }
+    .hero-subtitle { font-size: 18px; }
+    .hero-logo { height: 80px; }
+    .hero-content { padding: 30px 20px; }
+}
+
+/* FEATURES SECTION */
+.features-section {
+    padding: 100px 40px;
+    background: white;
+}
+
+.section-header {
+    text-align: center;
+    margin-bottom: 60px;
+    animation: fadeInUp 1s ease;
+}
+
+.section-title {
+    font-size: 42px;
+    color: #c8102e;
+    font-weight: 700;
+    margin-bottom: 15px;
+}
+
+.section-subtitle {
+    font-size: 20px;
+    color: #6c757d;
+    font-weight: 300;
+}
+
+.features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 40px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.feature-card {
+    background: #ffffff;
+    padding: 40px 30px;
+    border-radius: 15px;
+    text-align: center;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    border: 2px solid #e2e8f0;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.feature-card:hover {
+    transform: translateY(-10px);
+    border-color: #c8102e;
+    box-shadow: 0 15px 40px rgba(200, 16, 46, 0.15);
+}
+
+.feature-icon {
+    font-size: 3.5rem;
+    margin-bottom: 20px;
+    display: block;
+}
+
+.feature-card h3 {
+    font-size: 1.5rem;
+    color: #2d3748;
+    margin-bottom: 15px;
+    font-weight: 700;
+}
+
+.feature-card p {
+    color: #718096;
+    font-size: 1.1rem;
+    line-height: 1.6;
+}
+
+/* Responsive Features */
+@media (max-width: 768px) {
+    .features-section {
+        padding: 60px 20px;
+    }
+    
+    .section-title {
+        font-size: 32px;
+    }
+    
+    .features-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* TARGET AUDIENCE SECTION */
+.target-audience {
+    background: linear-gradient(135deg, #4a5568, #2d3748);
+    color: white;
+    padding: 100px 40px;
+    text-align: center;
+}
+
+.target-audience h2 {
+    font-size: 42px;
+    margin-bottom: 30px;
+    font-weight: 700;
+}
+
+.audience-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 30px;
+    margin-top: 40px;
+    max-width: 1200px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.audience-card {
+    background: rgba(255,255,255,0.1);
+    padding: 40px 30px;
+    border-radius: 15px;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.1);
+    transition: all 0.3s ease;
+}
+
+.audience-card:hover {
+    transform: translateY(-5px);
+    background: rgba(255,255,255,0.15);
+}
+
+.audience-card h3 {
+    font-size: 1.5rem;
+    margin-bottom: 15px;
+}
+
+.audience-card p {
+    font-size: 1.1rem;
+    opacity: 0.9;
+}
+
+/* BENEFITS SECTION */
+.benefits-section {
+    padding: 100px 40px;
+    background: #f8f9fa;
+}
+
+.benefits-section h2 {
+    text-align: center;
+    font-size: 42px;
+    color: #2d3748;
+    margin-bottom: 50px;
+    font-weight: 700;
+}
+
+.benefits-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 30px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.benefit-item {
+    display: flex;
+    align-items: center;
+    padding: 25px;
+    background: white;
+    border-radius: 10px;
+    border-left: 5px solid #c8102e;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+}
+
+.benefit-item:hover {
+    transform: translateX(10px);
+    box-shadow: 0 4px 15px rgba(200, 16, 46, 0.15);
+}
+
+.benefit-item .check {
+    color: #c8102e;
+    font-size: 1.8rem;
+    margin-right: 15px;
+}
+
+.benefit-item span {
+    font-size: 1.1rem;
+    color: #2d3748;
+    font-weight: 500;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .target-audience,
+    .benefits-section {
+        padding: 60px 20px;
+    }
+    
+    .target-audience h2,
+    .benefits-section h2 {
+        font-size: 32px;
+    }
+    
+    .audience-grid,
+    .benefits-list {
+        grid-template-columns: 1fr;
+    }
+}
 
         .target-audience {
             background: linear-gradient(135deg, #4a5568, #2d3748);
@@ -293,64 +536,70 @@
 
         }
 
-/* Modal de Registro */
-.registration-modal {
-    position: fixed;
-    z-index: 1000;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0,0,0,0.6);
-    display: none;
-    justify-content: center;
-    align-items: center;
-    overflow-y: auto;
+/* REGISTRATION SECTION */
+.registration-section {
+    padding: 100px 40px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
 }
 
-.registration-modal-content {
+.registration-container {
+    max-width: 900px;
+    margin: 0 auto;
     background: white;
-    border-radius: 15px;
-    width: 90%;
-    max-width: 600px;
-    max-height: 90vh;
-    overflow-y: auto;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-    animation: modalSlideIn 0.3s ease;
+    border-radius: 20px;
+    padding: 50px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
 }
 
-.registration-modal-header {
-    background: linear-gradient(135deg, #c8102e 0%, #8b0b1f 100%);
-    color: white;
-    padding: 25px;
-    border-radius: 15px 15px 0 0;
+.registration-header {
     text-align: center;
+    margin-bottom: 40px;
 }
 
-.registration-modal-body {
-    padding: 30px;
+.registration-header h2 {
+    font-size: 36px;
+    color: #c8102e;
+    font-weight: 700;
+    margin-bottom: 10px;
+}
+
+.registration-header p {
+    font-size: 18px;
+    color: #6c757d;
+}
+
+.registration-form {
+    display: grid;
+    gap: 25px;
 }
 
 .form-group {
-    margin-bottom: 20px;
+    margin-bottom: 25px;
 }
 
 .form-group label {
     display: block;
-    margin-bottom: 8px;
+    margin-bottom: 10px;
     font-weight: 600;
     color: #2d3748;
+    font-size: 15px;
+}
+
+.form-group label i {
+    color: #c8102e;
+    margin-right: 8px;
 }
 
 .form-group input,
 .form-group select,
 .form-group textarea {
     width: 100%;
-    padding: 12px;
+    padding: 14px 16px;
     border: 2px solid #e2e8f0;
-    border-radius: 8px;
-    font-size: 14px;
-    transition: border-color 0.3s ease;
+    border-radius: 10px;
+    font-size: 15px;
+    transition: all 0.3s ease;
+    background: #f8f9fa;
 }
 
 .form-group input:focus,
@@ -358,80 +607,289 @@
 .form-group textarea:focus {
     outline: none;
     border-color: #c8102e;
+    background: white;
+    box-shadow: 0 0 0 3px rgba(200, 16, 46, 0.1);
 }
 
 .conditional-fields {
     display: none;
-    background: #f8f9fa;
-    padding: 20px;
-    border-radius: 8px;
-    margin-top: 15px;
-    border-left: 4px solid #c8102e;
+    background: linear-gradient(135deg, #fff5f5 0%, #ffe8e8 100%);
+    padding: 30px;
+    border-radius: 15px;
+    margin-top: 20px;
+    border: 2px solid #c8102e;
+    box-shadow: 0 4px 15px rgba(200, 16, 46, 0.1);
+}
+
+.conditional-fields h4 {
+    color: #c8102e;
+    font-size: 18px;
+    margin-bottom: 20px;
+    font-weight: 700;
 }
 
 .checkbox-group {
     display: flex;
     align-items: center;
     gap: 10px;
+    background: white;
+    padding: 15px;
+    border-radius: 8px;
+    border: 2px solid #e2e8f0;
 }
 
 .checkbox-group input[type="checkbox"] {
-    width: auto;
+    width: 20px;
+    height: 20px;
     margin: 0;
+    cursor: pointer;
 }
 
-.modal-buttons {
+.checkbox-group label {
+    margin: 0;
+    cursor: pointer;
+}
+
+.form-buttons {
     display: flex;
-    gap: 15px;
+    gap: 20px;
     justify-content: center;
-    margin-top: 30px;
-    padding-top: 20px;
-    border-top: 1px solid #e2e8f0;
+    margin-top: 40px;
+    padding-top: 30px;
+    border-top: 2px solid #e2e8f0;
 }
 
 .btn-submit {
     background: linear-gradient(135deg, #c8102e, #8b0b1f);
     color: white;
-    padding: 12px 30px;
+    padding: 16px 50px;
     border: none;
-    border-radius: 25px;
-    font-size: 16px;
+    border-radius: 50px;
+    font-size: 18px;
     font-weight: bold;
     cursor: pointer;
-    transition: transform 0.3s ease;
+    transition: all 0.3s ease;
+    box-shadow: 0 6px 20px rgba(200, 16, 46, 0.3);
 }
 
 .btn-submit:hover {
-    transform: translateY(-2px);
+    transform: translateY(-3px);
+    box-shadow: 0 10px 30px rgba(200, 16, 46, 0.4);
 }
 
-.btn-cancel {
-    background: #6c757d;
+.btn-submit:active {
+    transform: translateY(-1px);
+}
+
+/* MAIN FOOTER */
+.main-footer {
+    background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
     color: white;
-    padding: 12px 30px;
-    border: none;
-    border-radius: 25px;
-    font-size: 16px;
-    cursor: pointer;
+    padding: 60px 40px 20px;
 }
 
-@keyframes modalSlideIn {
-    from { transform: translateY(-50px); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
+.footer-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 40px;
+    margin-bottom: 40px;
 }
+
+.footer-column {
+    animation: fadeInUp 0.8s ease;
+}
+
+.footer-logo {
+    height: 80px;
+    margin-bottom: 20px;
+    background: white;
+    padding: 10px;
+    border-radius: 10px;
+}
+
+.footer-description {
+    font-size: 14px;
+    line-height: 1.6;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.footer-title {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 20px;
+    color: #c8102e;
+    border-bottom: 2px solid #c8102e;
+    padding-bottom: 10px;
+}
+
+.footer-links,
+.footer-contact,
+.footer-hours {
+    list-style: none;
+    padding: 0;
+}
+
+.footer-links li,
+.footer-contact li,
+.footer-hours li {
+    margin-bottom: 12px;
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.footer-links a,
+.footer-contact a {
+    color: rgba(255, 255, 255, 0.8);
+    text-decoration: none;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+}
+
+.footer-links a:hover,
+.footer-contact a:hover {
+    color: #c8102e;
+    transform: translateX(5px);
+}
+
+.footer-links i,
+.footer-contact i,
+.footer-hours i {
+    margin-right: 10px;
+    color: #c8102e;
+    width: 20px;
+}
+
+.footer-social {
+    text-align: center;
+    padding: 30px 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.footer-social a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 45px;
+    height: 45px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    color: white;
+    font-size: 20px;
+    margin: 0 10px;
+    transition: all 0.3s ease;
+}
+
+.footer-social a:hover {
+    background: #c8102e;
+    transform: translateY(-5px);
+}
+
+.footer-bottom {
+    text-align: center;
+    padding-top: 20px;
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.footer-bottom p {
+    margin: 5px 0;
+}
+
+/* Responsive Footer */
+@media (max-width: 768px) {
+    .main-footer {
+        padding: 40px 20px 20px;
+    }
+    
+    .footer-content {
+        grid-template-columns: 1fr;
+        gap: 30px;
+    }
+    
+    .footer-logo {
+        height: 60px;
+    }
+    
+    .footer-social a {
+        width: 40px;
+        height: 40px;
+        font-size: 18px;
+        margin: 0 5px;
+    }
+    
+    .registration-section {
+        padding: 60px 20px;
+    }
+    
+    .registration-container {
+        padding: 30px 20px;
+    }
+    
+    .registration-header h2 {
+        font-size: 28px;
+    }
+}
+
     </style>
 </head>
 
 <script>
-function openRegistrationModal() {
-    document.getElementById('registration-modal').style.display = 'flex';
+// ============= CONFIGURACIÓN FIREBASE =============
+const firebaseConfig = {
+    apiKey: "AIzaSyBFgSuKNJMUoVcKgHjsqOsInArSPBsb32A",
+    authDomain: "uagm-portal-de-empleo-17aed.firebaseapp.com",
+    projectId: "uagm-portal-de-empleo-17aed",
+    storageBucket: "uagm-portal-de-empleo-17aed.firebasestorage.app",
+    messagingSenderId: "582147767835",
+    appId: "1:582147767835:web:546ab8f2557b6da6ccc2be"
+};
+
+// Inicializar Firebase
+let app, db;
+try {
+    app = firebase.initializeApp(firebaseConfig);
+    db = firebase.firestore();
+    console.log('✅ Firebase inicializado correctamente en Resume Builder');
+} catch (error) {
+    console.error('❌ Error inicializando Firebase:', error);
 }
 
-function closeRegistrationModal() {
-    document.getElementById('registration-modal').style.display = 'none';
-    clearForm();
+// ============= SLIDESHOW FUNCTIONALITY =============
+let currentSlide = 0;
+
+function nextSlide() {
+    const slides = document.querySelectorAll('.hero-slide');
+    slides[currentSlide].classList.remove('active');
+    currentSlide = (currentSlide + 1) % slides.length;
+    slides[currentSlide].classList.add('active');
 }
 
+// Iniciar slideshow cuando la página cargue
+document.addEventListener('DOMContentLoaded', function() {
+    setInterval(nextSlide, 5000);
+    
+    // Scroll suave
+    const scrollIndicator = document.querySelector('.scroll-indicator');
+    if (scrollIndicator) {
+        scrollIndicator.addEventListener('click', () => {
+            document.querySelector('.features-section').scrollIntoView({ behavior: 'smooth' });
+        });
+    }
+    
+    const ctaButton = document.querySelector('.hero-cta');
+    if (ctaButton) {
+        ctaButton.addEventListener('click', (e) => {
+            e.preventDefault();
+            document.querySelector('#registro').scrollIntoView({ behavior: 'smooth' });
+        });
+    }
+});
+
+// ============= TOGGLE STUDENT FIELDS =============
 function toggleStudentFields() {
     const tipoUsuario = document.getElementById('tipo-usuario').value;
     const studentFields = document.getElementById('student-fields');
@@ -443,177 +901,242 @@ function toggleStudentFields() {
     }
 }
 
-function submitRegistration() {
-    console.log('=== INICIO DEBUG ===');
+// ============= SUBMIT REGISTRATION (NUEVA FUNCIÓN CON FIREBASE) =============
+async function submitRegistration() {
+    console.log('=== INICIANDO REGISTRO CON FIREBASE ===');
     
-    // Verificar tipo de usuario
-    const tipoUsuario = document.getElementById('tipo-usuario').value;
-    console.log('Tipo de usuario:', tipoUsuario);
-    
-    console.log('Antes de validar...');
-    
-    // Validar campos obligatorios
+    // Validar formulario
     if (!validateForm()) {
-        console.log('VALIDACIÓN FALLÓ');
+        console.log('❌ Validación falló');
         return;
     }
     
-    console.log('VALIDACIÓN PASÓ - enviando datos...');
+    console.log('✅ Validación pasó - guardando en Firebase...');
     
-    // Recopilar datos
-    const formData = collectFormData();
-    console.log('Datos recopilados:', formData);
+    // Cambiar botón a loading
+    const submitBtn = document.querySelector('.btn-submit');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
+    submitBtn.disabled = true;
     
-    // Enviar a Google Forms
-    sendToGoogleForms(formData);
+    try {
+        // Guardar en Firebase
+        await saveToFirebase();
+        
+        // Mostrar éxito
+        showSuccessMessage();
+        
+        // Limpiar formulario
+        clearForm();
+        
+        // Redirigir después de 2 segundos
+        setTimeout(() => {
+            window.open('app.html', '_blank');
+        }, 2000);
+        
+    } catch (error) {
+        console.error('❌ Error:', error);
+        alert('Error al guardar el registro. Por favor intenta de nuevo.');
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+    }
 }
+
+// ============= VALIDAR FORMULARIO =============
 function validateForm() {
-    const requiredFields = ['tipo-participante', 'nombre', 'apellidos', 'telefono', 'email', 'pueblo', 'tipo-usuario', 'grado-academico'];
+    const requiredFields = [
+        'tipo-participante',
+        'nombre',
+        'apellidos',
+        'telefono',
+        'email',
+        'pueblo',
+        'tipo-usuario',
+        'grado-academico'
+    ];
     
     for (let field of requiredFields) {
         const element = document.getElementById(field);
-        if (!element.value.trim()) {
-            alert(`Por favor completa el campo: ${element.previousElementSibling.textContent}`);
-            element.focus();
+        if (!element || !element.value.trim()) {
+            const label = element ? element.previousElementSibling?.textContent : field;
+            alert(`Por favor completa el campo: ${label}`);
+            if (element) element.focus();
             return false;
         }
     }
     
+    // Validar email
+    const email = document.getElementById('email').value;
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        alert('Por favor ingresa un email válido');
+        document.getElementById('email').focus();
+        return false;
+    }
+    
     return true;
 }
-function collectFormData() {
-    const today = new Date();
-    
-    const data = {
-        'entry.1074346405_year': today.getFullYear(),
-        'entry.1074346405_month': today.getMonth() + 1,
-        'entry.1074346405_day': today.getDate(),
-        'entry.197550554': document.getElementById('tipo-participante').value,
-        'entry.567871006': document.getElementById('nombre').value,
-        'entry.294478372': document.getElementById('apellidos').value,
-        'entry.1199542402': document.getElementById('telefono').value,
-        'entry.822768235': document.getElementById('email').value,
-        'entry.908289735': document.getElementById('pueblo').value,
-        'entry.1594573126': document.getElementById('tipo-usuario').value,
-        'entry.252216177': document.getElementById('grado-academico').value,
-        'entry.143403103': 'Redacción de Resumé'
-    };
-    
-    // Agregar campos de estudiante (EXCEPTO candidato-graduacion)
-    const tipoUsuario = document.getElementById('tipo-usuario').value;
-    if (tipoUsuario === 'Estudiante') {
-        const recinto = document.getElementById('recinto').value;
-        const idEstudiante = document.getElementById('id-estudiante').value;
-        const horario = document.getElementById('horario').value;
-        const anosEstudios = document.getElementById('anos-estudios').value;
-        const divisionAcademica = document.getElementById('division-academica').value;
-        const concentracion = document.getElementById('concentracion').value;
+
+// ============= GUARDAR EN FIREBASE =============
+async function saveToFirebase() {
+    try {
+        // Recopilar datos básicos
+        const formData = {
+    // Fecha y hora (tomada del campo del formulario)
+    registrationDate: document.getElementById('fecha-registro').value, // Formato YYYY-MM-DD
+    registrationDateTime: new Date().toISOString(), // Fecha y hora completa
+    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+            
+            // Datos básicos
+            participantType: document.getElementById('tipo-participante').value,
+            firstName: document.getElementById('nombre').value.trim(),
+            lastName: document.getElementById('apellidos').value.trim(),
+            phone: document.getElementById('telefono').value.trim(),
+            email: document.getElementById('email').value.trim().toLowerCase(),
+            city: document.getElementById('pueblo').value.trim(),
+            
+            // Tipo de usuario
+            userType: document.getElementById('tipo-usuario').value,
+            academicDegree: document.getElementById('grado-academico').value,
+            concentration: document.getElementById('concentracion').value.trim() || null,
+            
+            // Servicio solicitado
+            service: 'Resume Builder Registration',
+            serviceType: 'Redacción de Resumé',
+            
+            // Metadata
+            source: 'Resume Builder Web Form',
+            status: 'pending',
+            
+            // Inicializar campos de estudiante como null
+            campus: null,
+            studentId: null,
+            schedule: null,
+            studyYears: null,
+            division: null,
+            graduationCandidate: null
+        };
         
-        if (recinto) data['entry.1416823813'] = recinto;
-        if (idEstudiante) data['entry.116228697'] = idEstudiante;
-        if (horario) data['entry.1549341664'] = horario;
-        if (anosEstudios) data['entry.325485168'] = anosEstudios;
-        if (divisionAcademica) data['entry.1608125740'] = divisionAcademica;
-        if (concentracion) data['entry.687301913'] = concentracion;
-    }
-    
-    return data;
-}
-
-function clearForm() {
-    document.getElementById('tipo-participante').value = '';
-    document.getElementById('nombre').value = '';
-    document.getElementById('apellidos').value = '';
-    document.getElementById('telefono').value = '';
-    document.getElementById('email').value = '';
-    document.getElementById('pueblo').value = '';
-    document.getElementById('tipo-usuario').value = '';
-    document.getElementById('recinto').value = '';
-    document.getElementById('id-estudiante').value = '';
-    document.getElementById('horario').value = '';
-    document.getElementById('anos-estudios').value = '';
-    document.getElementById('division-academica').value = '';
-    document.getElementById('concentracion').value = '';
-    document.getElementById('candidato-graduacion').value = '';
-    document.getElementById('grado-academico').value = '';
-    document.getElementById('servicio-resume').checked = true;
-    
-    // Ocultar campos de estudiante
-    document.getElementById('student-fields').style.display = 'none';
-}
-
-function sendToGoogleForms(data) {
-    const formURL = 'https://docs.google.com/forms/u/0/d/e/1FAIpQLSeebcRfFJkR25oUw9PVhj9ixQB5WGmxip7qhulxKdXGZx5xWA/formResponse';
-    
-    const formData = new FormData();
-    
-    // Agregar todos los datos al FormData
-    Object.keys(data).forEach(key => {
-        if (data[key]) {
-            formData.append(key, data[key]);
+        // Agregar campos de estudiante si aplica
+        const tipoUsuario = document.getElementById('tipo-usuario').value;
+        if (tipoUsuario === 'Estudiante') {
+            const studentFields = document.getElementById('student-fields');
+            if (studentFields && studentFields.style.display !== 'none') {
+                formData.campus = document.getElementById('recinto').value || null;
+                formData.studentId = document.getElementById('id-estudiante').value.trim() || null;
+                formData.schedule = document.getElementById('horario').value || null;
+                formData.studyYears = document.getElementById('anos-estudios').value || null;
+                formData.division = document.getElementById('division-academica').value || null;
+                formData.graduationCandidate = document.getElementById('candidato-graduacion').value || null;
+            }
         }
-    });
-    
-    // Enviar datos
-    fetch(formURL, {
-        method: 'POST',
-        body: formData,
-        mode: 'no-cors'
-    }).then(() => {
-        alert('¡Registro exitoso! Serás redirigido a la aplicación.');
-        closeRegistrationModal();
         
-        // Aquí puedes redirigir a tu Resume Builder
-        window.open('https://colocaciones.github.io/Resume-Builder-Pro/app.html', '_blank');
+        console.log('📤 Datos a guardar:', formData);
         
-    }).catch(error => {
-        console.error('Error:', error);
-        alert('¡Registro completado! Gracias por registrarte.');
-        closeRegistrationModal();
-        clearForm();
-    });
-}
-
-// Cerrar modal al hacer clic fuera
-window.onclick = function(event) {
-    const modal = document.getElementById('registration-modal');
-    if (event.target == modal) {
-        closeRegistrationModal();
+        // Guardar en Firestore
+        const docRef = await db.collection('resumeRegistrations').add(formData);
+        console.log('✅ Registro guardado con ID:', docRef.id);
+        
+        return docRef.id;
+        
+    } catch (error) {
+        console.error('❌ Error guardando en Firebase:', error);
+        throw error;
     }
-}
-</script>
+// Auto-llenar fecha de hoy en el campo de fecha
+document.addEventListener('DOMContentLoaded', function() {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    const fechaHoy = `${year}-${month}-${day}`;
+    
+    const fechaInput = document.getElementById('fecha-registro');
+    if (fechaInput) {
+        fechaInput.value = fechaHoy;
+    }
+});
 
+}
+
+// ============= MOSTRAR MENSAJE DE ÉXITO =============
+function showSuccessMessage() {
+    const form = document.getElementById('registration-form');
+    const successMessage = document.createElement('div');
+    successMessage.className = 'success-message';
+    successMessage.innerHTML = `
+        <div style="background: #d4edda; border: 2px solid #28a745; border-radius: 15px; padding: 40px; text-align: center; margin: 20px 0; animation: fadeInUp 0.6s ease;">
+            <i class="fas fa-check-circle" style="font-size: 64px; color: #28a745; margin-bottom: 20px;"></i>
+            <h3 style="color: #155724; margin-bottom: 15px; font-size: 28px;">¡Registro Exitoso!</h3>
+            <p style="color: #155724; margin-bottom: 10px; font-size: 18px;">Tu información ha sido guardada correctamente.</p>
+            <p style="color: #155724; font-size: 16px;">Serás redirigido a la aplicación en unos segundos...</p>
+        </div>
+    `;
+    
+    form.parentNode.insertBefore(successMessage, form);
+    form.style.display = 'none';
+    
+    // Scroll al mensaje
+    successMessage.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+// ============= LIMPIAR FORMULARIO =============
+function clearForm() {
+    document.getElementById('registration-form').reset();
+    document.getElementById('student-fields').style.display = 'none';
+    
+    const submitBtn = document.querySelector('.btn-submit');
+    submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Registrarse y Acceder';
+    submitBtn.disabled = false;
+}
+
+console.log('✅ Resume Builder con Firebase cargado correctamente');
+</script>
 
 <body>
     <div class="container">
-        <header class="header">
-          <div style="position: relative; text-align: center;">
-    <img src="logo blanco.png" alt="logo blanco" style="position: absolute; left: 5px; top: 120%; transform: translateY(-50%); height: 150px;">
-    <h1 class="floating">📄 UAGM Resume Builder Pro</h1>
-</div>
-            <p class="subtitle">Crea tu resume profesional en minutos</p>
-            <div class="institution">Universidad Ana G. Méndez Oficina de Carreras y Colocaciones - Recinto de Cupey</div>
-        </header>
+        <!-- HERO SECTION -->
+        <div class="hero-section">
+            <div class="hero-overlay"></div>
+            <div class="hero-background">
+                <div class="hero-slide active" style="background-image: url('https://images.unsplash.com/photo-1586281380349-632531db7ed4?w=1920');"></div>
+                <div class="hero-slide" style="background-image: url('https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=1920');"></div>
+                <div class="hero-slide" style="background-image: url('https://images.unsplash.com/photo-1499750310107-5fef28a66643?w=1920');"></div>
+                <div class="hero-slide" style="background-image: url('https://images.unsplash.com/photo-1517842645767-c639042777db?w=1920');"></div>
+            </div>
+            
+            <div class="hero-content">
+                <img src="logo blanco.png" alt="UAGM Logo" class="hero-logo">
+                <h1 class="hero-title">📄 UAGM Resume Builder Pro</h1>
+                <p class="hero-subtitle">Crea tu resume profesional en minutos</p>
+                <div class="hero-institution">Universidad Ana G. Méndez - Oficina de Carreras y Colocaciones</div>
+                <a href="#registro" class="hero-cta">🚀 Comienza Ahora</a>
+            </div>
+            
+            <div class="scroll-indicator">
+                <i class="fas fa-chevron-down"></i>
+            </div>
+        </div>
 
-        <main class="main-content">
-            <section class="hero-section">
-                <h2>¡Destaca en el Mercado Laboral!</h2>
-                <p>Nuestra herramienta gratuita te permite crear un resume profesional con plantillas modernas, múltiples fuentes y exportación a PDF y Word.</p>
-               <a href="javascript:void(0)" onclick="openRegistrationModal()" class="cta-button">🚀 Registrate y Crea tu Resume</a>
-            </section>
-
-            <section class="features-grid">
+            <!-- FEATURES SECTION -->
+        <section class="features-section">
+            <div class="section-header">
+                <h2 class="section-title">Características Principales</h2>
+                <p class="section-subtitle">Todo lo que necesitas para crear un resume excepcional</p>
+            </div>
+            
+            <div class="features-grid">
                 <div class="feature-card">
                     <span class="feature-icon">🎨</span>
                     <h3>Variedad de Plantillas Profesionales</h3>
-                    <p>Encuentra el estilo perfecto para tu carrera.</p>
+                    <p>Encuentra el estilo perfecto para tu carrera con nuestras plantillas modernas y elegantes.</p>
                 </div>
 
                 <div class="feature-card">
-    <span class="feature-icon">📝</span>
-    <h3>Generador de Cartas</h3>
-    <p>Crea cartas de presentación profesionales que complementen perfectamente tu resumé.</p>
-</div>
+                    <span class="feature-icon">📝</span>
+                    <h3>Generador de Cartas</h3>
+                    <p>Crea cartas de presentación profesionales que complementen perfectamente tu resumé.</p>
+                </div>
 
                 <div class="feature-card">
                     <span class="feature-icon">🏷️</span>
@@ -623,14 +1146,14 @@ window.onclick = function(event) {
 
                 <div class="feature-card">
                     <span class="feature-icon">📱</span>
-                    <h3>Interfaz Facil de Usar</h3>
-                    <p>Fácil de usar en computadora, tablet o móvil. Vista previa en tiempo real.</p>
+                    <h3>Interfaz Fácil de Usar</h3>
+                    <p>Accesible desde computadora, tablet o móvil con vista previa en tiempo real.</p>
                 </div>
 
                 <div class="feature-card">
                     <span class="feature-icon">📄</span>
                     <h3>Exportación Profesional</h3>
-                    <p>Descarga en PDF de alta calidad o Word. Sin problemas de formato.</p>
+                    <p>Descarga en PDF de alta calidad o Word sin problemas de formato.</p>
                 </div>
 
                 <div class="feature-card">
@@ -638,56 +1161,58 @@ window.onclick = function(event) {
                     <h3>Envío por Email</h3>
                     <p>Envía tu resume directamente por email con mensaje personalizado.</p>
                 </div>
-            </section>
+            </div>
+        </section>
 
-            <section class="target-audience">
-                <h2>¿Para Quién es Esta Herramienta?</h2>
-                <div class="audience-grid">
-                    <div class="audience-card">
-                        <h3>🎓 Estudiantes</h3>
-                        <p>Crea tu primer resume o actualiza el actual para prácticas profesionales e internados.</p>
-                    </div>
-                    <div class="audience-card">
-                        <h3>👨‍🎓 Exalumnos</h3>
-                        <p>Mantén tu resumé actualizado para nuevas oportunidades laborales y ascensos.</p>
-                    </div>
-                    <div class="audience-card">
-                        <h3>🏘️ Comunidad</h3>
-                        <p>Abierto a toda la comunidad que necesite crear un resumé profesional.</p>
-                    </div>
+            <!-- TARGET AUDIENCE SECTION -->
+        <section class="target-audience">
+            <h2>¿Para Quién es Esta Herramienta?</h2>
+            <div class="audience-grid">
+                <div class="audience-card">
+                    <h3>🎓 Estudiantes</h3>
+                    <p>Crea tu primer resume o actualiza el actual para prácticas profesionales e internados.</p>
                 </div>
-            </section>
+                <div class="audience-card">
+                    <h3>👨‍🎓 Exalumnos</h3>
+                    <p>Mantén tu resumé actualizado para nuevas oportunidades laborales y ascensos.</p>
+                </div>
+                <div class="audience-card">
+                    <h3>🏘️ Comunidad</h3>
+                    <p>Abierto a toda la comunidad que necesite crear un resumé profesional.</p>
+                </div>
+            </div>
+        </section>
 
-            <section class="benefits-section">
-                <h2>¿Por Qué Elegir Resume Builder Pro?</h2>
-                <div class="benefits-list">
-                    <div class="benefit-item">
-                        <span class="check">✅</span>
-                        <span>Completamente gratuito</span>
-                    </div>
-                    <div class="benefit-item">
-                        <span class="check">✅</span>
-                        <span>No requiere instalación</span>
-                    </div>
-                    <div class="benefit-item">
-                        <span class="check">✅</span>
-                        <span>Disponible 24/7</span>
-                    </div>
-                    <div class="benefit-item">
-                        <span class="check">✅</span>
-                        <span>Soporte bilingüe (Español/Inglés)</span>
-                    </div>
-                    <div class="benefit-item">
-                        <span class="check">✅</span>
-                        <span>Resultados profesionales</span>
-                    </div>
-                    <div class="benefit-item">
-                        <span class="check">✅</span>
-                        <span>Fácil de usar</span>
-                    </div>
+        <!-- BENEFITS SECTION -->
+        <section class="benefits-section">
+            <h2>¿Por Qué Elegir Resume Builder Pro?</h2>
+            <div class="benefits-list">
+                <div class="benefit-item">
+                    <span class="check">✅</span>
+                    <span>Completamente gratuito</span>
                 </div>
-            </section>
-        </main>
+                <div class="benefit-item">
+                    <span class="check">✅</span>
+                    <span>No requiere instalación</span>
+                </div>
+                <div class="benefit-item">
+                    <span class="check">✅</span>
+                    <span>Disponible 24/7</span>
+                </div>
+                <div class="benefit-item">
+                    <span class="check">✅</span>
+                    <span>Soporte bilingüe (Español/Inglés)</span>
+                </div>
+                <div class="benefit-item">
+                    <span class="check">✅</span>
+                    <span>Resultados profesionales</span>
+                </div>
+                <div class="benefit-item">
+                    <span class="check">✅</span>
+                    <span>Fácil de usar</span>
+                </div>
+            </div>
+        </section>
 
         <footer class="footer-cta">
             <h2>¡Comienza Hoy Mismo!</h2>
@@ -703,16 +1228,19 @@ window.onclick = function(event) {
             </div>
         </footer>
     </div>
-<!-- Modal de Registro -->
-<div id="registration-modal" class="registration-modal">
-    <div class="registration-modal-content">
-        <div class="registration-modal-header">
-            <h2>📝 Registro - UAGM Resume Builder Pro</h2>
-            <p>Completa tu información para acceder</p>
-        </div>
-        
-        <div class="registration-modal-body">
-            <div id="registration-form">
+<!-- REGISTRATION SECTION -->
+        <section id="registro" class="registration-section">
+            <div class="registration-container">
+                <div class="registration-header">
+                    <h2>📝 Registro - UAGM Resume Builder Pro</h2>
+                    <p>Completa tu información para acceder a la herramienta</p>
+                </div>
+                
+                <form id="registration-form" class="registration-form">
+                <div class="form-group">
+                    <label><i class="fas fa-calendar"></i> Fecha de Registro:</label>
+                    <input type="date" id="fecha-registro" required readonly style="background: #e9ecef; cursor: not-allowed;">
+                </div>
                 <div class="form-group">
                     <label>Tipo de participante:</label>
                     <select id="tipo-participante" required>
@@ -845,15 +1373,73 @@ window.onclick = function(event) {
                     </div>
                 </div>
 
-                <div class="modal-buttons">
-                    <button type="button" class="btn-submit" onclick="submitRegistration()">Registrarse</button>
-                    <button type="button" class="btn-cancel" onclick="closeRegistrationModal()">Cancelar</button>
+                <div class="form-buttons">
+                        <button type="button" class="btn-submit" onclick="submitRegistration()">
+                            <i class="fas fa-paper-plane"></i> Registrarse y Acceder
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+<!-- MAIN FOOTER -->
+        <footer class="main-footer">
+            <div class="footer-content">
+                <!-- Columna 1: Logo e Info -->
+                <div class="footer-column">
+                    <img src="UAGM de color.png" alt="UAGM Logo" class="footer-logo">
+                    <p class="footer-description">
+                        Oficina de Carreras y Colocaciones<br>
+                        Universidad Ana G. Méndez
+                    </p>
+                </div>
+
+                <!-- Columna 2: Enlaces Rápidos -->
+                <div class="footer-column">
+                    <h3 class="footer-title">Enlaces Rápidos</h3>
+                    <ul class="footer-links">
+                        <li><a href="https://uagm.edu/es" target="_blank"><i class="fas fa-home"></i> Portal Principal UAGM</a></li>
+                        <li><a href="https://uagm.edu/es/admisiones" target="_blank"><i class="fas fa-user-graduate"></i> Admisiones</a></li>
+                        <li><a href="https://uagm.edu/es/vida-estudiantil/servicios-estudiantiles" target="_blank"><i class="fas fa-hands-helping"></i> Servicios Estudiantiles</a></li>
+                        <li><a href="https://miuagm.uagm.edu" target="_blank"><i class="fas fa-graduation-cap"></i> Portal de Estudiantes</a></li>
+                        <li><a href="https://jobs.uagm.edu/" target="_blank"><i class="fas fa-briefcase"></i> Empleos Internos UAGM</a></li>
+                    </ul>
+                </div>
+
+                <!-- Columna 3: Contacto -->
+                <div class="footer-column">
+                    <h3 class="footer-title">Contacto</h3>
+                    <ul class="footer-contact">
+                        <li><i class="fas fa-envelope"></i> <a href="mailto:carreras_colocacionescu@uagm.edu">carreras_colocacionescu@uagm.edu</a></li>
+                        <li><i class="fas fa-phone"></i> (787) 766-1717 Ext. 3662</li>
+                        <li><i class="fas fa-map-marker-alt"></i> Recinto de Cupey</li>
+                    </ul>
+                </div>
+
+                <!-- Columna 4: Horarios -->
+                <div class="footer-column">
+                    <h3 class="footer-title">Horarios de Oficina</h3>
+                    <ul class="footer-hours">
+                        <li><i class="fas fa-clock"></i> Lunes - Viernes</li>
+                        <li>8:00 AM - 5:00 PM</li>
+                    </ul>
                 </div>
             </div>
-        </div>
+
+            <!-- Redes Sociales -->
+            <div class="footer-social">
+                <a href="https://facebook.com/uagmoficial/?locale=es_LA" target="_blank" title="Facebook"><i class="fab fa-facebook"></i></a>
+                <a href="#" target="_blank" title="Instagram"><i class="fab fa-instagram"></i></a>
+                <a href="#" target="_blank" title="LinkedIn"><i class="fab fa-linkedin"></i></a>
+                <a href="#" target="_blank" title="Twitter"><i class="fab fa-twitter"></i></a>
+            </div>
+
+            <!-- Copyright -->
+            <div class="footer-bottom">
+                <p>© 2025 Universidad Ana G. Méndez - Todos los derechos reservados</p>
+                <p>Desarrollado por la Oficina de Carreras y Colocaciones</p>
+            </div>
+        </footer>
     </div>
-</div>
-
-
 </body>
 </html>
