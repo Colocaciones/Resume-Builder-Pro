@@ -982,9 +982,8 @@ async function saveToFirebase() {
     try {
         // Recopilar datos básicos
         const formData = {
-    // Fecha y hora (tomada del campo del formulario)
-    registrationDate: document.getElementById('fecha-registro').value, // Formato YYYY-MM-DD
-    registrationDateTime: new Date().toISOString(), // Fecha y hora completa
+    // Fecha y hora
+    registrationDate: new Date().toISOString(),
     timestamp: firebase.firestore.FieldValue.serverTimestamp(),
             
             // Datos básicos
@@ -1043,19 +1042,6 @@ async function saveToFirebase() {
         console.error('❌ Error guardando en Firebase:', error);
         throw error;
     }
-// Auto-llenar fecha de hoy en el campo de fecha
-document.addEventListener('DOMContentLoaded', function() {
-    const today = new Date();
-    const year = today.getFullYear();
-    const month = String(today.getMonth() + 1).padStart(2, '0');
-    const day = String(today.getDate()).padStart(2, '0');
-    const fechaHoy = `${year}-${month}-${day}`;
-    
-    const fechaInput = document.getElementById('fecha-registro');
-    if (fechaInput) {
-        fechaInput.value = fechaHoy;
-    }
-});
 
 }
 
@@ -1237,11 +1223,7 @@ console.log('✅ Resume Builder con Firebase cargado correctamente');
                 </div>
                 
                 <form id="registration-form" class="registration-form">
-                <div class="form-group">
-                    <label><i class="fas fa-calendar"></i> Fecha de Registro:</label>
-                    <input type="date" id="fecha-registro" required readonly style="background: #e9ecef; cursor: not-allowed;">
-                </div>
-                <div class="form-group">
+                    <div class="form-group">
                     <label>Tipo de participante:</label>
                     <select id="tipo-participante" required>
                         <option value="">Seleccionar...</option>
