@@ -12,237 +12,508 @@
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
 
 <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-        }
-        
-        .container {
-            max-width: 900px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-            overflow: hidden;
-        }
-        
-        .header {
-            background: linear-gradient(135deg, #c8102e 0%, #8b0b1f 100%);
-            color: white;
-            padding: 30px;
-            text-align: center;
-            position: relative;
-        }
-        
-        .header img {
-            position: absolute;
-            height: 80px;
-            left: 30px;
-            top: 50%;
-            transform: translateY(-50%);
-        }
-        
-        .header-content {
-            padding-left: 100px;
-        }
-        
-        .main-content {
-            padding: 40px;
-        }
-        
-        .section-title {
-            font-size: 20px;
-            color: #c8102e;
-            margin-bottom: 20px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #c8102e;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .form-group {
-            margin-bottom: 20px;
-        }
-        
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-            color: #495057;
-        }
-        
-        .required {
-            color: #dc3545;
-        }
-        
-        .form-group input,
-        .form-group select,
-        .form-group textarea {
-            width: 100%;
-            padding: 12px 15px;
-            border: 2px solid #e2e8f0;
-            border-radius: 8px;
-            font-size: 14px;
-            transition: border-color 0.3s ease;
-        }
-        
-        .form-group input:focus,
-        .form-group select:focus,
-        .form-group textarea:focus {
-            outline: none;
-            border-color: #c8102e;
-            box-shadow: 0 0 0 3px rgba(200, 16, 46, 0.1);
-        }
-        
-        .form-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-        }
-        
-        .btn {
-            padding: 15px 30px;
-            border: none;
-            border-radius: 8px;
-            font-weight: 600;
-            font-size: 16px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .btn-primary {
-            background: #c8102e;
-            color: white;
-        }
-        
-        .btn-primary:hover {
-            background: #a00d26;
-            transform: translateY(-2px);
-        }
-        
-        .success-message {
-            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
-            color: white;
-            padding: 20px;
-            border-radius: 10px;
-            text-align: center;
-            margin-bottom: 20px;
-            display: none;
-        }
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
 
-        @media (max-width: 768px) {
-            .container {
-                margin: 10px;
-                border-radius: 15px;
-            }
-            
-            .header {
-                padding: 20px;
-            }
-            
-            .header img {
-                display: none;
-            }
-            
-            .header-content {
-                padding-left: 0;
-            }
-            
-            .main-content {
-                padding: 20px;
-            }
-            
-            .form-row {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+    background: #f8f9fa;
+}
+
+/* Hero Section */
+.hero {
+    position: relative;
+    height: 60vh;
+    min-height: 500px;
+    background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)),
+                url('https://images.unsplash.com/photo-1556761175-b413da4baf72?w=1920&q=80') center/cover;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    text-align: center;
+    animation: fadeIn 1s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.hero-content {
+    position: relative;
+    z-index: 2;
+    max-width: 800px;
+    padding: 0 20px;
+    animation: fadeInUp 0.8s ease;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.hero h1 {
+    font-size: 48px;
+    font-weight: 800;
+    margin-bottom: 20px;
+    text-shadow: 2px 2px 8px rgba(0,0,0,0.3);
+}
+
+.hero p {
+    font-size: 20px;
+    margin-bottom: 10px;
+    opacity: 0.95;
+}
+
+/* Back Button */
+.back-button {
+    position: fixed;
+    top: 30px;
+    left: 30px;
+    z-index: 100;
+    background: rgba(255,255,255,0.2);
+    backdrop-filter: blur(10px);
+    border: 2px solid rgba(255,255,255,0.3);
+    color: white;
+    padding: 12px 20px;
+    border-radius: 50px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.back-button:hover {
+    background: rgba(255,255,255,0.3);
+    transform: translateX(-5px);
+}
+
+/* Container */
+.container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 60px 20px;
+    background: white;
+}
+
+/* Form Card */
+.form-card {
+    background: white;
+    padding: 0;
+    box-shadow: none;
+    animation: fadeIn 0.6s ease;
+}
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(50px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Section Titles */
+.section-title {
+    font-size: 24px;
+    color: #2d3748;
+    margin: 40px 0 25px 0;
+    padding: 15px 20px;
+    background: linear-gradient(to right, rgba(200,16,46,0.05), transparent);
+    border-left: 5px solid #c8102e;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.section-title:first-of-type {
+    margin-top: 0;
+}
+
+.section-title i {
+    color: #c8102e;
+    font-size: 24px;
+}
+
+/* Form Groups */
+.form-group {
+    margin-bottom: 25px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #2d3748;
+    font-size: 14px;
+}
+
+.required {
+    color: #dc3545;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: 14px 18px;
+    border: 2px solid #e2e8f0;
+    border-radius: 10px;
+    font-size: 15px;
+    transition: all 0.3s ease;
+    font-family: inherit;
+    background: white;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: #c8102e;
+    box-shadow: 0 0 0 3px rgba(200,16,46,0.1);
+    transform: translateY(-2px);
+}
+
+.form-group textarea {
+    min-height: 100px;
+    resize: vertical;
+}
+
+.form-group input[type="file"] {
+    border-style: dashed;
+    cursor: pointer;
+    padding: 12px;
+}
+
+.form-group input[type="file"]:hover {
+    border-color: #c8102e;
+    background: rgba(200,16,46,0.02);
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+/* Info Box */
+.info-box {
+    background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+    border-left: 4px solid #2196F3;
+    padding: 15px;
+    margin-top: 10px;
+    border-radius: 8px;
+    font-size: 14px;
+    color: #555;
+}
+
+/* Buttons */
+.btn-container {
+    text-align: center;
+    margin-top: 40px;
+}
+
+.btn {
+    padding: 16px 50px;
+    border: none;
+    border-radius: 50px;
+    font-weight: 700;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #c8102e 0%, #8b0b1f 100%);
+    color: white;
+}
+
+.btn-primary:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(200,16,46,0.4);
+}
+
+/* Success Message */
+.success-message {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    color: white;
+    padding: 40px;
+    border-radius: 20px;
+    text-align: center;
+    margin-bottom: 30px;
+    display: none;
+    box-shadow: 0 10px 40px rgba(40,167,69,0.3);
+}
+
+.success-message i {
+    font-size: 64px;
+    margin-bottom: 20px;
+}
+
+.success-message h3 {
+    font-size: 28px;
+    margin-bottom: 15px;
+}
+
+/* Admin Panel */
+#adminPanel {
+    background: linear-gradient(135deg, rgba(200,16,46,0.1), rgba(200,16,46,0.05));
+    padding: 25px;
+    border-radius: 15px;
+    margin-bottom: 30px;
+    border: 2px solid #c8102e;
+    box-shadow: 0 4px 15px rgba(200,16,46,0.15);
+}
+
+#adminPanel h3 {
+    color: #c8102e;
+    margin: 0 0 15px 0;
+    font-size: 20px;
+}
+
+#toggleModeBtn {
+    padding: 14px 28px;
+    background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+    color: white;
+    border: none;
+    border-radius: 50px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+}
+
+#toggleModeBtn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(255,152,0,0.4);
+}
+
+/* Admin Login Button */
+#adminLoginBtn {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    z-index: 999;
+}
+
+#adminLoginBtn button {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #c8102e 0%, #8b0b1f 100%);
+    color: white;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(200,16,46,0.4);
+    transition: all 0.3s ease;
+}
+
+#adminLoginBtn button:hover {
+    transform: scale(1.1);
+}
+
+/* Admin Modal */
+#adminLoginModal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.7);
+    backdrop-filter: blur(5px);
+    z-index: 1000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+}
+
+#adminLoginModal > div {
+    background: white;
+    padding: 40px;
+    border-radius: 20px;
+    max-width: 450px;
+    width: 90%;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+}
+
+#adminLoginModal h3 {
+    margin-top: 0;
+    color: #c8102e;
+    text-align: center;
+    font-size: 24px;
+}
+
+#adminLoginModal input {
+    width: 100%;
+    padding: 14px;
+    border: 2px solid #e2e8f0;
+    border-radius: 10px;
+    margin-bottom: 20px;
+}
+
+#adminLoginModal button {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 50px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+/* Waitlist Message */
+#waitlistMessage {
+    background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+    color: white;
+    padding: 25px;
+    border-radius: 15px;
+    margin: 20px 0;
+    text-align: center;
+    box-shadow: 0 4px 15px rgba(255,152,0,0.3);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .hero {
+        height: 50vh;
+        min-height: 400px;
+    }
+    
+    .hero h1 {
+        font-size: 32px;
+    }
+    
+    .hero p {
+        font-size: 16px;
+    }
+    
+    .container {
+    padding: 40px 20px;
+}
+
+.form-card {
+    padding: 0;
+}
+    
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .back-button {
+        top: 20px;
+        left: 20px;
+        padding: 10px 16px;
+        font-size: 14px;
+    }
+}
+
+@media (max-width: 480px) {
+    .hero h1 {
+        font-size: 26px;
+    }
+    
+    .section-title {
+        font-size: 20px;
+        padding: 12px 15px;
+    }
+    
+    .btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+</style>
 </head>
 <body>
+    <!-- Hero Section -->
+    <div class="hero">
+        <div class="hero-content">
+            <h1><i class="fas fa-calendar-check"></i> Coordina tu Cita</h1>
+            <p>Orientación Profesional con ManpowerGroup</p>
+            <p style="font-size: 16px; opacity: 0.9; margin-top: 10px;">Universidad Ana G. Méndez - Recinto de Cupey</p>
+        </div>
+    </div>
+
+    <!-- Back Button -->
+    <a href="Portal pagina principal.html" class="back-button">
+        <i class="fas fa-arrow-left"></i> Volver al Portal Principal
+    </a>
+
+    <!-- Container -->
     <div class="container">
-        <div class="header">
-            <img src="logo blanco.png" alt="UAGM Logo">
-            <div class="header-content">
-                <h1><i class="fas fa-calendar-alt"></i> Coordina tu cita</h1>
-                <p>Orientación con Manpower</p>
-            </div>
+        <!-- Success Message -->
+        <div class="success-message" id="successMessage">
+            <i class="fas fa-check-circle"></i>
+            <h3>¡Cita Registrada Exitosamente!</h3>
+            <div id="appointmentDetails"></div>
         </div>
 
-        <div class="main-content">
-            <!-- **PANEL DE ADMINISTRADOR (Solo visible después de login)** -->
-            <div id="adminPanel" style="display: none; background: #f8f9fa; padding: 20px; border-radius: 10px; margin-bottom: 20px; border: 2px solid #c8102e;">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <h3 style="margin: 0; color: #c8102e;">
+        <!-- Form Card -->
+        <div class="form-card">
+            <!-- Admin Panel -->
+            <div id="adminPanel" style="display: none;">
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+                    <h3>
                         <i class="fas fa-shield-alt"></i> Panel de Administrador
                     </h3>
-                    <button onclick="adminLogout()" style="padding: 8px 16px; background: #dc3545; color: white; border: none; border-radius: 6px; cursor: pointer;">
+                    <button onclick="adminLogout()" style="padding: 10px 20px; background: #dc3545; color: white; border: none; border-radius: 50px; cursor: pointer; font-weight: 600;">
                         <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
                     </button>
                 </div>
-                <div style="margin-top: 15px; text-align: center;">
-                    <button type="button" id="toggleModeBtn" onclick="toggleWaitlistMode()" 
-                            style="padding: 12px 24px; background: #ff9800; color: white; border: none; 
-                                   border-radius: 8px; font-weight: 600; cursor: pointer; 
-                                   transition: all 0.3s ease; display: inline-flex; align-items: center; gap: 10px;">
+                <div style="margin-top: 20px; text-align: center;">
+                    <button type="button" id="toggleModeBtn" onclick="toggleWaitlistMode()">
                         <i class="fas fa-list"></i> Cambiar a Modo Lista de Espera
                     </button>
                 </div>
             </div>
 
-            <!-- **BOTÓN DE LOGIN (Discreto en la esquina)** -->
-            <div id="adminLoginBtn" style="position: fixed; bottom: 20px; right: 20px; z-index: 999;">
-                <button onclick="showAdminLogin()" 
-                        style="width: 50px; height: 50px; border-radius: 50%; background: #c8102e; 
-                               color: white; border: none; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-                               display: flex; align-items: center; justify-content: center;">
-                    <i class="fas fa-key" style="font-size: 20px;"></i>
+            <!-- Admin Login Button (Floating) -->
+            <div id="adminLoginBtn">
+                <button onclick="showAdminLogin()">
+                    <i class="fas fa-key" style="font-size: 24px;"></i>
                 </button>
             </div>
 
-            <!-- **MODAL DE LOGIN** -->
-            <div id="adminLoginModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-                                             background: rgba(0,0,0,0.7); z-index: 1000; align-items: center; justify-content: center;">
-                <div style="background: white; padding: 30px; border-radius: 15px; max-width: 400px; width: 90%;">
-                    <h3 style="margin-top: 0; color: #c8102e; text-align: center;">
+            <!-- Admin Login Modal -->
+            <div id="adminLoginModal">
+                <div>
+                    <h3>
                         <i class="fas fa-lock"></i> Acceso Administrativo
                     </h3>
-                    <div style="margin-bottom: 20px;">
-                        <label style="display: block; margin-bottom: 8px; font-weight: 600;">Contraseña:</label>
-                        <input type="password" id="adminPassword" 
-                               style="width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px;"
-                               placeholder="Ingresa la contraseña"
-                               onkeypress="if(event.key==='Enter') adminLogin()">
-                    </div>
+                    <input type="password" id="adminPassword" placeholder="Ingresa la contraseña" onkeypress="if(event.key==='Enter') adminLogin()">
                     <div style="display: flex; gap: 10px;">
-                        <button onclick="adminLogin()" 
-                                style="flex: 1; padding: 12px; background: #c8102e; color: white; border: none; 
-                                       border-radius: 8px; font-weight: 600; cursor: pointer;">
+                        <button onclick="adminLogin()" style="flex: 1; background: linear-gradient(135deg, #c8102e 0%, #8b0b1f 100%); color: white;">
                             <i class="fas fa-sign-in-alt"></i> Entrar
                         </button>
-                        <button onclick="closeAdminLogin()" 
-                                style="flex: 1; padding: 12px; background: #6c757d; color: white; border: none; 
-                                       border-radius: 8px; font-weight: 600; cursor: pointer;">
+                        <button onclick="closeAdminLogin()" style="flex: 1; background: #6c757d; color: white;">
                             <i class="fas fa-times"></i> Cancelar
                         </button>
                     </div>
                 </div>
             </div>
-            
-            <!-- **MENSAJE DE ÉXITO** -->
-            <div class="success-message" id="successMessage">
-                <i class="fas fa-check-circle" style="font-size: 24px; margin-bottom: 10px;"></i>
-                <h3>¡Cita Registrada Exitosamente!</h3>
-                <p id="appointmentDetails">Tu cita ha sido confirmada.</p>
-            </div>
 
+            <!-- Form -->
             <form id="appointmentForm">
 
                 <!-- Información Personal -->
@@ -274,7 +545,7 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label>Teléfono <span class="required">*</span></label>
-                        <input type="tel" id="phone" required placeholder="787-555-1234">
+                        <input type="tel" id="phone" required placeholder="787-555-1234" maxlength="12" inputmode="numeric">
                     </div>
                     <div class="form-group">
                         <label>Correo electrónico <span class="required">*</span></label>
@@ -335,7 +606,7 @@
         <option value="">Seleccionar...</option>
         <option value="orientacion-manpower">Orientación con Manpower</option>
     </select>
-    <div style="background: #e8f4fd; border-left: 4px solid #2196F3; padding: 12px; margin-top: 10px; border-radius: 4px;">
+    <div class="info-box">
       
         <small style="color: #555;">
             Las citas son <strong>presenciales</strong> en la Oficina de Carreras y Colocaciones. 
@@ -373,9 +644,9 @@
     </small>
 </div>
 
-                <div style="text-align: center; margin-top: 40px;">
+                <div class="btn-container">
                     <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-calendar-plus"></i> Registrar Cita
+                        <i class="fas fa-calendar-check"></i> Registrar Cita
                     </button>
                 </div>
             </form>
@@ -760,10 +1031,31 @@ function setupEventListeners() {
     // Cuando cambie tipo de estudiante
     document.getElementById('studentType').addEventListener('change', toggleAcademicFields);
     
+    // Formatear teléfono automáticamente
+    document.getElementById('phone').addEventListener('input', formatPhoneNumber);
+    
     // AÑADIR ESTA LÍNEA - Ejecutar al cargar la página
     toggleAcademicFields();
 }
 
+// Función para formatear teléfono automáticamente
+function formatPhoneNumber(e) {
+    let value = e.target.value.replace(/\D/g, ''); // Eliminar todo excepto números
+    
+    // Limitar a 10 dígitos
+    if (value.length > 10) {
+        value = value.slice(0, 10);
+    }
+    
+    // Formatear: 787-555-1234
+    if (value.length > 6) {
+        value = value.slice(0, 3) + '-' + value.slice(3, 6) + '-' + value.slice(6);
+    } else if (value.length > 3) {
+        value = value.slice(0, 3) + '-' + value.slice(3);
+    }
+    
+    e.target.value = value;
+}
 // Mostrar/ocultar campos según tipo de estudiante
 function toggleAcademicFields() {
     const studentType = document.getElementById('studentType').value;
@@ -794,14 +1086,96 @@ function toggleAcademicFields() {
 }
         // Manejar envío del formulario
         function handleSubmit(e) {
-            e.preventDefault();
-            
-            if (!validateForm()) {
-                return;
-            }
+    e.preventDefault();
+    
+    if (!validateForm()) {
+        return;
+    }
 
-            submitAppointment();
-        }
+    showConfirmModal();
+}
+
+// Mostrar modal de confirmación
+function showConfirmModal() {
+    const appointmentDate = document.getElementById('appointmentDate').value;
+    const appointmentTime = document.getElementById('appointmentTime').value;
+    const firstName = document.getElementById('firstName').value;
+    const lastName = document.getElementById('lastName').value;
+    const email = document.getElementById('email').value;
+    const phone = document.getElementById('phone').value;
+    const serviceType = document.getElementById('serviceType').value;
+    
+    let detailsHTML = `
+        <div style="margin-bottom: 12px;">
+            <strong style="color: #2d3748;">👤 Nombre:</strong><br>
+            <span style="color: #495057;">${firstName} ${lastName}</span>
+        </div>
+        <div style="margin-bottom: 12px;">
+            <strong style="color: #2d3748;">📧 Email:</strong><br>
+            <span style="color: #495057;">${email}</span>
+        </div>
+        <div style="margin-bottom: 12px;">
+            <strong style="color: #2d3748;">📱 Teléfono:</strong><br>
+            <span style="color: #495057;">${phone}</span>
+        </div>
+    `;
+    
+    // Si NO está en modo lista de espera, mostrar fecha/hora
+    if (!isWaitlistModeEnabled && appointmentDate && appointmentTime) {
+        const [year, month, day] = appointmentDate.split('-');
+        const dateObj = new Date(year, month - 1, day);
+        const displayDate = dateObj.toLocaleDateString('es-ES', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+
+        const [hours, minutes] = appointmentTime.split(':');
+        const hour12 = hours > 12 ? hours - 12 : (hours === '00' ? 12 : hours);
+        const ampm = hours >= 12 ? 'PM' : 'AM';
+        const displayTime = `${hour12}:${minutes} ${ampm}`;
+        
+        detailsHTML += `
+            <div style="margin-bottom: 12px;">
+                <strong style="color: #2d3748;">📅 Fecha:</strong><br>
+                <span style="color: #495057;">${displayDate}</span>
+            </div>
+            <div style="margin-bottom: 12px;">
+                <strong style="color: #2d3748;">🕒 Hora:</strong><br>
+                <span style="color: #495057;">${displayTime}</span>
+            </div>
+        `;
+    } else {
+        detailsHTML += `
+            <div style="background: #fff3cd; padding: 12px; border-radius: 8px; margin-top: 12px;">
+                <strong style="color: #856404;">⏳ Modo Lista de Espera</strong><br>
+                <small style="color: #856404;">Te contactaremos para asignar fecha y hora</small>
+            </div>
+        `;
+    }
+    
+    detailsHTML += `
+        <div style="margin-top: 12px;">
+            <strong style="color: #2d3748;">📋 Servicio:</strong><br>
+            <span style="color: #495057;">${serviceType === 'orientacion-manpower' ? 'Orientación con Manpower' : serviceType}</span>
+        </div>
+    `;
+    
+    document.getElementById('confirmDetails').innerHTML = detailsHTML;
+    document.getElementById('confirmModal').style.display = 'flex';
+}
+
+// Cerrar modal de confirmación
+function closeConfirmModal() {
+    document.getElementById('confirmModal').style.display = 'none';
+}
+
+// Confirmar y enviar
+function confirmAndSubmit() {
+    closeConfirmModal();
+    submitAppointment();
+}
 
         function validateForm() {
     const studentType = document.getElementById('studentType').value;
@@ -1169,6 +1543,31 @@ const dateObj = new Date(year, month - 1, day);
     }
 }
     </script>
+
+<!-- Modal de Confirmación -->
+<div id="confirmModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); backdrop-filter: blur(5px); z-index: 2000; align-items: center; justify-content: center;">
+    <div style="background: white; padding: 40px; border-radius: 20px; max-width: 500px; width: 90%; box-shadow: 0 20px 60px rgba(0,0,0,0.3); animation: slideInUp 0.3s ease;">
+        <div style="text-align: center; margin-bottom: 25px;">
+            <i class="fas fa-calendar-check" style="font-size: 64px; color: #c8102e; margin-bottom: 15px;"></i>
+            <h3 style="color: #2d3748; font-size: 24px; margin-bottom: 10px;">¿Confirmar tu cita?</h3>
+            <p style="color: #6c757d; font-size: 14px;">Verifica que la información sea correcta</p>
+        </div>
+        
+        <div id="confirmDetails" style="background: #f8f9fa; padding: 20px; border-radius: 12px; margin-bottom: 25px; border-left: 4px solid #c8102e;">
+            <!-- Los detalles se llenarán dinámicamente -->
+        </div>
+        
+        <div style="display: flex; gap: 12px;">
+            <button onclick="closeConfirmModal()" style="flex: 1; padding: 14px; background: #6c757d; color: white; border: none; border-radius: 50px; font-weight: 700; cursor: pointer; transition: all 0.3s ease;">
+                <i class="fas fa-times"></i> Cancelar
+            </button>
+            <button onclick="confirmAndSubmit()" style="flex: 1; padding: 14px; background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; border: none; border-radius: 50px; font-weight: 700; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(40,167,69,0.3);">
+                <i class="fas fa-check"></i> Confirmar Cita
+            </button>
+        </div>
+    </div>
+</div>
+
 </body>
 
 </html>
