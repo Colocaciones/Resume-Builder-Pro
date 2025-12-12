@@ -999,37 +999,46 @@ function checkForPromotion() {
     promoOfferId = urlParams.get('promo');
     
     if (promoOfferId) {
-        console.log('Modo promoción para oferta:', promoOfferId);
+        console.log('🎯 Modo promoción activado para oferta:', promoOfferId);
         
-        // Buscar la oferta después de que las ofertas se hayan cargado
+        // Esperar a que las ofertas se carguen
         setTimeout(() => {
             const promoOffer = offers.find(offer => offer.id === promoOfferId);
             
             if (promoOffer) {
-                switchTab('register');
+                // Actualizar el header con info de la oferta
                 updateHeaderForPromotion(promoOffer);
+                
+                // Ocultar el tab de ofertas
                 document.getElementById('offersTab').style.display = 'none';
+                
+                // Ir al tab de registro
+                switchTab('register');
+                
+                // NUEVO: Filtrar las ofertas para mostrar solo la promocionada
+                offers = [promoOffer]; // ← CLAVE: Sobrescribir array de ofertas
+                
             } else {
-                console.log('Oferta no encontrada:', promoOfferId);
+                console.log('❌ Oferta no encontrada:', promoOfferId);
             }
-        }, 1000); // Esperar 1 segundo para que se carguen las ofertas
+        }, 1500);
     }
 }
-
 function updateHeaderForPromotion(offer) {
     const welcomeSection = document.querySelector('.welcome-section');
     welcomeSection.innerHTML = `
         <div style="background: linear-gradient(135deg, #c8102e 0%, #8b0b1f 100%); color: white; padding: 25px; border-radius: 15px; margin-bottom: 30px;">
-            <h2 style="color: white; margin-bottom: 15px;">Solicitud para referido
+            <h2 style="color: white; margin-bottom: 15px;">✨ Solicitud para Referido</h2>
             <div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 8px;">
                 <h3 style="color: white; margin-bottom: 10px;">${offer.position}</h3>
                 <p style="font-size: 16px; margin-bottom: 5px; color: white;"><strong>Empresa:</strong> ${offer.companyName}</p>
                 <p style="font-size: 16px; margin-bottom: 5px; color: white;"><strong>Ubicación:</strong> ${offer.location}</p>
-		<p style="font-size: 16px; margin-bottom: 5px; color: white;"><strong></strong> ${offer.schedule}</p>
+                <p style="font-size: 16px; margin-bottom: 5px; color: white;"><strong>Horario:</strong> ${offer.schedule || 'Por confirmar'}</p>
             </div>
             <div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 8px; margin-top: 15px;">
-    <h4 style="color: white; margin-bottom: 10px; font-size: 16px;">Requisitos de la Posición:</h4>
-    <p style="font-size: 14px; color: white; line-height: 1.5; margin: 0;">${offer.requirements}</p>
+                <h4 style="color: white; margin-bottom: 10px; font-size: 16px;">📋 Requisitos de la Posición:</h4>
+                <p style="font-size: 14px; color: white; line-height: 1.5; margin: 0;">${offer.requirements}</p>
+            </div>
         </div>
     `;
     
@@ -1040,6 +1049,7 @@ function updateHeaderForPromotion(offer) {
     window.originalSwitchTab = window.switchTab;
     window.switchTab = function(tabName) {
         if (tabName === 'offers' && promoOfferId) {
+            console.log('🚫 Navegación a ofertas bloqueada en modo promoción');
             return; // No permitir ir al tab de ofertas
         }
         window.originalSwitchTab(tabName);
@@ -1329,10 +1339,15 @@ if (promoOfferId) {
 
 async function createAutoApplication(participantData, offerId) {
     const offer = offers.find(o => o.id === offerId);
-    if (!offer) return;
+    if (!offer) {
+        console.error('❌ Oferta no encontrada para auto-aplicación');
+        return;
+    }
+    
+    console.log('📝 Creando aplicación automática para:', offer.position);
     
     const autoApplication = {
-        id: Date.now().toString() + '_auto',
+        id: Date.now().toString() + '_promo',
         offerId: offerId,
         participantId: participantData.id,
         participantData: participantData,
@@ -1350,7 +1365,7 @@ async function createAutoApplication(participantData, offerId) {
             reviewedBy: null,
             reviewedAt: null,
             decision: null,
-            notes: 'Aplicación automática vía enlace promocional'
+            notes: '🔗 Aplicación automática vía enlace promocional'
         }
     };
     
@@ -1358,7 +1373,7 @@ async function createAutoApplication(participantData, offerId) {
         if (isFirebaseInitialized) {
             const result = await FirebaseHelper.saveDoc('applications', autoApplication);
             if (result.success) {
-                console.log('Aplicación automática guardada:', result.id);
+                console.log('✅ Aplicación automática guardada en Firebase:', result.id);
             }
         }
         
@@ -1366,28 +1381,32 @@ async function createAutoApplication(participantData, offerId) {
         applications.push(autoApplication);
         localStorage.setItem('applications', JSON.stringify(applications));
         
-        showNotification('¡Aplicación enviada automáticamente!', 'success');
-
+        console.log('✅ Aplicación guardada localmente');
         
     } catch (error) {
-        console.error('Error:', error);
+        console.error('❌ Error creando aplicación:', error);
     }
-// Mostrar mensaje final y bloquear navegación
-        setTimeout(() => {
-            const offer = offers.find(o => o.id === offerId);
-            document.querySelector('.welcome-section').innerHTML = `
-                <div style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; padding: 30px; border-radius: 15px; text-align: center;">
-                    <i class="fas fa-check-circle" style="font-size: 48px; margin-bottom: 20px;"></i>
-                    <h2 style="color: white; margin-bottom: 15px;">¡Solicitud Completada!</h2>
-                    <p style="font-size: 16px; margin-bottom: 10px;">Tu aplicación para <strong>${offer.position}</strong> en <strong>${offer.companyName}</strong> ha sido enviada.</p>
-                    <p style="font-size: 14px; opacity: 0.9;">Nuestro equipo revisará tu perfil y se pondrá en contacto contigo pronto.</p>
+
+    // Mostrar mensaje final de confirmación
+    setTimeout(() => {
+        document.querySelector('.welcome-section').innerHTML = `
+            <div style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; padding: 40px; border-radius: 15px; text-align: center;">
+                <i class="fas fa-check-circle" style="font-size: 64px; margin-bottom: 20px;"></i>
+                <h2 style="color: white; margin-bottom: 15px;">¡Solicitud Completada Exitosamente!</h2>
+                <p style="font-size: 18px; margin-bottom: 10px;">Tu aplicación para <strong>${offer.position}</strong> en <strong>${offer.companyName}</strong> ha sido enviada.</p>
+                <p style="font-size: 16px; opacity: 0.95; margin-bottom: 20px;">Nuestro equipo revisará tu perfil y se pondrá en contacto contigo pronto.</p>
+                <div style="background: rgba(255,255,255,0.2); padding: 15px; border-radius: 10px; margin-top: 20px;">
+                    <p style="font-size: 14px; margin: 0;">📧 Recibirás un correo de confirmación a: <strong>${participantData.email}</strong></p>
                 </div>
-            `;
-            
-            // Ocultar el formulario
-            document.getElementById('registerContent').style.display = 'none';
-        }, 2000);
+            </div>
+        `;
+        
+        // Ocultar el formulario de registro
+        document.getElementById('registerContent').style.display = 'none';
+        
+    }, 2000);
 }
+
        // Cargar ofertas desde Firebase
         async function loadOffers() {
             try {
