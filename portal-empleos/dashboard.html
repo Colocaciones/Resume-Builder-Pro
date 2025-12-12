@@ -1383,6 +1383,88 @@
         </div>
     </div>
 
+<!-- Modal para Ver Historial del Participante -->
+<div id="participantHistoryModal" class="modal">
+    <div class="modal-content" style="max-width: 1000px; max-height: 90vh;">
+        <div class="modal-header">
+            <h3 id="historyModalTitle">📋 Historial del Participante</h3>
+            <span class="close" onclick="closeHistoryModal()">&times;</span>
+        </div>
+        
+        <div class="modal-body" style="max-height: calc(90vh - 200px); overflow-y: auto;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 10px;">
+                <div>
+                    <h4 style="margin: 0; color: #2d3748;" id="historyParticipantName">Nombre del Participante</h4>
+                    <p style="margin: 5px 0 0 0; color: #6c757d; font-size: 14px;" id="historyParticipantEmail">email@ejemplo.com</p>
+                </div>
+                <div style="text-align: right;">
+                    <button class="btn btn-success btn-small" onclick="generateParticipantHistoryPDF()" style="margin-right: 10px;">
+                        <i class="fas fa-file-pdf"></i> Generar PDF
+                    </button>
+                    <button class="btn btn-info btn-small" onclick="showAddManualNoteModal()">
+                        <i class="fas fa-plus"></i> Agregar Nota
+                    </button>
+                </div>
+            </div>
+            
+            <div id="historyTimelineContainer">
+                <!-- Timeline se genera aquí -->
+            </div>
+        </div>
+        
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeHistoryModal()">Cerrar</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Agregar Nota Manual al Historial -->
+<div id="manualNoteModal" class="modal">
+    <div class="modal-content" style="max-width: 600px;">
+        <div class="modal-header">
+            <h3>📝 Agregar Nota al Historial</h3>
+            <span class="close" onclick="closeManualNoteModal()">&times;</span>
+        </div>
+        
+        <div class="modal-body">
+            <form id="manualNoteForm">
+                <div class="form-group">
+                    <label>Participante:</label>
+                    <input type="text" id="note-participantName" readonly style="background: #f8f9fa;">
+                </div>
+                
+                <div class="form-group">
+                    <label>Tipo de nota:</label>
+                    <select id="note-type" required>
+                        <option value="">Seleccionar tipo...</option>
+                        <option value="service">Servicio prestado</option>
+                        <option value="followup">Seguimiento</option>
+                        <option value="general">Nota general</option>
+                        <option value="achievement">Logro/Avance</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>Descripción: *</label>
+                    <textarea id="note-description" rows="5" required placeholder="Ej: Estudiante solicitó orientación sobre búsqueda de empleo. Se le proporcionó información sobre..."></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label>Fecha del evento:</label>
+                    <input type="date" id="note-date" required>
+                </div>
+            </form>
+        </div>
+        
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeManualNoteModal()">Cancelar</button>
+            <button class="btn btn-success" onclick="saveManualNote()">
+                <i class="fas fa-save"></i> Guardar Nota
+            </button>
+        </div>
+    </div>
+</div>
+
 <!-- Modal para Editar Cita -->
 <div id="editAppointmentModal" class="modal">
     <div class="modal-content" style="max-width: 700px;">
@@ -1527,6 +1609,7 @@
         let placements = [];
         let allOffersHistory = [];
         let resumeRegistrations = [];
+        let participantHistory = []; // Array para guardar todo el historial de participantes
 
 // Sistema de notificaciones
 let notifications = JSON.parse(localStorage.getItem('adminNotifications')) || [];
@@ -1539,6 +1622,7 @@ let lastCheckedAppointments = localStorage.getItem('lastCheckedAppointments') ? 
         document.addEventListener('DOMContentLoaded', async function() {
     isFirebaseInitialized = initializeFirebase();
     await loadAllData();
+    await loadParticipantHistory();
     updateExpiredOffers(); 
     updateStats();
     updateNotificationBadge();
@@ -1567,6 +1651,29 @@ let lastCheckedAppointments = localStorage.getItem('lastCheckedAppointments') ? 
                         console.log('Participantes cargados desde Firebase:', participants.length);
                     }
 
+// Registrar evento de registro para participantes que no tienen historial
+                    if (participantsResult.success && participants.length > 0) {
+                        for (const participant of participants) {
+                            const hasHistory = participantHistory.some(h => 
+                                h.participantId === participant.id && h.eventType === 'registration'
+                            );
+                            
+                            if (!hasHistory) {
+                                await addToParticipantHistory(participant.id, {
+                                    eventType: 'registration',
+                                    eventTitle: 'Registro Inicial',
+                                    description: 'Se registró en el portal de empleos',
+                                    data: {
+                                        participantName: `${participant.firstName} ${participant.lastName}`,
+                                        campus: participant.campus,
+                                        studentType: participant.studentType,
+                                        concentration: participant.concentration
+                                    }
+                                });
+                            }
+                        }
+                    }
+
                     // Cargar aplicaciones desde Firebase
                     const applicationsResult = await FirebaseHelper.getDocs('applications');
                     if (applicationsResult.success) {
@@ -1579,6 +1686,40 @@ let lastCheckedAppointments = localStorage.getItem('lastCheckedAppointments') ? 
                    if (appointmentsResult.success) {
                        appointments = appointmentsResult.docs;
                        console.log('Citas cargadas desde Firebase:', appointments.length);
+                       
+                       // Registrar citas nuevas en el historial
+                       for (const appointment of appointments) {
+                           const hasHistory = participantHistory.some(h => 
+                               h.eventType === 'appointment_scheduled' && 
+                               h.data?.appointmentId === appointment.id
+                           );
+                           
+                           if (!hasHistory) {
+                               // Buscar participante por email o nombre
+                               const participant = participants.find(p => 
+                                   p.email === appointment.email || 
+                                   (p.firstName === appointment.firstName && p.lastName === appointment.lastName)
+                               );
+                               
+                               if (participant) {
+                                   await addToParticipantHistory(participant.id, {
+                                       eventType: 'appointment_scheduled',
+                                       eventTitle: 'Cita Programada',
+                                       description: `Programó cita: ${appointment.serviceType === 'orientacion-manpower' ? 'Orientación con Manpower' : appointment.serviceType}`,
+                                       data: {
+                                           participantName: `${appointment.firstName} ${appointment.lastName}`,
+                                           appointmentDate: appointment.appointmentDate,
+                                           appointmentTime: appointment.appointmentTime,
+                                           serviceType: appointment.serviceType,
+                                           campus: appointment.campus,
+                                           concentration: appointment.concentration,
+                                           appointmentId: appointment.id,
+                                           status: appointment.status
+                                       }
+                                   });
+                               }
+                           }
+                       }
                    }
 
 // Cargar colocados desde Firebase
@@ -1594,6 +1735,40 @@ if (resumeRegsResult.success) {
     resumeRegistrations = resumeRegsResult.docs;
     console.log('Registros Resume Builder cargados desde Firebase:', resumeRegistrations.length);
 }
+
+// Registrar eventos de Resume Builder para registros sin historial
+                    if (resumeRegsResult.success && resumeRegistrations.length > 0) {
+                        for (const reg of resumeRegistrations) {
+                            const hasHistory = participantHistory.some(h => 
+                                h.eventType === 'resume_builder' && 
+                                h.data?.registrationId === reg.id
+                            );
+                            
+                            if (!hasHistory) {
+                                // Buscar participante por email o nombre
+                                const participant = participants.find(p => 
+                                    p.email === reg.email || 
+                                    (p.firstName === reg.firstName && p.lastName === reg.lastName)
+                                );
+                                
+                                if (participant) {
+                                    await addToParticipantHistory(participant.id, {
+                                        eventType: 'resume_builder',
+                                        eventTitle: 'Registro Resume Builder',
+                                        description: `Solicitó servicio de redacción de resumé`,
+                                        data: {
+                                            participantName: `${reg.firstName} ${reg.lastName}`,
+                                            participantType: reg.participantType,
+                                            userType: reg.userType,
+                                            campus: reg.campus,
+                                            registrationId: reg.id,
+                                            registrationDate: reg.registrationDate
+                                        }
+                                    });
+                                }
+                            }
+                        }
+                    }
 
                 } else {
                     throw new Error('Firebase no inicializado');
@@ -1987,6 +2162,9 @@ case 'resumes':
                             <div class="actions">
                                 <button class="btn btn-info btn-small" onclick="viewParticipantDetails('${participant.id}')" title="Ver detalles">
                                     <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="btn btn-warning btn-small" onclick="viewParticipantHistory('${participant.id}')" title="Ver historial">
+                                    <i class="fas fa-history"></i>
                                 </button>
                                 <button class="btn btn-success btn-small" onclick="downloadResume('${participant.id}')" title="Descargar resumé">
                                     <i class="fas fa-download"></i>
@@ -2427,7 +2605,21 @@ modalAction.className = 'btn btn-success';
             
             showNotification('Solicitud procesada exitosamente', 'success');
             
+            // Registrar en historial
+            await addToParticipantHistory(application.participantId, {
+                eventType: 'application',
+                eventTitle: 'Aplicó a Oferta',
+                description: `Aplicó a "${application.offerTitle}" en ${application.companyName}`,
+                data: {
+                    participantName: application.participantName,
+                    companyName: application.companyName,
+                    offerTitle: application.offerTitle,
+                    applicationId: application.id
+                }
+            });
+            
         } catch (error) {
+           
             console.error('Error procesando aplicación:', error);
             showNotification('Error procesando la solicitud. Intenta de nuevo.', 'error');
         }
@@ -3064,6 +3256,9 @@ if (sortFilter) {
                             <div class="actions">
                                 <button class="btn btn-info btn-small" onclick="viewParticipantDetails('${participant.id}')" title="Ver detalles">
                                     <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="btn btn-warning btn-small" onclick="viewParticipantHistory('${participant.id}')" title="Ver historial">
+                                    <i class="fas fa-history"></i>
                                 </button>
                                 <button class="btn btn-success btn-small" onclick="downloadResume('${participant.id}')" title="Descargar resumé">
                                     <i class="fas fa-download"></i>
@@ -4475,7 +4670,31 @@ const formattedDate = appointmentDate.toLocaleDateString('es-ES', {
             loadAppointmentsTable();
             showNotification('Cita cancelada', 'success');
             
+            // Registrar en historial
+            const participant = participants.find(p => 
+                p.email === appointment.email || 
+                (p.firstName === appointment.firstName && p.lastName === appointment.lastName)
+            );
+            
+            if (participant) {
+                await addToParticipantHistory(participant.id, {
+                    eventType: 'appointment_cancelled',
+                    eventTitle: 'Cita Cancelada',
+                    description: `Cita cancelada: ${appointment.serviceType === 'orientacion-manpower' ? 'Orientación con Manpower' : appointment.serviceType}`,
+                    data: {
+                        participantName: `${appointment.firstName} ${appointment.lastName}`,
+                        appointmentDate: appointment.appointmentDate,
+                        appointmentTime: appointment.appointmentTime,
+                        serviceType: appointment.serviceType,
+                        campus: appointment.campus,
+                        appointmentId: appointment.id,
+                        cancelReason: 'Cancelada por administrador'
+                    }
+                });
+            }
+            
         } catch (error) {
+
             console.error('Error cancelando cita:', error);
             showNotification('Error cancelando la cita. Intenta de nuevo.', 'error');
         }
@@ -5147,7 +5366,22 @@ async function markApplicationAsSent(applicationId) {
         
         showNotification('✅ Email enviado y referido registrado exitosamente', 'success');
         
+        // Registrar en historial
+        await addToParticipantHistory(application.participantId, {
+            eventType: 'referral',
+            eventTitle: 'Referido a Patrono',
+            description: `Fue referido a "${application.offerTitle}" en ${application.companyName}`,
+            data: {
+                participantName: application.participantName,
+                companyName: application.companyName,
+                offerTitle: application.offerTitle,
+                applicationId: application.id,
+                notes: application.adminReview?.notes || ''
+            }
+        });
+        
     } catch (error) {
+
         console.error('Error marcando como enviado:', error);
         showNotification('Error actualizando el estado. Intenta de nuevo.', 'error');
     }
@@ -5275,7 +5509,22 @@ async function rejectApplication(applicationId, reason) {
        
        showNotification('Solicitud rechazada correctamente', 'success');
        
+       // Registrar en historial
+       await addToParticipantHistory(application.participantId, {
+           eventType: 'rejection',
+           eventTitle: 'Solicitud Rechazada',
+           description: `Fue rechazado para "${application.offerTitle}" en ${application.companyName}`,
+           data: {
+               participantName: application.participantName,
+               companyName: application.companyName,
+               offerTitle: application.offerTitle,
+               applicationId: application.id,
+               reason: reason
+           }
+       });
+       
    } catch (error) {
+
        console.error('Error rechazando aplicación:', error);
        showNotification('Error rechazando la solicitud. Intenta de nuevo.', 'error');
    }
@@ -5669,10 +5918,21 @@ function viewReferralDetails(applicationId) {
             <p>✓ Email enviado al patrono con resumé adjunto</p>
             <p>✓ Datos de contacto proporcionados</p>
         </div>
+        
+        <div style="text-align: center; margin-top: 20px; padding: 20px; background: #f8f9fa; border-radius: 10px;">
+            <h4 style="color: #2d3748; margin-bottom: 15px;">📄 Descargar Historial</h4>
+            <button class="btn btn-success" onclick="generateReferralPDF('${application.id}')">
+                <i class="fas fa-file-pdf"></i> Descargar PDF del Referido
+            </button>
+            <p style="font-size: 12px; color: #6c757d; margin-top: 10px;">
+                Este documento se puede agregar al expediente del estudiante
+            </p>
+        </div>
     `;
     
     document.getElementById('detailsModal').style.display = 'flex';
 }
+
 
 // Ver detalles de rechazo
 function viewRejectionDetails(applicationId) {
@@ -5714,10 +5974,21 @@ function viewRejectionDetails(applicationId) {
             <p>• El candidato puede aplicar a otras ofertas disponibles</p>
             <p>• Se recomienda revisar los requisitos antes de futuras aplicaciones</p>
         </div>
+        
+        <div style="text-align: center; margin-top: 20px; padding: 20px; background: #f8f9fa; border-radius: 10px;">
+            <h4 style="color: #2d3748; margin-bottom: 15px;">📄 Descargar Historial</h4>
+            <button class="btn btn-danger" onclick="generateRejectionPDF('${application.id}')">
+                <i class="fas fa-file-pdf"></i> Descargar PDF del Rechazo
+            </button>
+            <p style="font-size: 12px; color: #6c757d; margin-top: 10px;">
+                Este documento se puede agregar al expediente del estudiante
+            </p>
+        </div>
     `;
     
     document.getElementById('detailsModal').style.display = 'flex';
 }
+
 
 // ============= FUNCIONES PARA MÓDULO DE COLOCADOS =============
 
@@ -5918,7 +6189,33 @@ async function savePlacement() {
         
         showNotification('Colocado registrado exitosamente', 'success');
         
+        // Registrar en historial
+        const participant = participants.find(p => 
+            p.email === placementData.email || 
+            (p.firstName === placementData.participantName.split(' ')[0] && 
+             p.lastName === placementData.participantName.split(' ').slice(1).join(' '))
+        );
+        
+        if (participant) {
+            await addToParticipantHistory(participant.id, {
+                eventType: 'placement',
+                eventTitle: 'Colocado',
+                description: `Colocado en ${placementData.company} como ${placementData.position}`,
+                data: {
+                    participantName: placementData.participantName,
+                    company: placementData.company,
+                    position: placementData.position,
+                    placementDate: placementData.placementDate,
+                    trackingType: placementData.trackingType,
+                    positionType: placementData.positionType,
+                    modality: placementData.modality,
+                    placementId: placementData.id
+                }
+            });
+        }
+        
     } catch (error) {
+
         console.error('Error guardando colocado:', error);
         showNotification('Error guardando el colocado. Intenta de nuevo.', 'error');
     }
@@ -6394,6 +6691,476 @@ function exportPlacementsData() {
 
 // ============= FIN DE FUNCIONES PARA MÓDULO DE COLOCADOS =============
 
+// ============= FUNCIONES PARA GENERAR PDFs DE HISTORIAL DE SOLICITUDES =============
+
+// Generar PDF de rechazo
+function generateRejectionPDF(applicationId) {
+    const application = applications.find(app => app.id === applicationId);
+    if (!application || application.status !== 'rejected') {
+        showNotification('Solicitud no encontrada o no está rechazada', 'error');
+        return;
+    }
+
+    const participant = getParticipantData(application.participantId);
+    const offer = offers.find(o => o.id === application.offerId);
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    
+    let yPos = 20;
+    const margin = 20;
+    const lineHeight = 6;
+    
+    // Función auxiliar para agregar texto
+    function addText(text, x, y, fontSize = 10, style = 'normal') {
+        doc.setFontSize(fontSize);
+        doc.setFont('helvetica', style);
+        doc.text(text, x, y);
+    }
+    
+    // Función auxiliar para agregar línea separadora
+    function addLine(y) {
+        doc.setDrawColor(200, 200, 200);
+        doc.setLineWidth(0.5);
+        doc.line(margin, y, 190, y);
+    }
+
+    // ENCABEZADO
+    doc.setTextColor(200, 16, 46);
+    addText('UNIVERSIDAD ANA G. MÉNDEZ', margin, yPos, 16, 'bold');
+    yPos += 10;
+    addText('OFICINA DE CARRERAS Y COLOCACIONES', margin, yPos, 14, 'bold');
+    yPos += 8;
+    addText('REGISTRO DE SOLICITUD RECHAZADA', margin, yPos, 14, 'bold');
+    yPos += 15;
+    
+    doc.setTextColor(0, 0, 0);
+    addText('Fecha de generación: ' + new Date().toLocaleDateString('es-ES'), margin, yPos, 10);
+    addText('ID de Solicitud: ' + application.id, 120, yPos, 10);
+    yPos += 10;
+    addLine(yPos);
+    yPos += 15;
+
+    // INFORMACIÓN DEL PARTICIPANTE
+    doc.setTextColor(200, 16, 46);
+    addText('INFORMACIÓN DEL PARTICIPANTE', margin, yPos, 12, 'bold');
+    yPos += 10;
+    doc.setTextColor(0, 0, 0);
+    
+    addText('Nombre Completo:', margin, yPos, 10, 'bold');
+    addText(application.participantName, 80, yPos);
+    yPos += lineHeight;
+    
+    addText('Email:', margin, yPos, 10, 'bold');
+    addText(application.participantEmail, 80, yPos);
+    yPos += lineHeight;
+    
+    addText('Teléfono:', margin, yPos, 10, 'bold');
+    addText(application.participantPhone, 80, yPos);
+    yPos += lineHeight;
+    
+    if (participant) {
+        addText('Tipo Estudiante:', margin, yPos, 10, 'bold');
+        addText(getStudentTypeLabel(participant.studentType), 80, yPos);
+        yPos += lineHeight;
+        
+        addText('Concentración:', margin, yPos, 10, 'bold');
+        addText(participant.concentration || 'N/A', 80, yPos);
+        yPos += lineHeight;
+        
+        addText('Campus:', margin, yPos, 10, 'bold');
+        addText(getCampusLabel(participant.campus), 80, yPos);
+        yPos += lineHeight;
+        
+        addText('ID Estudiante:', margin, yPos, 10, 'bold');
+        addText(participant.studentId || 'N/A', 80, yPos);
+        yPos += lineHeight;
+    }
+    yPos += 10;
+
+    // INFORMACIÓN DE LA OFERTA
+    doc.setTextColor(200, 16, 46);
+    addText('INFORMACIÓN DE LA OFERTA', margin, yPos, 12, 'bold');
+    yPos += 10;
+    doc.setTextColor(0, 0, 0);
+    
+    addText('Empresa:', margin, yPos, 10, 'bold');
+    addText(application.companyName, 80, yPos);
+    yPos += lineHeight;
+    
+    addText('Posición:', margin, yPos, 10, 'bold');
+    addText(application.offerTitle, 80, yPos);
+    yPos += lineHeight;
+    
+    if (offer) {
+        addText('Contacto Empresa:', margin, yPos, 10, 'bold');
+        addText(offer.contactPerson || 'N/A', 80, yPos);
+        yPos += lineHeight;
+        
+        addText('Email Empresa:', margin, yPos, 10, 'bold');
+        addText(offer.email || 'N/A', 80, yPos);
+        yPos += lineHeight;
+        
+        addText('Ubicación:', margin, yPos, 10, 'bold');
+        addText(offer.location || 'N/A', 80, yPos);
+        yPos += lineHeight;
+    }
+    yPos += 10;
+
+    // DETALLES DEL RECHAZO
+    doc.setTextColor(220, 53, 69);
+    addText('DETALLES DEL RECHAZO', margin, yPos, 12, 'bold');
+    yPos += 10;
+    doc.setTextColor(0, 0, 0);
+    
+    addText('Fecha de Solicitud:', margin, yPos, 10, 'bold');
+    addText(new Date(application.appliedAt).toLocaleDateString('es-ES') + ' a las ' + new Date(application.appliedAt).toLocaleTimeString('es-ES'), 80, yPos);
+    yPos += lineHeight;
+    
+    addText('Fecha de Rechazo:', margin, yPos, 10, 'bold');
+    const rejectionDate = application.adminReview?.reviewedAt ? new Date(application.adminReview.reviewedAt) : new Date();
+    addText(rejectionDate.toLocaleDateString('es-ES') + ' a las ' + rejectionDate.toLocaleTimeString('es-ES'), 80, yPos);
+    yPos += lineHeight;
+    
+    addText('Evaluado Por:', margin, yPos, 10, 'bold');
+    addText(application.adminReview?.reviewedBy || 'Administrador', 80, yPos);
+    yPos += lineHeight;
+    
+    addText('Estado:', margin, yPos, 10, 'bold');
+    addText('RECHAZADA', 80, yPos);
+    yPos += 15;
+
+    // RAZÓN DEL RECHAZO (destacado)
+    doc.setFillColor(248, 215, 218);
+    doc.rect(margin - 5, yPos - 5, 175, 50, 'F');
+    
+    doc.setTextColor(114, 28, 36);
+    addText('RAZÓN DEL RECHAZO:', margin, yPos, 11, 'bold');
+    yPos += 10;
+    
+    doc.setTextColor(0, 0, 0);
+    const rejectionReason = application.adminReview?.notes || 'No se proporcionó una razón específica.';
+    const reasonLines = doc.splitTextToSize(rejectionReason, 160);
+    doc.text(reasonLines, margin, yPos);
+    yPos += reasonLines.length * 5 + 15;
+
+    // RECOMENDACIONES
+    doc.setTextColor(255, 193, 7);
+    addText('RECOMENDACIONES', margin, yPos, 12, 'bold');
+    yPos += 10;
+    doc.setTextColor(0, 0, 0);
+    
+    addText('• El participante puede aplicar a otras ofertas disponibles en el portal', margin + 5, yPos, 9);
+    yPos += lineHeight;
+    addText('• Se recomienda revisar cuidadosamente los requisitos antes de aplicar', margin + 5, yPos, 9);
+    yPos += lineHeight;
+    addText('• Puede agendar una cita con la oficina para orientación sobre aplicaciones', margin + 5, yPos, 9);
+    yPos += lineHeight;
+    addText('• Actualizar su resumé y perfil puede mejorar futuras aplicaciones', margin + 5, yPos, 9);
+    yPos += 15;
+
+    // INFORMACIÓN ADICIONAL
+    if (yPos > 240) {
+        doc.addPage();
+        yPos = 20;
+    }
+    
+    doc.setTextColor(200, 16, 46);
+    addText('INFORMACIÓN ADICIONAL', margin, yPos, 12, 'bold');
+    yPos += 10;
+    doc.setTextColor(0, 0, 0);
+    
+    addText('Este documento certifica que la solicitud del participante fue evaluada', margin + 5, yPos, 9);
+    yPos += lineHeight;
+    addText('por el personal de la Oficina de Carreras y Colocaciones y no cumplió', margin + 5, yPos, 9);
+    yPos += lineHeight;
+    addText('con los requisitos establecidos para la posición solicitada.', margin + 5, yPos, 9);
+    yPos += 10;
+    
+    addText('Para más información o aclaraciones, contactar:', margin + 5, yPos, 9);
+    yPos += lineHeight;
+    addText('Email: carreras_colocacionescu@uagm.edu', margin + 5, yPos, 9);
+    yPos += lineHeight;
+    addText('Teléfono: (787) 766-1717', margin + 5, yPos, 9);
+    yPos += lineHeight;
+
+    // PIE DE PÁGINA
+    yPos = 270;
+    addLine(yPos - 5);
+    doc.setFontSize(8);
+    doc.setTextColor(100, 100, 100);
+    addText('Documento Confidencial - Oficina de Carreras y Colocaciones UAGM', margin, yPos);
+    addText('Generado el: ' + new Date().toLocaleString('es-ES'), margin, yPos + 5);
+    addText('Este documento forma parte del expediente del participante', margin, yPos + 10);
+
+    // Generar y descargar
+    const fileName = `Rechazo_${application.participantName.replace(/\s+/g, '_')}_${application.companyName.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`;
+    doc.save(fileName);
+    
+    showNotification('PDF de rechazo generado: ' + fileName, 'success');
+}
+
+// Generar PDF de referido aprobado
+function generateReferralPDF(applicationId) {
+    const application = applications.find(app => app.id === applicationId);
+    if (!application || application.status !== 'approved_sent') {
+        showNotification('Solicitud no encontrada o no está en estado de referido enviado', 'error');
+        return;
+    }
+
+    const participant = getParticipantData(application.participantId);
+    const offer = offers.find(o => o.id === application.offerId);
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    
+    let yPos = 20;
+    const margin = 20;
+    const lineHeight = 6;
+    
+    // Función auxiliar para agregar texto
+    function addText(text, x, y, fontSize = 10, style = 'normal') {
+        doc.setFontSize(fontSize);
+        doc.setFont('helvetica', style);
+        doc.text(text, x, y);
+    }
+    
+    // Función auxiliar para agregar línea separadora
+    function addLine(y) {
+        doc.setDrawColor(200, 200, 200);
+        doc.setLineWidth(0.5);
+        doc.line(margin, y, 190, y);
+    }
+
+    // ENCABEZADO
+    doc.setTextColor(200, 16, 46);
+    addText('UNIVERSIDAD ANA G. MÉNDEZ', margin, yPos, 16, 'bold');
+    yPos += 10;
+    addText('OFICINA DE CARRERAS Y COLOCACIONES', margin, yPos, 14, 'bold');
+    yPos += 8;
+    addText('REGISTRO DE REFERIDO A PATRONO', margin, yPos, 14, 'bold');
+    yPos += 15;
+    
+    doc.setTextColor(0, 0, 0);
+    addText('Fecha de generación: ' + new Date().toLocaleDateString('es-ES'), margin, yPos, 10);
+    addText('ID de Solicitud: ' + application.id, 120, yPos, 10);
+    yPos += 10;
+    addLine(yPos);
+    yPos += 15;
+
+    // INFORMACIÓN DEL PARTICIPANTE REFERIDO
+    doc.setTextColor(200, 16, 46);
+    addText('INFORMACIÓN DEL CANDIDATO REFERIDO', margin, yPos, 12, 'bold');
+    yPos += 10;
+    doc.setTextColor(0, 0, 0);
+    
+    addText('Nombre Completo:', margin, yPos, 10, 'bold');
+    addText(application.participantName, 80, yPos);
+    yPos += lineHeight;
+    
+    addText('Email:', margin, yPos, 10, 'bold');
+    addText(application.participantEmail, 80, yPos);
+    yPos += lineHeight;
+    
+    addText('Teléfono:', margin, yPos, 10, 'bold');
+    addText(application.participantPhone, 80, yPos);
+    yPos += lineHeight;
+    
+    if (participant) {
+        addText('Tipo Estudiante:', margin, yPos, 10, 'bold');
+        addText(getStudentTypeLabel(participant.studentType), 80, yPos);
+        yPos += lineHeight;
+        
+        addText('Concentración:', margin, yPos, 10, 'bold');
+        addText(participant.concentration || 'N/A', 80, yPos);
+        yPos += lineHeight;
+        
+        addText('Campus:', margin, yPos, 10, 'bold');
+        addText(getCampusLabel(participant.campus), 80, yPos);
+        yPos += lineHeight;
+        
+        addText('ID Estudiante:', margin, yPos, 10, 'bold');
+        addText(participant.studentId || 'N/A', 80, yPos);
+        yPos += lineHeight;
+        
+        addText('Año de Estudios:', margin, yPos, 10, 'bold');
+        addText(participant.studyYear || 'N/A', 80, yPos);
+        yPos += lineHeight;
+        
+        addText('Grado Académico:', margin, yPos, 10, 'bold');
+        addText(participant.academicDegree || 'N/A', 80, yPos);
+        yPos += lineHeight;
+    }
+    yPos += 10;
+
+    // INFORMACIÓN DE LA EMPRESA Y POSICIÓN
+    doc.setTextColor(200, 16, 46);
+    addText('INFORMACIÓN DE LA EMPRESA Y POSICIÓN', margin, yPos, 12, 'bold');
+    yPos += 10;
+    doc.setTextColor(0, 0, 0);
+    
+    addText('Empresa:', margin, yPos, 10, 'bold');
+    addText(application.companyName, 80, yPos);
+    yPos += lineHeight;
+    
+    addText('Posición:', margin, yPos, 10, 'bold');
+    addText(application.offerTitle, 80, yPos);
+    yPos += lineHeight;
+    
+    if (offer) {
+        addText('Contacto Empresa:', margin, yPos, 10, 'bold');
+        addText(offer.contactPerson || 'N/A', 80, yPos);
+        yPos += lineHeight;
+        
+        addText('Email Empresa:', margin, yPos, 10, 'bold');
+        addText(offer.email || 'N/A', 80, yPos);
+        yPos += lineHeight;
+        
+        addText('Teléfono Empresa:', margin, yPos, 10, 'bold');
+        addText(offer.phone || 'N/A', 80, yPos);
+        yPos += lineHeight;
+        
+        addText('Ubicación:', margin, yPos, 10, 'bold');
+        addText(offer.location || 'N/A', 80, yPos);
+        yPos += lineHeight;
+        
+        addText('Tipo Posición:', margin, yPos, 10, 'bold');
+        addText(getTypeLabel(offer.positionType), 80, yPos);
+        yPos += lineHeight;
+        
+        addText('Salario:', margin, yPos, 10, 'bold');
+        addText(offer.salary || 'N/A', 80, yPos);
+        yPos += lineHeight;
+    }
+    yPos += 10;
+
+    // DETALLES DEL REFERIDO
+    doc.setFillColor(212, 237, 218);
+    doc.rect(margin - 5, yPos - 5, 175, 35, 'F');
+    
+    doc.setTextColor(21, 87, 36);
+    addText('DETALLES DEL REFERIDO', margin, yPos, 11, 'bold');
+    yPos += 10;
+    
+    doc.setTextColor(0, 0, 0);
+    addText('Fecha de Solicitud:', margin, yPos, 10, 'bold');
+    addText(new Date(application.appliedAt).toLocaleDateString('es-ES'), 80, yPos);
+    yPos += lineHeight;
+    
+    addText('Fecha de Aprobación:', margin, yPos, 10, 'bold');
+    const approvalDate = application.adminReview?.reviewedAt ? new Date(application.adminReview.reviewedAt) : new Date();
+    addText(approvalDate.toLocaleDateString('es-ES'), 80, yPos);
+    yPos += lineHeight;
+    
+    addText('Fecha de Envío:', margin, yPos, 10, 'bold');
+    const sentDate = application.adminReview?.sentAt ? new Date(application.adminReview.sentAt) : new Date();
+    addText(sentDate.toLocaleDateString('es-ES') + ' a las ' + sentDate.toLocaleTimeString('es-ES'), 80, yPos);
+    yPos += lineHeight;
+    
+    addText('Evaluado Por:', margin, yPos, 10, 'bold');
+    addText(application.adminReview?.reviewedBy || 'Administrador', 80, yPos);
+    yPos += lineHeight;
+    
+    addText('Estado:', margin, yPos, 10, 'bold');
+    addText('REFERIDO ENVIADO AL PATRONO', 80, yPos);
+    yPos += 15;
+
+    // NOTAS DEL EVALUADOR (si existen)
+    if (application.adminReview?.notes && application.adminReview.notes.trim()) {
+        doc.setFillColor(255, 243, 205);
+        doc.rect(margin - 5, yPos - 5, 175, 35, 'F');
+        
+        doc.setTextColor(133, 100, 4);
+        addText('NOTAS DEL EVALUADOR:', margin, yPos, 11, 'bold');
+        yPos += 10;
+        
+        doc.setTextColor(0, 0, 0);
+        const notesLines = doc.splitTextToSize(application.adminReview.notes, 160);
+        doc.text(notesLines, margin, yPos);
+        yPos += notesLines.length * 5 + 10;
+    }
+
+    // Verificar si necesitamos nueva página
+    if (yPos > 240) {
+        doc.addPage();
+        yPos = 20;
+    }
+
+    // ACCIONES REALIZADAS
+    doc.setTextColor(200, 16, 46);
+    addText('ACCIONES REALIZADAS', margin, yPos, 12, 'bold');
+    yPos += 10;
+    doc.setTextColor(0, 0, 0);
+    
+    addText('✓ Candidato evaluado y pre-aprobado por UAGM', margin + 5, yPos, 9);
+    yPos += lineHeight;
+    addText('✓ Resumé del candidato enviado al patrono', margin + 5, yPos, 9);
+    yPos += lineHeight;
+    addText('✓ Datos de contacto del candidato proporcionados', margin + 5, yPos, 9);
+    yPos += lineHeight;
+    addText('✓ Email formal enviado al contacto de la empresa', margin + 5, yPos, 9);
+    yPos += lineHeight;
+    addText('✓ Registro creado en sistema de seguimiento', margin + 5, yPos, 9);
+    yPos += 15;
+
+    // SEGUIMIENTO
+    doc.setTextColor(200, 16, 46);
+    addText('SEGUIMIENTO', margin, yPos, 12, 'bold');
+    yPos += 10;
+    doc.setTextColor(0, 0, 0);
+    
+    addText('La empresa tiene acceso a:', margin + 5, yPos, 9);
+    yPos += lineHeight;
+    addText('• Información completa del candidato', margin + 10, yPos, 9);
+    yPos += lineHeight;
+    addText('• Resumé actualizado', margin + 10, yPos, 9);
+    yPos += lineHeight;
+    addText('• Datos de contacto directo', margin + 10, yPos, 9);
+    yPos += lineHeight + 5;
+    
+    addText('Próximos pasos esperados:', margin + 5, yPos, 9);
+    yPos += lineHeight;
+    addText('• Empresa contactará al candidato directamente', margin + 10, yPos, 9);
+    yPos += lineHeight;
+    addText('• Proceso de entrevista según criterios del patrono', margin + 10, yPos, 9);
+    yPos += lineHeight;
+    addText('• Notificación a UAGM sobre resultados del proceso', margin + 10, yPos, 9);
+    yPos += 15;
+
+    // INFORMACIÓN DE CONTACTO
+    doc.setTextColor(200, 16, 46);
+    addText('INFORMACIÓN DE CONTACTO', margin, yPos, 12, 'bold');
+    yPos += 10;
+    doc.setTextColor(0, 0, 0);
+    
+    addText('Para seguimiento o consultas sobre este referido:', margin + 5, yPos, 9);
+    yPos += lineHeight;
+    addText('Oficina de Carreras y Colocaciones', margin + 5, yPos, 9, 'bold');
+    yPos += lineHeight;
+    addText('Email: carreras_colocacionescu@uagm.edu', margin + 5, yPos, 9);
+    yPos += lineHeight;
+    addText('Teléfono: (787) 766-1717', margin + 5, yPos, 9);
+    yPos += lineHeight;
+
+    // PIE DE PÁGINA
+    yPos = 270;
+    addLine(yPos - 5);
+    doc.setFontSize(8);
+    doc.setTextColor(100, 100, 100);
+    addText('Documento Confidencial - Oficina de Carreras y Colocaciones UAGM', margin, yPos);
+    addText('Generado el: ' + new Date().toLocaleString('es-ES'), margin, yPos + 5);
+    addText('Este documento forma parte del expediente del participante', margin, yPos + 10);
+
+    // Generar y descargar
+    const fileName = `Referido_${application.participantName.replace(/\s+/g, '_')}_${application.companyName.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`;
+    doc.save(fileName);
+    
+    showNotification('PDF de referido generado: ' + fileName, 'success');
+}
+
+// ============= FIN FUNCIONES PARA GENERAR PDFs DE HISTORIAL =============
+
+
 // Variable global para la cita que se está editando
 let currentEditingAppointment = null;
 
@@ -6511,7 +7278,39 @@ async function saveAppointmentChanges() {
         
         showNotification('Cita actualizada exitosamente', 'success');
         
+        // Registrar en historial si cambió la fecha/hora
+        const participant = participants.find(p => 
+            p.email === currentEditingAppointment.email || 
+            (p.firstName === currentEditingAppointment.firstName && p.lastName === currentEditingAppointment.lastName)
+        );
+        
+        if (participant) {
+            const oldDate = currentEditingAppointment.appointmentDate;
+            const oldTime = currentEditingAppointment.appointmentTime;
+            const newDate = document.getElementById('edit-appointmentDate').value;
+            const newTime = document.getElementById('edit-appointmentTime').value;
+            
+            if (oldDate !== newDate || oldTime !== oldTime) {
+                await addToParticipantHistory(participant.id, {
+                    eventType: 'appointment_rescheduled',
+                    eventTitle: 'Cita Reprogramada',
+                    description: `Cita reprogramada de ${formatLocalDate(oldDate)} ${oldTime} a ${formatLocalDate(newDate)} ${newTime}`,
+                    data: {
+                        participantName: `${currentEditingAppointment.firstName} ${currentEditingAppointment.lastName}`,
+                        oldDate: oldDate,
+                        oldTime: oldTime,
+                        newDate: newDate,
+                        newTime: newTime,
+                        serviceType: currentEditingAppointment.serviceType,
+                        changeReason: document.getElementById('edit-changeReason').value,
+                        appointmentId: currentEditingAppointment.id
+                    }
+                });
+            }
+        }
+        
     } catch (error) {
+
         console.error('Error actualizando cita:', error);
         showNotification('Error actualizando la cita. Intenta de nuevo.', 'error');
     }
@@ -7329,6 +8128,757 @@ function exportResumeRegistrationsData() {
 }
 
 // ============= FIN FUNCIONES RESUME BUILDER =============
+
+
+// ============= SISTEMA DE HISTORIAL DE PARTICIPANTES =============
+
+// Función para agregar evento al historial
+async function addToParticipantHistory(participantId, eventData) {
+    const historyEntry = {
+        id: `hist_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        participantId: participantId,
+        timestamp: new Date().toISOString(),
+        ...eventData
+    };
+    
+    try {
+        // Guardar en Firebase
+        if (isFirebaseInitialized) {
+            await db.collection('participantHistory').add(historyEntry);
+            console.log('Evento agregado al historial en Firebase:', historyEntry.id);
+        }
+        
+        // Agregar a memoria local
+        participantHistory.push(historyEntry);
+        
+        // Guardar en localStorage como respaldo
+        localStorage.setItem('participantHistory', JSON.stringify(participantHistory));
+        
+        return historyEntry;
+        
+    } catch (error) {
+        console.error('Error agregando evento al historial:', error);
+        return null;
+    }
+}
+
+// Función para obtener historial de un participante
+function getParticipantHistory(participantId) {
+    return participantHistory
+        .filter(entry => entry.participantId === participantId)
+        .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+}
+
+// Función para cargar historial desde Firebase
+async function loadParticipantHistory() {
+    try {
+        if (isFirebaseInitialized) {
+            const snapshot = await db.collection('participantHistory').get();
+            participantHistory = [];
+            snapshot.forEach(doc => {
+                participantHistory.push({ id: doc.id, ...doc.data() });
+            });
+            console.log('Historial de participantes cargado desde Firebase:', participantHistory.length);
+        } else {
+            // Cargar desde localStorage
+            participantHistory = JSON.parse(localStorage.getItem('participantHistory')) || [];
+        }
+    } catch (error) {
+        console.error('Error cargando historial:', error);
+        participantHistory = JSON.parse(localStorage.getItem('participantHistory')) || [];
+    }
+}
+
+// Función para obtener icono según tipo de evento
+function getEventIcon(eventType) {
+    const icons = {
+        'registration': '✓',
+        'application': '📤',
+        'referral': '✅',
+        'rejection': '❌',
+        'placement': '🎯',
+        'appointment_scheduled': '📅',
+        'appointment_completed': '✅',
+        'appointment_cancelled': '❌',
+        'appointment_rescheduled': '🔄',
+        'resume_builder': '📄',
+        'manual_note': '📝'
+    };
+    return icons[eventType] || '•';
+}
+
+// Función para obtener color según tipo de evento
+function getEventColor(eventType) {
+    const colors = {
+        'registration': '#28a745',
+        'application': '#17a2b8',
+        'referral': '#28a745',
+        'rejection': '#dc3545',
+        'placement': '#ffc107',
+        'appointment_scheduled': '#6f42c1',
+        'appointment_completed': '#28a745',
+        'appointment_cancelled': '#dc3545',
+        'appointment_rescheduled': '#fd7e14',
+        'resume_builder': '#17a2b8',
+        'manual_note': '#6c757d'
+    };
+    return colors[eventType] || '#6c757d';
+}
+
+// Función para obtener título del evento
+function getEventTitle(eventType) {
+    const titles = {
+        'registration': 'REGISTRO INICIAL',
+        'application': 'APLICÓ A OFERTA',
+        'referral': 'REFERIDO A PATRONO',
+        'rejection': 'SOLICITUD RECHAZADA',
+        'placement': 'COLOCADO',
+        'appointment_scheduled': 'CITA PROGRAMADA',
+        'appointment_completed': 'CITA COMPLETADA',
+        'appointment_cancelled': 'CITA CANCELADA',
+        'appointment_rescheduled': 'CITA REPROGRAMADA',
+        'resume_builder': 'REGISTRO RESUME BUILDER',
+        'manual_note': 'NOTA MANUAL'
+    };
+    return titles[eventType] || 'EVENTO';
+}
+
+// ============= FIN SISTEMA DE HISTORIAL =============
+
+// ============= FUNCIONES DE INTERFAZ PARA HISTORIAL =============
+
+// Variable global para el participante actual en el modal de historial
+let currentHistoryParticipantId = null;
+
+// Función para ver historial del participante
+function viewParticipantHistory(participantId) {
+    const participant = participants.find(p => p.id === participantId);
+    if (!participant) {
+        showNotification('Participante no encontrado', 'error');
+        return;
+    }
+    
+    currentHistoryParticipantId = participantId;
+    
+    // Actualizar título del modal
+    document.getElementById('historyParticipantName').textContent = `${participant.firstName} ${participant.lastName}`;
+    document.getElementById('historyParticipantEmail').textContent = participant.email;
+    
+    // Cargar timeline
+    loadHistoryTimeline(participantId);
+    
+    // Mostrar modal
+    document.getElementById('participantHistoryModal').style.display = 'flex';
+}
+
+// Función para cargar el timeline del historial
+function loadHistoryTimeline(participantId) {
+    const history = getParticipantHistory(participantId);
+    const container = document.getElementById('historyTimelineContainer');
+    
+    if (history.length === 0) {
+        container.innerHTML = `
+            <div class="no-data">
+                <i class="fas fa-history"></i>
+                <h3>No hay historial registrado</h3>
+                <p>Los eventos del participante aparecerán aquí</p>
+            </div>
+        `;
+        return;
+    }
+    
+    let html = '<div class="timeline">';
+    
+    history.forEach((event, index) => {
+        const icon = getEventIcon(event.eventType);
+        const color = getEventColor(event.eventType);
+        const title = getEventTitle(event.eventType);
+        const date = new Date(event.timestamp);
+        const formattedDate = date.toLocaleDateString('es-ES', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+        const formattedTime = date.toLocaleTimeString('es-ES', {
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+        
+        html += `
+            <div class="timeline-item" style="border-left: 4px solid ${color}; padding: 20px; margin-bottom: 20px; background: white; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
+                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <div style="font-size: 24px;">${icon}</div>
+                        <div>
+                            <h4 style="margin: 0; color: ${color}; font-size: 16px;">${title}</h4>
+                            <p style="margin: 5px 0 0 0; color: #6c757d; font-size: 12px;">
+                                <i class="fas fa-clock"></i> ${formattedDate} a las ${formattedTime}
+                            </p>
+                        </div>
+                    </div>
+                    ${event.eventType === 'manual_note' ? `
+                        <button class="btn btn-danger btn-small" onclick="deleteHistoryEvent('${event.id}')" title="Eliminar nota">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    ` : ''}
+                </div>
+                
+                <div style="padding-left: 35px;">
+                    <p style="margin: 10px 0; color: #2d3748; font-size: 14px;">${event.description}</p>
+                    ${generateEventDetails(event)}
+                </div>
+            </div>
+        `;
+    });
+    
+    html += '</div>';
+    
+    // Agregar resumen al final
+    html += generateHistorySummary(history);
+    
+    container.innerHTML = html;
+}
+
+// Función para generar detalles específicos según el tipo de evento
+function generateEventDetails(event) {
+    let html = '';
+    
+    switch(event.eventType) {
+        case 'registration':
+            html += `
+                <div style="background: #f8f9fa; padding: 10px; border-radius: 5px; margin-top: 10px; font-size: 13px;">
+                    <p style="margin: 3px 0;"><strong>Campus:</strong> ${getCampusLabel(event.data?.campus)}</p>
+                    <p style="margin: 3px 0;"><strong>Tipo:</strong> ${getStudentTypeLabel(event.data?.studentType)}</p>
+                    <p style="margin: 3px 0;"><strong>Concentración:</strong> ${event.data?.concentration || 'N/A'}</p>
+                </div>
+            `;
+            break;
+            
+        case 'application':
+            html += `
+                <div style="background: #e3f2fd; padding: 10px; border-radius: 5px; margin-top: 10px; font-size: 13px;">
+                    <p style="margin: 3px 0;"><strong>Empresa:</strong> ${event.data?.companyName}</p>
+                    <p style="margin: 3px 0;"><strong>Posición:</strong> ${event.data?.offerTitle}</p>
+                </div>
+            `;
+            break;
+            
+        case 'referral':
+            html += `
+                <div style="background: #e8f5e9; padding: 10px; border-radius: 5px; margin-top: 10px; font-size: 13px;">
+                    <p style="margin: 3px 0;"><strong>Empresa:</strong> ${event.data?.companyName}</p>
+                    <p style="margin: 3px 0;"><strong>Posición:</strong> ${event.data?.offerTitle}</p>
+                    ${event.data?.notes ? `<p style="margin: 8px 0 3px 0;"><strong>Notas del evaluador:</strong></p><p style="margin: 3px 0; font-style: italic;">${event.data.notes}</p>` : ''}
+                </div>
+            `;
+            break;
+            
+        case 'rejection':
+            html += `
+                <div style="background: #ffebee; padding: 10px; border-radius: 5px; margin-top: 10px; font-size: 13px;">
+                    <p style="margin: 3px 0;"><strong>Empresa:</strong> ${event.data?.companyName}</p>
+                    <p style="margin: 3px 0;"><strong>Posición:</strong> ${event.data?.offerTitle}</p>
+                    <p style="margin: 8px 0 3px 0;"><strong>Razón del rechazo:</strong></p>
+                    <p style="margin: 3px 0; font-style: italic; color: #c62828;">${event.data?.reason || 'No especificada'}</p>
+                </div>
+            `;
+            break;
+            
+        case 'placement':
+            html += `
+                <div style="background: #fff3e0; padding: 10px; border-radius: 5px; margin-top: 10px; font-size: 13px;">
+                    <p style="margin: 3px 0;"><strong>Empresa:</strong> ${event.data?.company}</p>
+                    <p style="margin: 3px 0;"><strong>Posición:</strong> ${event.data?.position}</p>
+                    <p style="margin: 3px 0;"><strong>Tipo:</strong> ${event.data?.positionType === 'full-time' ? 'Full-Time' : 'Part-Time'}</p>
+                    <p style="margin: 3px 0;"><strong>Seguimiento:</strong> ${event.data?.trackingType === 'directo' ? 'Directo' : 'Indirecto'}</p>
+                    <p style="margin: 3px 0;"><strong>Fecha colocación:</strong> ${formatLocalDate(event.data?.placementDate)}</p>
+                </div>
+            `;
+            break;
+            
+        case 'appointment_scheduled':
+        case 'appointment_completed':
+        case 'appointment_cancelled':
+        case 'appointment_rescheduled':
+            html += `
+                <div style="background: #f3e5f5; padding: 10px; border-radius: 5px; margin-top: 10px; font-size: 13px;">
+                    <p style="margin: 3px 0;"><strong>Fecha cita:</strong> ${formatLocalDate(event.data?.appointmentDate)} a las ${event.data?.appointmentTime}</p>
+                    <p style="margin: 3px 0;"><strong>Servicio:</strong> ${event.data?.serviceType === 'orientacion-manpower' ? 'Orientación con Manpower' : event.data?.serviceType}</p>
+                    <p style="margin: 3px 0;"><strong>Campus:</strong> ${getCampusLabel(event.data?.campus)}</p>
+                    ${event.data?.changeReason ? `<p style="margin: 8px 0 3px 0;"><strong>Razón:</strong></p><p style="margin: 3px 0; font-style: italic;">${event.data.changeReason}</p>` : ''}
+                </div>
+            `;
+            break;
+            
+        case 'resume_builder':
+            html += `
+                <div style="background: #e1f5fe; padding: 10px; border-radius: 5px; margin-top: 10px; font-size: 13px;">
+                    <p style="margin: 3px 0;"><strong>Tipo participante:</strong> ${event.data?.participantType || 'N/A'}</p>
+                    <p style="margin: 3px 0;"><strong>Tipo usuario:</strong> ${event.data?.userType || 'N/A'}</p>
+                    <p style="margin: 3px 0;"><strong>Campus:</strong> ${getCampusLabel(event.data?.campus)}</p>
+                </div>
+            `;
+            break;
+    }
+    
+    return html;
+}
+
+// Función para generar resumen del historial
+function generateHistorySummary(history) {
+    const summary = {
+        applications: history.filter(h => h.eventType === 'application').length,
+        referrals: history.filter(h => h.eventType === 'referral').length,
+        rejections: history.filter(h => h.eventType === 'rejection').length,
+        placements: history.filter(h => h.eventType === 'placement').length,
+        appointments: history.filter(h => h.eventType === 'appointment_scheduled').length,
+        appointmentsCompleted: history.filter(h => h.eventType === 'appointment_completed').length,
+        resumeBuilder: history.filter(h => h.eventType === 'resume_builder').length,
+        manualNotes: history.filter(h => h.eventType === 'manual_note').length
+    };
+    
+    const firstEvent = history[history.length - 1];
+    const lastEvent = history[0];
+    const startDate = new Date(firstEvent.timestamp).toLocaleDateString('es-ES');
+    const endDate = new Date(lastEvent.timestamp).toLocaleDateString('es-ES');
+    
+    return `
+        <div style="margin-top: 30px; padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 15px; color: white;">
+            <h4 style="margin: 0 0 15px 0; font-size: 18px;">📊 RESUMEN DE ACTIVIDAD</h4>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                <div style="background: rgba(255,255,255,0.2); padding: 15px; border-radius: 10px; text-align: center;">
+                    <div style="font-size: 32px; font-weight: bold;">${summary.applications}</div>
+                    <div style="font-size: 12px; opacity: 0.9;">Aplicaciones</div>
+                </div>
+                <div style="background: rgba(255,255,255,0.2); padding: 15px; border-radius: 10px; text-align: center;">
+                    <div style="font-size: 32px; font-weight: bold;">${summary.referrals}</div>
+                    <div style="font-size: 12px; opacity: 0.9;">Referidos</div>
+                </div>
+                <div style="background: rgba(255,255,255,0.2); padding: 15px; border-radius: 10px; text-align: center;">
+                    <div style="font-size: 32px; font-weight: bold;">${summary.rejections}</div>
+                    <div style="font-size: 12px; opacity: 0.9;">Rechazados</div>
+                </div>
+                <div style="background: rgba(255,255,255,0.2); padding: 15px; border-radius: 10px; text-align: center;">
+                    <div style="font-size: 32px; font-weight: bold;">${summary.placements}</div>
+                    <div style="font-size: 12px; opacity: 0.9;">Colocaciones</div>
+                </div>
+                <div style="background: rgba(255,255,255,0.2); padding: 15px; border-radius: 10px; text-align: center;">
+                    <div style="font-size: 32px; font-weight: bold;">${summary.appointmentsCompleted}</div>
+                    <div style="font-size: 12px; opacity: 0.9;">Citas Completadas</div>
+                </div>
+                <div style="background: rgba(255,255,255,0.2); padding: 15px; border-radius: 10px; text-align: center;">
+                    <div style="font-size: 32px; font-weight: bold;">${summary.manualNotes}</div>
+                    <div style="font-size: 12px; opacity: 0.9;">Notas Manuales</div>
+                </div>
+            </div>
+            <p style="margin: 15px 0 0 0; text-align: center; font-size: 14px; opacity: 0.9;">
+                📅 Periodo: ${startDate} - ${endDate}
+            </p>
+        </div>
+    `;
+}
+
+// Función para cerrar modal de historial
+function closeHistoryModal() {
+    document.getElementById('participantHistoryModal').style.display = 'none';
+    currentHistoryParticipantId = null;
+}
+
+// Función para mostrar modal de agregar nota manual
+function showAddManualNoteModal() {
+    if (!currentHistoryParticipantId) {
+        showNotification('Error: No hay participante seleccionado', 'error');
+        return;
+    }
+    
+    const participant = participants.find(p => p.id === currentHistoryParticipantId);
+    if (!participant) {
+        showNotification('Participante no encontrado', 'error');
+        return;
+    }
+    
+    // Llenar datos
+    document.getElementById('note-participantName').value = `${participant.firstName} ${participant.lastName}`;
+    document.getElementById('note-date').valueAsDate = new Date();
+    
+    // Mostrar modal
+    document.getElementById('manualNoteModal').style.display = 'flex';
+}
+
+// Función para cerrar modal de nota manual
+function closeManualNoteModal() {
+    document.getElementById('manualNoteModal').style.display = 'none';
+    document.getElementById('manualNoteForm').reset();
+}
+
+// Función para guardar nota manual
+async function saveManualNote() {
+    const form = document.getElementById('manualNoteForm');
+    if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+    }
+    
+    const noteType = document.getElementById('note-type').value;
+    const description = document.getElementById('note-description').value;
+    const noteDate = document.getElementById('note-date').value;
+    
+    const typeLabels = {
+        'service': 'Servicio prestado',
+        'followup': 'Seguimiento',
+        'general': 'Nota general',
+        'achievement': 'Logro/Avance'
+    };
+    
+    try {
+        await addToParticipantHistory(currentHistoryParticipantId, {
+            eventType: 'manual_note',
+            eventTitle: typeLabels[noteType],
+            description: description,
+            timestamp: new Date(noteDate + 'T' + new Date().toTimeString().split(' ')[0]).toISOString(),
+            data: {
+                noteType: noteType,
+                addedBy: 'admin@uagm.edu'
+            }
+        });
+        
+        // Recargar timeline
+        loadHistoryTimeline(currentHistoryParticipantId);
+        
+        // Cerrar modal
+        closeManualNoteModal();
+        
+        showNotification('Nota agregada exitosamente al historial', 'success');
+        
+    } catch (error) {
+        console.error('Error guardando nota:', error);
+        showNotification('Error guardando la nota. Intenta de nuevo.', 'error');
+    }
+}
+
+// Función para eliminar evento del historial (solo notas manuales)
+async function deleteHistoryEvent(eventId) {
+    if (!confirm('¿Estás seguro de que quieres eliminar esta nota del historial?')) {
+        return;
+    }
+    
+    try {
+        // Eliminar de Firebase
+        if (isFirebaseInitialized) {
+            const snapshot = await db.collection('participantHistory')
+                .where('id', '==', eventId)
+                .get();
+            
+            if (!snapshot.empty) {
+                const batch = db.batch();
+                snapshot.docs.forEach(doc => {
+                    batch.delete(doc.ref);
+                });
+                await batch.commit();
+                console.log('Evento eliminado de Firebase:', eventId);
+            }
+        }
+        
+        // Eliminar de memoria local
+        participantHistory = participantHistory.filter(h => h.id !== eventId);
+        
+        // Actualizar localStorage
+        localStorage.setItem('participantHistory', JSON.stringify(participantHistory));
+        
+        // Recargar timeline
+        loadHistoryTimeline(currentHistoryParticipantId);
+        
+        showNotification('Nota eliminada del historial', 'success');
+        
+    } catch (error) {
+        console.error('Error eliminando evento:', error);
+        showNotification('Error eliminando la nota. Intenta de nuevo.', 'error');
+    }
+}
+
+// ============= FIN FUNCIONES DE INTERFAZ PARA HISTORIAL =============
+
+// ============= FUNCIÓN PARA GENERAR PDF DEL HISTORIAL =============
+
+function generateParticipantHistoryPDF() {
+    if (!currentHistoryParticipantId) {
+        showNotification('Error: No hay participante seleccionado', 'error');
+        return;
+    }
+    
+    const participant = participants.find(p => p.id === currentHistoryParticipantId);
+    if (!participant) {
+        showNotification('Participante no encontrado', 'error');
+        return;
+    }
+    
+    const history = getParticipantHistory(currentHistoryParticipantId);
+    if (history.length === 0) {
+        showNotification('No hay historial para generar', 'warning');
+        return;
+    }
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    
+    let yPos = 20;
+    const margin = 20;
+    const lineHeight = 6;
+    const pageHeight = 280;
+    
+    // Función auxiliar para agregar texto
+    function addText(text, x, y, fontSize = 10, style = 'normal') {
+        doc.setFontSize(fontSize);
+        doc.setFont('helvetica', style);
+        doc.text(text, x, y);
+    }
+    
+    // Función auxiliar para agregar línea separadora
+    function addLine(y) {
+        doc.setDrawColor(200, 200, 200);
+        doc.setLineWidth(0.5);
+        doc.line(margin, y, 190, y);
+    }
+    
+    // Función para verificar espacio y agregar página
+    function checkSpace(needed) {
+        if (yPos + needed > pageHeight) {
+            doc.addPage();
+            yPos = 20;
+            return true;
+        }
+        return false;
+    }
+
+    // ========== PORTADA ==========
+    doc.setFillColor(200, 16, 46);
+    doc.rect(0, 0, 210, 80, 'F');
+    
+    doc.setTextColor(255, 255, 255);
+    addText('UNIVERSIDAD ANA G. MÉNDEZ', margin, 30, 18, 'bold');
+    addText('OFICINA DE CARRERAS Y COLOCACIONES', margin, 42, 14, 'bold');
+    addText('HISTORIAL COMPLETO DEL PARTICIPANTE', margin, 54, 14, 'bold');
+    
+    yPos = 90;
+    doc.setTextColor(0, 0, 0);
+    
+    // Información del participante
+    doc.setFillColor(248, 249, 250);
+    doc.rect(margin - 5, yPos - 5, 175, 35, 'F');
+    
+    addText('PARTICIPANTE:', margin, yPos, 12, 'bold');
+    yPos += 8;
+    addText(`${participant.firstName} ${participant.lastName}`, margin, yPos, 14, 'bold');
+    yPos += 8;
+    addText(`Email: ${participant.email}`, margin, yPos, 10);
+    yPos += 6;
+    addText(`Campus: ${getCampusLabel(participant.campus)}`, margin, yPos, 10);
+    yPos += 6;
+    addText(`Concentración: ${participant.concentration}`, margin, yPos, 10);
+    yPos += 15;
+    
+    addText('Fecha de generación: ' + new Date().toLocaleDateString('es-ES'), margin, yPos, 9);
+    addText('ID: ' + participant.id, 120, yPos, 9);
+    yPos += 10;
+    addLine(yPos);
+    yPos += 15;
+
+    // ========== TIMELINE DE EVENTOS ==========
+    doc.setTextColor(200, 16, 46);
+    addText('TIMELINE DE ACTIVIDADES', margin, yPos, 14, 'bold');
+    yPos += 10;
+    doc.setTextColor(0, 0, 0);
+    
+    history.forEach((event, index) => {
+        checkSpace(50);
+        
+        const date = new Date(event.timestamp);
+        const formattedDate = date.toLocaleDateString('es-ES');
+        const formattedTime = date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+        const icon = getEventIcon(event.eventType);
+        const title = getEventTitle(event.eventType);
+        
+        // Fondo del evento
+        const bgColors = {
+            'registration': [232, 245, 233],
+            'application': [227, 242, 253],
+            'referral': [232, 245, 233],
+            'rejection': [255, 235, 238],
+            'placement': [255, 243, 224],
+            'appointment_scheduled': [243, 229, 245],
+            'appointment_completed': [232, 245, 233],
+            'appointment_cancelled': [255, 235, 238],
+            'appointment_rescheduled': [255, 243, 224],
+            'resume_builder': [225, 245, 254],
+            'manual_note': [245, 245, 245]
+        };
+        
+        const bgColor = bgColors[event.eventType] || [245, 245, 245];
+        doc.setFillColor(...bgColor);
+        doc.rect(margin - 3, yPos - 3, 173, 25, 'F');
+        
+        // Icono y título
+        addText(icon, margin, yPos + 4, 14);
+        doc.setTextColor(200, 16, 46);
+        addText(title, margin + 10, yPos + 4, 11, 'bold');
+        
+        // Fecha y hora
+        doc.setTextColor(108, 117, 125);
+        addText(`${formattedDate} - ${formattedTime}`, margin + 10, yPos + 10, 8);
+        yPos += 15;
+        
+        // Descripción
+        doc.setTextColor(0, 0, 0);
+        const descLines = doc.splitTextToSize(event.description, 150);
+        doc.text(descLines, margin + 10, yPos);
+        yPos += descLines.length * 4 + 3;
+        
+        // Detalles específicos según tipo
+        doc.setFontSize(8);
+        doc.setTextColor(100, 100, 100);
+        
+        switch(event.eventType) {
+            case 'application':
+            case 'referral':
+            case 'rejection':
+                if (event.data?.companyName) {
+                    addText(`→ Empresa: ${event.data.companyName} | Posición: ${event.data.offerTitle}`, margin + 12, yPos, 8);
+                    yPos += 4;
+                }
+                if (event.eventType === 'rejection' && event.data?.reason) {
+                    const reasonLines = doc.splitTextToSize(`Razón: ${event.data.reason}`, 140);
+                    doc.text(reasonLines, margin + 12, yPos);
+                    yPos += reasonLines.length * 4;
+                }
+                if (event.eventType === 'referral' && event.data?.notes) {
+                    const notesLines = doc.splitTextToSize(`Notas: ${event.data.notes}`, 140);
+                    doc.text(notesLines, margin + 12, yPos);
+                    yPos += notesLines.length * 4;
+                }
+                break;
+                
+            case 'placement':
+                if (event.data?.company) {
+                    addText(`→ Empresa: ${event.data.company} | Posición: ${event.data.position}`, margin + 12, yPos, 8);
+                    yPos += 4;
+                    addText(`→ Tipo: ${event.data.positionType === 'full-time' ? 'Full-Time' : 'Part-Time'} | Seguimiento: ${event.data.trackingType === 'directo' ? 'Directo' : 'Indirecto'}`, margin + 12, yPos, 8);
+                    yPos += 4;
+                }
+                break;
+                
+            case 'appointment_scheduled':
+            case 'appointment_completed':
+            case 'appointment_cancelled':
+            case 'appointment_rescheduled':
+                if (event.data?.appointmentDate) {
+                    addText(`→ Fecha: ${formatLocalDate(event.data.appointmentDate)} ${event.data.appointmentTime} | Campus: ${getCampusLabel(event.data.campus)}`, margin + 12, yPos, 8);
+                    yPos += 4;
+                }
+                break;
+        }
+        
+        yPos += 8;
+        doc.setTextColor(0, 0, 0);
+        
+        checkSpace(10);
+    });
+
+    // ========== RESUMEN ESTADÍSTICO ==========
+    checkSpace(70);
+    
+    doc.addPage();
+    yPos = 20;
+    
+    doc.setFillColor(200, 16, 46);
+    doc.rect(0, yPos - 10, 210, 20, 'F');
+    doc.setTextColor(255, 255, 255);
+    addText('📊 RESUMEN DE ACTIVIDAD', margin, yPos, 14, 'bold');
+    
+    yPos += 20;
+    doc.setTextColor(0, 0, 0);
+    
+    const summary = {
+        applications: history.filter(h => h.eventType === 'application').length,
+        referrals: history.filter(h => h.eventType === 'referral').length,
+        rejections: history.filter(h => h.eventType === 'rejection').length,
+        placements: history.filter(h => h.eventType === 'placement').length,
+        appointmentsScheduled: history.filter(h => h.eventType === 'appointment_scheduled').length,
+        appointmentsCompleted: history.filter(h => h.eventType === 'appointment_completed').length,
+        appointmentsCancelled: history.filter(h => h.eventType === 'appointment_cancelled').length,
+        resumeBuilder: history.filter(h => h.eventType === 'resume_builder').length,
+        manualNotes: history.filter(h => h.eventType === 'manual_note').length
+    };
+    
+    // Grid de estadísticas
+    const stats = [
+        { label: 'Total de Aplicaciones', value: summary.applications, icon: '📤' },
+        { label: 'Referidos Enviados', value: summary.referrals, icon: '✅' },
+        { label: 'Solicitudes Rechazadas', value: summary.rejections, icon: '❌' },
+        { label: 'Colocaciones Exitosas', value: summary.placements, icon: '🎯' },
+        { label: 'Citas Programadas', value: summary.appointmentsScheduled, icon: '📅' },
+        { label: 'Citas Completadas', value: summary.appointmentsCompleted, icon: '✓' },
+        { label: 'Citas Canceladas', value: summary.appointmentsCancelled, icon: '✗' },
+        { label: 'Registros Resume Builder', value: summary.resumeBuilder, icon: '📄' },
+        { label: 'Notas Manuales', value: summary.manualNotes, icon: '📝' }
+    ];
+    
+    let col = 0;
+    let row = 0;
+    const colWidth = 85;
+    const rowHeight = 20;
+    
+    stats.forEach(stat => {
+        const x = margin + (col * colWidth);
+        const y = yPos + (row * rowHeight);
+        
+        doc.setFillColor(248, 249, 250);
+        doc.rect(x, y, 80, 15, 'F');
+        
+        addText(stat.icon, x + 3, y + 10, 12);
+        addText(stat.value.toString(), x + 12, y + 10, 16, 'bold');
+        addText(stat.label, x + 25, y + 10, 9);
+        
+        col++;
+        if (col >= 2) {
+            col = 0;
+            row++;
+        }
+    });
+    
+    yPos += (Math.ceil(stats.length / 2) * rowHeight) + 20;
+    
+    // Periodo
+    const firstEvent = history[history.length - 1];
+    const lastEvent = history[0];
+    const startDate = new Date(firstEvent.timestamp).toLocaleDateString('es-ES');
+    const endDate = new Date(lastEvent.timestamp).toLocaleDateString('es-ES');
+    
+    doc.setFillColor(227, 242, 253);
+    doc.rect(margin - 5, yPos, 175, 15, 'F');
+    addText(`📅 Periodo de Actividad: ${startDate} - ${endDate}`, margin, yPos + 10, 10, 'bold');
+    yPos += 25;
+    
+    addText(`📊 Total de Eventos Registrados: ${history.length}`, margin, yPos, 10);
+    yPos += 10;
+
+    // ========== PIE DE PÁGINA ==========
+    yPos = 270;
+    addLine(yPos - 5);
+    doc.setFontSize(8);
+    doc.setTextColor(100, 100, 100);
+    addText('Documento Confidencial - Oficina de Carreras y Colocaciones UAGM', margin, yPos);
+    addText('Generado el: ' + new Date().toLocaleString('es-ES'), margin, yPos + 5);
+    addText('Este documento forma parte del expediente del participante', margin, yPos + 10);
+
+    // Generar y descargar
+    const fileName = `Historial_${participant.firstName}_${participant.lastName}_${new Date().toISOString().split('T')[0]}.pdf`;
+    doc.save(fileName);
+    
+    showNotification('PDF del historial generado: ' + fileName, 'success');
+}
+
+// ============= FIN FUNCIÓN PARA GENERAR PDF DEL HISTORIAL =============
 
     </script>
 </body>
