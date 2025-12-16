@@ -936,13 +936,37 @@
 
 <div class="search-filter-bar">
     <input type="text" class="search-input" id="offersSearch" placeholder="🔍 Buscar por empresa, posición o ubicación..." oninput="filterOffers()">
+    
+    <select class="filter-select" id="divisionFilter" onchange="filterOffers()">
+    <option value="">Todos los sectores</option>
+    <option value="administracion">Administración</option>
+    <option value="finanzas">Finanzas</option>
+    <option value="salud">Salud</option>
+    <option value="ciencias">Ciencias</option>
+    <option value="tecnologia">Tecnología y Sistemas</option>
+    <option value="ventas">Ventas</option>
+    <option value="mercadeo">Mercadeo</option>
+    <option value="servicios">Servicios al Cliente</option>
+    <option value="operaciones">Operaciones y Logística</option>
+    <option value="ingenieria">Ingeniería y Manufactura</option>
+    <option value="hospitalidad">Hospitalidad y Turismo</option>
+    <option value="educacion">Educación</option>
+</select>
+    
+    <select class="filter-select" id="typeFilter" onchange="filterOffers()">
+        <option value="">Todos los tipos</option>
+        <option value="full-time">Full-Time</option>
+        <option value="part-time">Part-Time</option>
+        <option value="regular">Regular</option>
+        <option value="temporary">Temporero</option>
+    </select>
+    
     <select class="filter-select" id="statusFilter" onchange="filterOffers()">
         <option value="">Todas las ofertas</option>
         <option value="active">Solo activas</option>
         <option value="expiring">Vencen pronto</option>
     </select>
 </div>
-
                 <div id="offersContainer">
                     <div class="no-offers">
                         <i class="fas fa-info-circle"></i>
@@ -1559,6 +1583,8 @@ async function createAutoApplication(participantData, offerId) {
 function filterOffers() {
     const search = document.getElementById('offersSearch').value.toLowerCase();
     const statusFilter = document.getElementById('statusFilter').value;
+    const divisionFilter = document.getElementById('divisionFilter').value;
+    const typeFilter = document.getElementById('typeFilter').value;
     
     let filteredOffers = offers;
     
@@ -1569,6 +1595,20 @@ function filterOffers() {
             offer.position.toLowerCase().includes(search) ||
             offer.location.toLowerCase().includes(search) ||
             (offer.requirements && offer.requirements.toLowerCase().includes(search))
+        );
+    }
+    
+    // Filtro por división académica
+    if (divisionFilter) {
+        filteredOffers = filteredOffers.filter(offer => 
+            offer.academicDivision && offer.academicDivision === divisionFilter
+        );
+    }
+    
+    // Filtro por tipo de posición
+    if (typeFilter) {
+        filteredOffers = filteredOffers.filter(offer => 
+            offer.positionType && offer.positionType === typeFilter
         );
     }
     
