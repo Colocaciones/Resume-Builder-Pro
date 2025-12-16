@@ -512,6 +512,27 @@
                     <textarea id="requirements" required placeholder="Ej: Bachillerato en Ingeniería, 3 años de experiencia..."></textarea>
                 </div>
 
+<div class="form-group">
+    <label>Sector Industrial <span class="required">*</span></label>
+    <select id="academicDivision" required>
+        <option value="">Seleccionar...</option>
+        <option value="administracion">Administración</option>
+        <option value="finanzas">Finanzas</option>
+        <option value="salud">Salud</option>
+        <option value="ciencias">Ciencias</option>
+        <option value="tecnologia">Tecnología y Sistemas</option>
+        <option value="ventas">Ventas</option>
+        <option value="mercadeo">Mercadeo</option>
+        <option value="servicios">Servicios al Cliente</option>
+        <option value="operaciones">Operaciones y Logística</option>
+        <option value="ingenieria">Ingeniería y Manufactura</option>
+        <option value="hospitalidad">Hospitalidad y Turismo</option>
+        <option value="educacion">Educación</option>
+        <option value="todos">Todos los sectores</option>
+    </select>
+    <div class="help-text">Selecciona el sector que mejor describe esta posición</div>
+                </div>
+
                 <!-- Detalles del Empleo -->
                 <div class="section-title">
                     <i class="fas fa-clipboard-list"></i>
@@ -689,7 +710,7 @@
             const requiredFields = [
     'today', 'patronType', 'companyName', 'contactPerson', 
     'phone', 'email', 'receivedThrough', 'position', 
-    'requirements', 'workSchedule', 'employmentType', 'salary', 'location', 'deadline'
+    'requirements', 'academicDivision', 'workSchedule', 'employmentType', 'salary', 'location', 'deadline'
 ];
 
             for (let fieldId of requiredFields) {
@@ -732,29 +753,30 @@
 
             // Recopilar datos del formulario
             const offerData = {
-                id: Date.now().toString(),
-                today: document.getElementById('today').value,
-                patronType: document.getElementById('patronType').value,
-                companyName: document.getElementById('companyName').value,
-                contactPerson: document.getElementById('contactPerson').value,
-                contactPosition: document.getElementById('contactPosition').value,
-                phone: document.getElementById('phone').value,
-                email: document.getElementById('email').value,
-                receivedThrough: document.getElementById('receivedThrough').value,
-                position: document.getElementById('position').value,
-                jobDescription: document.getElementById('jobDescription').value,
-                schedule: document.getElementById('schedule').value,
-                requirements: document.getElementById('requirements').value,
-                workSchedule: document.getElementById('workSchedule').value,
-                employmentType: document.getElementById('employmentType').value,
-                salary: document.getElementById('salary').value,
-                location: document.getElementById('location').value,
-                deadline: document.getElementById('deadline').value,
-                notes: document.getElementById('notes').value,
-                status: 'active',
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString()
-            };
+    id: Date.now().toString(),
+    today: document.getElementById('today').value,
+    patronType: document.getElementById('patronType').value,
+    companyName: document.getElementById('companyName').value,
+    contactPerson: document.getElementById('contactPerson').value,
+    contactPosition: document.getElementById('contactPosition').value,
+    phone: document.getElementById('phone').value,
+    email: document.getElementById('email').value,
+    receivedThrough: document.getElementById('receivedThrough').value,
+    position: document.getElementById('position').value,
+    jobDescription: document.getElementById('jobDescription').value,
+    schedule: document.getElementById('schedule').value,
+    requirements: document.getElementById('requirements').value,
+    academicDivision: document.getElementById('academicDivision').value,
+    workSchedule: document.getElementById('workSchedule').value,
+    employmentType: document.getElementById('employmentType').value,
+    salary: document.getElementById('salary').value,
+    location: document.getElementById('location').value,
+    deadline: document.getElementById('deadline').value,
+    notes: document.getElementById('notes').value,
+    status: 'active',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+};
 
             // Recopilar actividades seleccionadas
             const activities = [];
