@@ -890,6 +890,279 @@
     line-height: 1.6;
     font-size: 14px;
 }
+
+
+/* PLANTILLA STOCKHOLM PRO - VERDADERO ESTILO RESUME.IO */
+.template-stockholm-pro {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    gap: 0;
+    padding: 0;
+    background: white;
+    font-family: 'Inter', 'Lato', sans-serif;
+    max-width: 210mm;
+    margin: 0 auto;
+}
+
+.template-stockholm-pro .resume-header {
+    grid-column: 1 / -1;
+    background: white;
+    padding: 50px 50px 30px 50px;
+    margin: 0;
+    border-bottom: none;
+}
+
+.template-stockholm-pro .name {
+    font-size: 48px;
+    font-weight: 900;
+    color: #111827;
+    margin-bottom: 15px;
+    letter-spacing: -1px;
+    line-height: 1;
+}
+
+.template-stockholm-pro .contact-info {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    font-size: 13px;
+    color: #6B7280;
+    font-weight: 500;
+}
+
+.template-stockholm-pro .contact-info span {
+    position: relative;
+    padding-left: 22px;
+}
+
+.template-stockholm-pro .contact-info span::before {
+    position: absolute;
+    left: 0;
+    color: #2563eb;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.template-stockholm-pro .contact-info span:nth-child(1)::before { content: "✉"; }
+.template-stockholm-pro .contact-info span:nth-child(2)::before { content: "☎"; }
+.template-stockholm-pro .contact-info span:nth-child(3)::before { content: "⌖"; }
+.template-stockholm-pro .contact-info span:nth-child(4)::before { content: "◉"; }
+
+.template-stockholm-pro .resume-summary {
+    grid-column: 1 / -1;
+    padding: 0 50px 35px 50px;
+    margin: 0;
+    background: white;
+    text-align: center;
+}
+
+.template-stockholm-pro .resume-summary h3 {
+    font-size: 14px;
+    font-weight: 700;
+    color: #111827;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    margin-bottom: 15px;
+    padding-bottom: 8px;
+    border-bottom: 3px solid #2563eb;
+    display: inline-block;
+    text-align: center;
+}
+
+.template-stockholm-pro .resume-summary p {
+    font-size: 14px;
+    line-height: 1.7;
+    color: #4b5563;
+    margin: 0 auto;
+    max-width: 700px;
+    text-align: center;
+}
+.template-stockholm-pro .left-column {
+    grid-column: 1;
+    grid-row: 3;
+    background: #F9FAFB;
+    padding: 0 25px 50px 25px;
+    min-height: 100%;
+    border-right: 1px solid #E5E7EB;
+}
+.template-stockholm-pro .left-column .resume-section {
+    margin-bottom: 35px;
+}
+
+.template-stockholm-pro .left-column .resume-section:last-child {
+    margin-bottom: 0;
+}
+
+.template-stockholm-pro .left-column .resume-section h3 {
+    font-size: 13px;
+    font-weight: 700;
+    color: #111827;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 18px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #2563eb;
+}
+
+.template-stockholm-pro .left-column .education-item {
+    margin-bottom: 20px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #E5E7EB;
+}
+
+.template-stockholm-pro .left-column .education-item:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.template-stockholm-pro .left-column .degree-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #2563eb;
+    margin-bottom: 6px;
+    line-height: 1.4;
+}
+
+.template-stockholm-pro .left-column .institution-info {
+    font-size: 12px;
+    color: #6b7280;
+    line-height: 1.5;
+    margin-bottom: 0;
+}
+
+/* Skills en bullets solo para Stockholm Pro */
+.template-stockholm-pro .left-column .skills-category {
+    margin-bottom: 0;
+}
+
+.template-stockholm-pro .left-column .skills-category h4 {
+    display: none;
+}
+
+.template-stockholm-pro .left-column .skills-list {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+    padding-left: 5px;
+}
+
+.template-stockholm-pro .left-column .skill-tag {
+    background: transparent !important;
+    color: #374151 !important;
+    padding: 0 0 0 18px !important;
+    border-radius: 0 !important;
+    font-size: 12px !important;
+    font-weight: 500 !important;
+    display: block !important;
+    text-align: left !important;
+    margin: 0 0 6px 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+    position: relative !important;
+    line-height: 1.5 !important;
+}
+
+.template-stockholm-pro .left-column .skill-tag::before {
+    content: "•" !important;
+    position: absolute !important;
+    left: 0 !important;
+    color: #2563eb !important;
+    font-size: 16px !important;
+    font-weight: 700 !important;
+    line-height: 1 !important;
+}
+
+.template-stockholm-pro .left-column .skill-tag:hover {
+    color: #2563eb !important;
+    background: transparent !important;
+}
+
+
+.template-stockholm-pro .right-column {
+    grid-column: 2;
+    grid-row: 3;
+    padding: 0 50px 50px 40px;
+    background: white;
+}
+.template-stockholm-pro .right-column .resume-section {
+    margin-bottom: 40px;
+}
+
+.template-stockholm-pro .right-column .resume-section:last-child {
+    margin-bottom: 0;
+}
+
+.template-stockholm-pro .right-column .resume-section h3 {
+    font-size: 14px;
+    font-weight: 700;
+    color: #111827;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    margin-bottom: 25px;
+    padding-bottom: 8px;
+    border-bottom: 3px solid #2563eb;
+}
+
+.template-stockholm-pro .right-column .experience-item {
+    margin-bottom: 30px;
+    padding-bottom: 0;
+    border: none;
+}
+
+.template-stockholm-pro .right-column .experience-item:last-child {
+    margin-bottom: 0;
+}
+
+.template-stockholm-pro .right-column .job-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #2563eb;
+    margin-bottom: 5px;
+    line-height: 1.3;
+}
+
+.template-stockholm-pro .right-column .company-info {
+    font-size: 13px;
+    color: #6B7280;
+    font-weight: 500;
+    margin-bottom: 12px;
+    letter-spacing: 0.3px;
+}
+
+.template-stockholm-pro .right-column .job-description {
+    font-size: 14px;
+    line-height: 1.7;
+    color: #4b5563;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+    .template-stockholm-pro {
+        grid-template-columns: 1fr;
+    }
+    
+    .template-stockholm-pro .resume-header {
+        padding: 40px 30px 25px 30px;
+    }
+    
+    .template-stockholm-pro .name {
+        font-size: 36px;
+    }
+    
+    .template-stockholm-pro .left-column {
+        padding: 30px;
+        border-right: none;
+        border-bottom: 2px solid #E5E7EB;
+    }
+    
+    .template-stockholm-pro .right-column {
+        padding: 30px;
+    }
+    
+    .template-stockholm-pro .resume-summary {
+        padding: 0 30px 30px 30px;
+    }
+}
         
         .contact-info {
             font-size: 14px;
@@ -940,7 +1213,83 @@
             border-radius: 12px;
             font-size: 12px;
         }
-        
+
+/* ========================================
+   BULLETS PARA TODAS LAS PLANTILLAS
+   ======================================== */
+
+/* Forzar bullets en TODOS los skill-tags - AMBAS ESTRUCTURAS */
+.skill-tag,
+.resume-section .skill-tag,
+.skills-category .skill-tag,
+.left-column .skill-tag,
+.right-column .skill-tag {
+    background: transparent !important;
+    border: none !important;
+    padding: 0 0 0 18px !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    position: relative !important;
+    line-height: 1.6 !important;
+    display: block !important;
+    margin-bottom: 8px !important;
+    margin-right: 0 !important;
+    text-align: left !important;
+    width: auto !important;
+    max-width: 100% !important;
+    white-space: normal !important;
+    word-wrap: break-word !important;
+    font-size: 12px !important;
+    font-weight: 500 !important;
+    color: #374151 !important;
+}
+
+/* Bullet universal para TODAS las estructuras */
+.skill-tag::before,
+.resume-section .skill-tag::before,
+.skills-category .skill-tag::before,
+.left-column .skill-tag::before,
+.right-column .skill-tag::before {
+    content: "•" !important;
+    position: absolute !important;
+    left: 0 !important;
+    font-size: 16px !important;
+    font-weight: 700 !important;
+    line-height: 1 !important;
+    top: 2px !important;
+}
+
+/* Colores por plantilla */
+.template-modern .skill-tag::before { color: #667eea !important; }
+.template-creative .skill-tag::before { color: #667eea !important; }
+.template-minimal .skill-tag::before { color: #667eea !important; }
+.template-elegant .skill-tag::before { color: #1a202c !important; }
+.template-clean .skill-tag::before { color: #48bb78 !important; }
+.template-corporate .skill-tag::before { color: #2b6cb0 !important; }
+.template-professional .skill-tag::before { color: #2d3748 !important; }
+.template-berlin .skill-tag::before { color: #3b82f6 !important; }
+.template-vienna .skill-tag::before { color: #d69e2e !important; }
+.template-stockholm-pro .skill-tag::before { color: #2563eb !important; }
+
+/* Layout vertical para TODAS las listas - TODAS LAS ESTRUCTURAS */
+.skills-list,
+.resume-section .skills-list,
+.skills-category .skills-list,
+.left-column .skills-list,
+.right-column .skills-list {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 6px !important;
+    align-items: flex-start !important;
+    flex-wrap: nowrap !important;
+}
+
+/* Hover sutil */
+.skill-tag:hover {
+    background: transparent !important;
+    opacity: 0.7 !important;
+    border: none !important;
+}
 	@media (max-width: 768px) {
     	    .container { padding: 10px; }
     	    .header { padding: 20px; font-size: 14px; }
@@ -977,6 +1326,7 @@
             padding-right: 0; 
             padding-bottom: 20px; 
     	}
+
 @media (max-width: 1024px) and (min-width: 769px) {
     .container { max-width: 100%; }
     .controls { gap: 8px; }
@@ -1597,6 +1947,7 @@
     <option value="professional">Profesional</option>
     <option value="berlin">Berlin</option>
     <option value="vienna">Vienna</option>
+    <option value="stockholm-pro">Stockholm Pro</option>
 </select>
 
 	    <select id="font-select">
@@ -1641,7 +1992,7 @@
                 </div>
                 <div class="form-group">
                     <label id="phone-label">Teléfono</label>
-                    <input type="tel" id="phone" placeholder="+1 234 567 8900" oninput="updatePreview()">
+                    <input type="tel" id="phone" placeholder="(787) 123-4567" oninput="formatPhoneNumber(this)" maxlength="14">
                 </div>
                 <div class="form-group">
                     <label id="location-label">Ubicación</label>
@@ -1657,13 +2008,13 @@
                 <div id="experience-container"></div>
                 <button class="btn btn-add btn-small" onclick="addExperience()" id="add-experience-btn">+ Agregar Experiencia</button>
 
-                <h2 class="section-title" id="education-title">Educación</h2>
+                <h2 class="section-title" id="education-title">Educación (mas reciente o en proceso)</h2>
                 <div id="education-container"></div>
                 <button class="btn btn-add btn-small" onclick="addEducation()" id="add-education-btn">+ Agregar Educación</button>
 
                 <h2 class="section-title" id="skills-title">Habilidades</h2>
                 <div id="skills-container"></div>
-                <button class="btn btn-add btn-small" onclick="addSkillCategory()" id="add-skill-btn">+ Agregar Categoría</button>
+                <button class="btn btn-add btn-small" onclick="addSkillCategory(); this.style.display='none';" id="add-skill-btn">+ Agregar Categoría</button>
 
 		<h2 class="section-title" id="certifications-title">Certificaciones y Adiestramientos</h2>
 		<div id="certifications-container"></div>
@@ -1672,6 +2023,10 @@
 		<h2 class="section-title" id="volunteer-title">Experiencia de Voluntariado e Internados</h2>
 		<div id="volunteer-container"></div>
 		<button class="btn btn-add btn-small" onclick="addVolunteer()" id="add-volunteer-btn">+ Agregar Voluntariado</button>
+                <h2 class="section-title" id="achievements-title">Logros Destacados</h2>
+                <div id="achievements-container"></div>
+                <button class="btn btn-add btn-small" onclick="addAchievement()" id="add-achievement-btn">+ Agregar Logro</button>
+
             </div>
 
             <div class="preview-section">
@@ -1718,6 +2073,10 @@
              <h3 id="preview-volunteer-title">Voluntariado</h3>
              <div id="preview-volunteer">Tu experiencia de voluntariado aparecerá aquí...</div>
     	</div>
+        <div class="resume-section">
+             <h3 id="preview-achievements-title">Logros Destacados</h3>
+             <div id="preview-achievements">Tus logros destacados aparecerán aquí...</div>
+        </div>
     </div>
 </div>
 
@@ -1750,11 +2109,77 @@ function initializeFirebase() {
 }
 
 let currentLang = 'es';
+
+// Diccionario de corrección de acentos
+const accentCorrections = {
+    'administracion': 'administración',
+    'comunicacion': 'comunicación',
+    'organizacion': 'organización',
+    'gestion': 'gestión',
+    'atencion': 'atención',
+    'negociacion': 'negociación',
+    'solucion': 'solución',
+    'resolucion': 'resolución',
+    'informacion': 'información',
+    'educacion': 'educación',
+    'capacitacion': 'capacitación',
+    'coordinacion': 'coordinación',
+    'planificacion': 'planificación',
+    'supervision': 'supervisión',
+    'direccion': 'dirección',
+    'operacion': 'operación',
+    'evaluacion': 'evaluación',
+    'implementacion': 'implementación',
+    'optimizacion': 'optimización',
+    'profesional': 'profesional',
+    'tecnico': 'técnico',
+    'practico': 'práctico',
+    'estrategico': 'estratégico',
+    'logico': 'lógico',
+    'dinamico': 'dinámico',
+    'sistematico': 'sistemático',
+    'metodico': 'metódico',
+    'analitico': 'analítico',
+    'critico': 'crítico'
+};
 let expCount = 0;
 let eduCount = 0;
 let skillCount = 0;
 let certCount = 0;
 let volunteerCount = 0;
+let achievementCount = 0;
+
+// Función para corregir acentos automáticamente
+function correctAccents(text) {
+    if (currentLang !== 'es') return text;
+    
+    let correctedText = text;
+    
+    // Corregir cada palabra del diccionario
+    for (const [wrong, correct] of Object.entries(accentCorrections)) {
+        const regex = new RegExp('\\b' + wrong + '\\b', 'gi');
+        correctedText = correctedText.replace(regex, correct);
+    }
+    
+    return correctedText;
+}
+
+// Función para aplicar corrección en tiempo real
+function applyAccentCorrection(event) {
+    if (currentLang !== 'es') return;
+    
+    const element = event.target;
+    const cursorPosition = element.selectionStart;
+    const originalText = element.value;
+    const correctedText = correctAccents(originalText);
+    
+    if (originalText !== correctedText) {
+        element.value = correctedText;
+        // Mantener posición del cursor
+        element.setSelectionRange(cursorPosition, cursorPosition);
+        updatePreview();
+    }
+}
 
 const predefinedSkills = {
     es: {
@@ -1862,14 +2287,23 @@ const texts = {
         locationLabel: "Ubicación",
         summaryTitle: "Perfil Profesional",
         experienceTitle: "Experiencia Laboral",
-        educationTitle: "Educación",
+        educationTitle: "Educación (mas reciente o en proceso)",
         skillsTitle: "Habilidades",
 	certificationsTitle: "Certificaciones y Adiestramientos",
 	volunteerTitle: "Voluntariado e Internados",
+achievementsTitle: "Logros Destacados",
+    addAchievement: "+ Agregar Logro",
+    achievementTitle: "Título del Logro",
+    achievementRole: "Puesto o Rol Relacionado",
+    achievementCompany: "Empresa / Institución",
+    achievementDate: "Fecha (Año)",
+    achievementDescription: "Descripción Breve del Logro",
+    achievementResults: "Resultados (números, cantidad, tiempo)",
+    achievementSkill: "Habilidad Demostrada",
         previewTitle: "Vista Previa",
         addExperience: "+ Agregar Experiencia",
         addEducation: "+ Agregar Educación",
-        addSkill: "+ Agregar Categoría",
+        addSkill: "+ Agregar Habilidades",
 	addCertification: "+ Agregar Certificación",
 	addVolunteer: "+ Agregar Experiencia",
 	volunteerRole: "Rol/Posición",
@@ -1888,6 +2322,7 @@ const texts = {
         tasks: "Tareas y Responsabilidades",
         degree: "Título/Grado",
         institution: "Institución",
+concentration: "Concentración",
         year: "Año",
         description: "Descripción",
         skillCategory: "Categoría",
@@ -1910,7 +2345,8 @@ const texts = {
             corporate: "Corporativa",
 	    professional: "Profesional",
 	    berlin: "Berlin", 
-            vienna: "Vienna"
+            vienna: "Vienna",
+            stockholmPro: "Stockholm Pro"
         }
     },
     en: {
@@ -1923,14 +2359,23 @@ const texts = {
         locationLabel: "Location",
         summaryTitle: "Professional Summary",
         experienceTitle: "Work Experience",
-        educationTitle: "Education",
+        educationTitle: "Education (most recent first or in progress)",
         skillsTitle: "Skills",
 	certificationsTitle: "Certifications & Training",
 	volunteerTitle: "Volunteer & Internships",
+achievementsTitle: "Key Achievements",
+    addAchievement: "+ Add Achievement",
+    achievementTitle: "Achievement Title",
+    achievementRole: "Related Position or Role",
+    achievementCompany: "Company / Institution",
+    achievementDate: "Date (Year)",
+    achievementDescription: "Brief Description of Achievement",
+    achievementResults: "Results (numbers, quantity, time)",
+    achievementSkill: "Demonstrated Skill",
         previewTitle: "Preview",
         addExperience: "+ Add Experience",
         addEducation: "+ Add Education",
-        addSkill: "+ Add Category",
+        addSkill: "+ Add Skills",
 	addCertification: "+ Add Certification",
 	addVolunteer: "+ Add Experience",
 	certificationName: "Certification/Course",
@@ -1948,6 +2393,7 @@ const texts = {
         tasks: "Tasks and Responsibilities",
         degree: "Degree/Title",
         institution: "Institution",
+concentration: "Concentration",
         year: "Year",
         description: "Description",
         skillCategory: "Category",
@@ -1970,7 +2416,8 @@ const texts = {
             corporate: "Corporate",
 	    professional: "Profesional",
 	    berlin: "Berlin",
-            vienna: "Vienna"
+            vienna: "Vienna",
+            stockholmPro: "Stockholm Pro"
         }
     }
 };
@@ -2005,6 +2452,13 @@ function setupEvents() {
     document.getElementById('font-size-select').onchange = function() {
         updateFontSize();
     };
+
+// Activar corrección de acentos en todos los campos de texto
+    document.addEventListener('input', function(event) {
+        if (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA') {
+            applyAccentCorrection(event);
+        }
+    });
 
 }
 
@@ -2064,6 +2518,8 @@ function updateLanguage() {
     document.getElementById('volunteer-title').textContent = t.volunteerTitle;
     document.getElementById('add-certification-btn').textContent = t.addCertification;
     document.getElementById('add-volunteer-btn').textContent = t.addVolunteer;
+document.getElementById('achievements-title').textContent = t.achievementsTitle;
+document.getElementById('add-achievement-btn').textContent = t.addAchievement;
     
 
     document.getElementById('preview-summary-title').textContent = t.summaryTitle;
@@ -2072,6 +2528,11 @@ function updateLanguage() {
     document.getElementById('preview-skills-title').textContent = t.skillsTitle;
     document.getElementById('preview-certifications-title').textContent = t.certificationsTitle;
     document.getElementById('preview-volunteer-title').textContent = t.volunteerTitle;
+document.getElementById('preview-achievements-title').textContent = t.achievementsTitle;
+
+// Actualizar placeholder del teléfono según idioma
+    document.getElementById('phone').placeholder = currentLang === 'es' ? '(787) 123-4567' : '(787) 123-4567';
+
 // Actualizar textos del menú (con verificación)
 const menuText = document.getElementById('menu-text');
 if (menuText) menuText.textContent = currentLang === 'es' ? 'MENÚ' : 'MENU';
@@ -2117,6 +2578,7 @@ function updateTemplateOptions() {
 	<option value="professional">${t.professional}</option>
 	<option value="berlin">${t.berlin}</option>
         <option value="vienna">${t.vienna}</option>
+        <option value="stockholm-pro">${t.stockholmPro}</option>
     `;
     select.value = current;
 }
@@ -2189,6 +2651,12 @@ function toggleCurrentJob(expId) {
         endDateInput.style.color = '';
     }
     
+// Activar corrección en nuevos campos
+    const newSection = document.getElementById(`exp-${id}`);
+    newSection.querySelectorAll('input, textarea').forEach(field => {
+        field.addEventListener('input', applyAccentCorrection);
+    });
+
     updatePreview();
 }
 
@@ -2207,17 +2675,23 @@ function addEducation() {
             <div class="form-row">
                 <div class="form-group">
                     <label>${t.degree}</label>
-                    <input type="text" class="edu-degree" placeholder="Licenciatura en Ciencias" oninput="updatePreview()">
+                    <input type="text" class="edu-degree" placeholder="Bachillerato, Maestría, Doctorado" oninput="updatePreview()">
                 </div>
                 <div class="form-group">
                     <label>${t.institution}</label>
-                    <input type="text" class="edu-institution" placeholder="Universidad Nacional" oninput="updatePreview()">
+                    <input type="text" class="edu-institution" placeholder="Universidad Ana G. Méndez" oninput="updatePreview()">
                 </div>
             </div>
             
-            <div class="form-group">
-                <label>${t.year}</label>
-                <input type="text" class="edu-year" placeholder="2015-2019" oninput="updatePreview()">
+            <div class="form-row">
+                <div class="form-group">
+                    <label>${t.concentration || 'Concentración'}</label>
+                    <input type="text" class="edu-concentration" placeholder="Sistemas de Información" oninput="updatePreview()">
+                </div>
+                <div class="form-group">
+                    <label>${t.year}</label>
+                    <input type="text" class="edu-year" placeholder="2015-2019" oninput="updatePreview()">
+                </div>
             </div>
             
             <div class="form-group">
@@ -2228,38 +2702,75 @@ function addEducation() {
     `;
     
     container.insertAdjacentHTML('beforeend', html);
+    
+    // Activar corrección en nuevos campos
+    const newSection = document.getElementById(`edu-${id}`);
+    newSection.querySelectorAll('input, textarea').forEach(field => {
+        field.addEventListener('input', applyAccentCorrection);
+    });
+    
     updatePreview();
 }
-
 function addSkillCategory() {
     const container = document.getElementById('skills-container');
     const t = texts[currentLang];
+    
+    // Prevenir que se creen múltiples secciones
+    if (skillCount > 0) return;
+    
     const id = skillCount++;
     
     const html = `
         <div class="dynamic-section" id="skill-cat-${id}">
-            <button class="btn btn-remove btn-small remove-btn" onclick="removeItem('skill-cat-${id}')">
-                ${t.remove}
-            </button>
-            <h4>${t.skillsTitle} ${id + 1}</h4>
+            <h4>${currentLang === 'es' ? 'Habilidades Profesionales' : 'Professional Skills'}</h4>
             
-            <div class="skill-selection-container" id="skill-selection-${id}">
-                <label>${currentLang === 'es' ? 'Seleccionar habilidades:' : 'Select skills:'}</label>
-                <div class="skill-checkboxes" id="skill-checkboxes-${id}"></div>
+            <!-- HABILIDADES TÉCNICAS -->
+            <div class="skill-selection-container" style="margin-bottom: 30px;">
+                <label style="font-weight: bold; font-size: 16px; color: #2d3748; margin-bottom: 10px; display: block;">
+                    ${currentLang === 'es' ? '🔧 Habilidades Técnicas' : '🔧 Technical Skills'}
+                </label>
+                <div class="skill-checkboxes" id="skill-checkboxes-technical-${id}"></div>
                 
                 <div class="custom-skill-section">
-                    <label>${currentLang === 'es' ? 'Agregar habilidad personalizada:' : 'Add custom skill:'}</label>
+                    <label>${currentLang === 'es' ? 'Agregar habilidad técnica personalizada:' : 'Add custom technical skill:'}</label>
                     <div class="custom-skill-input-container">
                         <input 
                             type="text" 
-                            id="custom-skill-input-${id}" 
-                            placeholder="${currentLang === 'es' ? 'Escribir nueva habilidad...' : 'Write new skill...'}"
+                            id="custom-skill-input-technical-${id}" 
+                            placeholder="${currentLang === 'es' ? 'Escribir nueva habilidad técnica...' : 'Write new technical skill...'}"
                             class="custom-skill-input"
                         >
                         <button 
                             type="button" 
                             class="btn btn-add btn-small" 
-                            onclick="addCustomSkill(${id})"
+                            onclick="addCustomSkill(${id}, 'technical')"
+                        >
+                            ${currentLang === 'es' ? 'Agregar' : 'Add'}
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- HABILIDADES BLANDAS -->
+            <div class="skill-selection-container" style="margin-bottom: 20px;">
+                <label style="font-weight: bold; font-size: 16px; color: #2d3748; margin-bottom: 10px; display: block;">
+                    ${currentLang === 'es' ? '💡 Habilidades Blandas' : '💡 Soft Skills'}
+                </label>
+                <div class="skill-checkboxes" id="skill-checkboxes-soft-${id}"></div>
+                
+                <div class="custom-skill-section">
+                    <label>${currentLang === 'es' ? 'Agregar habilidad blanda personalizada:' : 'Add custom soft skill:'}</label>
+                    <div class="custom-skill-input-container">
+                        <input 
+                            type="text" 
+                            id="custom-skill-input-soft-${id}" 
+                            placeholder="${currentLang === 'es' ? 'Escribir nueva habilidad blanda...' : 'Write new soft skill...'}"
+                            class="custom-skill-input"
+                        >
+                        <button 
+                            type="button" 
+                            class="btn btn-add btn-small" 
+                            onclick="addCustomSkill(${id}, 'soft')"
                         >
                             ${currentLang === 'es' ? 'Agregar' : 'Add'}
                         </button>
@@ -2268,7 +2779,7 @@ function addSkillCategory() {
             </div>
             
             <div class="selected-skills-display" id="selected-skills-${id}">
-                <h5>${currentLang === 'es' ? 'Habilidades seleccionadas:' : 'Selected skills:'}</h5>
+                <h5>${currentLang === 'es' ? 'Todas las habilidades seleccionadas:' : 'All selected skills:'}</h5>
                 <div class="skills-list" id="skills-list-${id}"></div>
             </div>
         </div>
@@ -2276,36 +2787,32 @@ function addSkillCategory() {
     
     container.insertAdjacentHTML('beforeend', html);
     
-    // Cargar todas las habilidades automáticamente
-    loadAllSkills(id);
+    // Cargar habilidades técnicas y blandas por separado
+    loadSkillsByType(id, 'technical');
+    loadSkillsByType(id, 'soft');
+    
+    // Activar corrección en nuevos campos
+    const newSection = document.getElementById(`skill-cat-${id}`);
+    newSection.querySelectorAll('input, textarea').forEach(field => {
+        field.addEventListener('input', applyAccentCorrection);
+    });
     
     updatePreview();
 }
 
-function loadAllSkills(categoryId) {
-    const skillCheckboxes = document.getElementById(`skill-checkboxes-${categoryId}`);
+function loadSkillsByType(categoryId, type) {
+    const skillCheckboxes = document.getElementById(`skill-checkboxes-${type}-${categoryId}`);
+    if (!skillCheckboxes) return;
+    
     skillCheckboxes.innerHTML = '';
     
-    // Primero agregar habilidades técnicas
-    const technicalSkills = predefinedSkills[currentLang]['technical'];
-    technicalSkills.forEach((skill, index) => {
-        const checkboxId = `skill-${categoryId}-tech-${index}`;
-        const checkboxHtml = `
-            <div class="skill-checkbox-item">
-                <input type="checkbox" id="${checkboxId}" value="${skill}" onchange="updateSelectedSkills(${categoryId})">
-                <label for="${checkboxId}">${skill}</label>
-            </div>
-        `;
-        skillCheckboxes.insertAdjacentHTML('beforeend', checkboxHtml);
-    });
+    const skills = predefinedSkills[currentLang][type];
     
-    // Luego agregar habilidades blandas
-    const softSkills = predefinedSkills[currentLang]['soft'];
-    softSkills.forEach((skill, index) => {
-        const checkboxId = `skill-${categoryId}-soft-${index}`;
+    skills.forEach((skill, index) => {
+        const checkboxId = `skill-${categoryId}-${type}-${index}`;
         const checkboxHtml = `
             <div class="skill-checkbox-item">
-                <input type="checkbox" id="${checkboxId}" value="${skill}" onchange="updateSelectedSkills(${categoryId})">
+                <input type="checkbox" id="${checkboxId}" value="${skill}" data-type="${type}" onchange="updateSelectedSkills(${categoryId})">
                 <label for="${checkboxId}">${skill}</label>
             </div>
         `;
@@ -2392,18 +2899,79 @@ function addVolunteer() {
     updatePreview();
 }
 
-function addCustomSkill(categoryId) {
-    const customInput = document.getElementById(`custom-skill-input-${categoryId}`);
+function addAchievement() {
+    const container = document.getElementById('achievements-container');
+    const t = texts[currentLang];
+    const id = achievementCount++;
+    
+    const html = `
+        <div class="dynamic-section" id="achievement-${id}">
+            <button class="btn btn-remove btn-small remove-btn" onclick="removeItem('achievement-${id}')">
+                ${t.remove}
+            </button>
+            <h4>${t.achievementsTitle} ${id + 1}</h4>
+            
+            <div class="form-group">
+                <label>${t.achievementTitle}</label>
+                <input type="text" class="achievement-title" placeholder="${currentLang === 'es' ? 'Incremento del 40% en ventas anuales' : 'Increased annual sales by 40%'}" oninput="updatePreview()">
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label>${t.achievementRole}</label>
+                    <input type="text" class="achievement-role" placeholder="${currentLang === 'es' ? 'Gerente de Ventas' : 'Sales Manager'}" oninput="updatePreview()">
+                </div>
+                <div class="form-group">
+                    <label>${t.achievementCompany}</label>
+                    <input type="text" class="achievement-company" placeholder="${currentLang === 'es' ? 'Empresa XYZ' : 'XYZ Company'}" oninput="updatePreview()">
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>${t.achievementDate}</label>
+                <input type="text" class="achievement-date" placeholder="2023" oninput="updatePreview()">
+            </div>
+            
+            <div class="form-group">
+                <label>${t.achievementDescription}</label>
+                <textarea class="achievement-description" rows="2" placeholder="${currentLang === 'es' ? 'Lideré la implementación de una nueva estrategia de ventas...' : 'Led the implementation of a new sales strategy...'}" oninput="updatePreview()"></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label>${t.achievementResults}</label>
+                <input type="text" class="achievement-results" placeholder="${currentLang === 'es' ? '40% de incremento, $500K en ingresos adicionales, 6 meses' : '40% increase, $500K additional revenue, 6 months'}" oninput="updatePreview()">
+            </div>
+            
+            <div class="form-group">
+                <label>${t.achievementSkill}</label>
+                <input type="text" class="achievement-skill" placeholder="${currentLang === 'es' ? 'Liderazgo, Estrategia de Ventas, Análisis de Datos' : 'Leadership, Sales Strategy, Data Analysis'}" oninput="updatePreview()">
+            </div>
+        </div>
+    `;
+    
+    container.insertAdjacentHTML('beforeend', html);
+    
+    // Activar corrección en nuevos campos
+    const newSection = document.getElementById(`achievement-${id}`);
+    newSection.querySelectorAll('input, textarea').forEach(field => {
+        field.addEventListener('input', applyAccentCorrection);
+    });
+    
+    updatePreview();
+}
+
+function addCustomSkill(categoryId, type) {
+    const customInput = document.getElementById(`custom-skill-input-${type}-${categoryId}`);
     const skillValue = customInput.value.trim();
     
     if (skillValue) {
         // Crear un checkbox temporal para la habilidad personalizada
-        const skillCheckboxes = document.getElementById(`skill-checkboxes-${categoryId}`);
-        const customSkillId = `custom-skill-${categoryId}-${Date.now()}`;
+        const skillCheckboxes = document.getElementById(`skill-checkboxes-${type}-${categoryId}`);
+        const customSkillId = `custom-skill-${categoryId}-${type}-${Date.now()}`;
         
         const customSkillHtml = `
             <div class="skill-checkbox-item custom-skill-item">
-                <input type="checkbox" id="${customSkillId}" value="${skillValue}" checked onchange="updateSelectedSkills(${categoryId})">
+                <input type="checkbox" id="${customSkillId}" value="${skillValue}" data-type="${type}" checked onchange="updateSelectedSkills(${categoryId})">
                 <label for="${customSkillId}">${skillValue}</label>
                 <button type="button" class="btn btn-remove btn-small" onclick="removeCustomSkill('${customSkillId}', ${categoryId})" style="margin-left: auto;">×</button>
             </div>
@@ -2431,12 +2999,17 @@ function removeCustomSkill(skillId, categoryId) {
 
 
 function updateSelectedSkills(categoryId) {
-    const checkboxes = document.querySelectorAll(`#skill-checkboxes-${categoryId} input[type="checkbox"]:checked`);
-    const skillsList = document.getElementById(`skills-list-${categoryId}`);
+    // Obtener TODAS las habilidades marcadas (técnicas Y blandas)
+    const technicalCheckboxes = document.querySelectorAll(`#skill-checkboxes-technical-${categoryId} input[type="checkbox"]:checked`);
+    const softCheckboxes = document.querySelectorAll(`#skill-checkboxes-soft-${categoryId} input[type="checkbox"]:checked`);
     
+    const skillsList = document.getElementById(`skills-list-${categoryId}`);
     skillsList.innerHTML = '';
     
-    checkboxes.forEach(checkbox => {
+    // Agregar todas las habilidades juntas (sin separación)
+    const allCheckboxes = [...technicalCheckboxes, ...softCheckboxes];
+    
+    allCheckboxes.forEach(checkbox => {
         const skillTag = document.createElement('span');
         skillTag.className = 'skill-tag';
         skillTag.textContent = checkbox.value;
@@ -2478,6 +3051,30 @@ function removeItem(id) {
     }
 }
 
+function formatPhoneNumber(input) {
+    // Remover todo lo que no sea número
+    let phone = input.value.replace(/\D/g, '');
+    
+    // Limitar a 10 dígitos
+    phone = phone.substring(0, 10);
+    
+    // Aplicar formato (787) 123-4567
+    let formatted = '';
+    if (phone.length > 0) {
+        formatted = '(' + phone.substring(0, 3);
+        if (phone.length >= 4) {
+            formatted += ') ' + phone.substring(3, 6);
+        }
+        if (phone.length >= 7) {
+            formatted += '-' + phone.substring(6, 10);
+        }
+    }
+    
+    input.value = formatted;
+    updatePreview();
+}
+
+
 function updatePreview() {
     // Información personal
     document.getElementById('preview-name').textContent = 
@@ -2501,6 +3098,7 @@ updateEducationPreview();
 updateSkillsPreview();
 updateCertificationsPreview();
 updateVolunteerPreview();
+updateAchievementsPreview();
 }
 
 function updateExperiencePreview() {
@@ -2538,13 +3136,14 @@ function updateEducationPreview() {
     educations.forEach((edu) => {
         const degree = edu.querySelector('.edu-degree')?.value || '';
         const institution = edu.querySelector('.edu-institution')?.value || '';
+        const concentration = edu.querySelector('.edu-concentration')?.value || '';
         const year = edu.querySelector('.edu-year')?.value || '';
         const description = edu.querySelector('.edu-description')?.value || '';
         
         if (degree || institution) {
             html += `
                 <div class="education-item">
-                    <div class="degree-title">${degree}</div>
+                    <div class="degree-title">${degree}${concentration ? ' - ' + concentration : ''}</div>
                     <div class="institution-info">${institution} | ${year}</div>
                     ${description ? `<div>${description}</div>` : ''}
                 </div>
@@ -2562,15 +3161,17 @@ function updateSkillsPreview() {
     
     const skillCategories = document.querySelectorAll('#skills-container .dynamic-section');
     skillCategories.forEach((cat, index) => {
-        // Buscar las habilidades seleccionadas (checkboxes marcados)
-        const selectedSkills = cat.querySelectorAll('.skill-checkboxes input[type="checkbox"]:checked');
+        // Obtener TODAS las habilidades seleccionadas (técnicas Y blandas) juntas
+        const technicalSkills = cat.querySelectorAll('#skill-checkboxes-technical-0 input[type="checkbox"]:checked');
+        const softSkills = cat.querySelectorAll('#skill-checkboxes-soft-0 input[type="checkbox"]:checked');
         
-        if (selectedSkills.length > 0) {
-            // Usar un título genérico para la categoría
+        const allSelectedSkills = [...technicalSkills, ...softSkills];
+        
+        if (allSelectedSkills.length > 0) {
             html += `<div class="skills-category">`;
             html += `<div class="skills-list">`;
             
-            selectedSkills.forEach((checkbox) => {
+            allSelectedSkills.forEach((checkbox) => {
                 const skillName = checkbox.value;
                 if (skillName) {
                     html += `<span class="skill-tag">${skillName}</span>`;
@@ -2584,6 +3185,7 @@ function updateSkillsPreview() {
     container.innerHTML = html || 
         (currentLang === 'es' ? 'Tus habilidades aparecerán aquí...' : 'Your skills will appear here...');
 }
+
 function updateCertificationsPreview() {
     const container = document.getElementById('preview-certifications');
     const section = container.closest('.resume-section');
@@ -2598,12 +3200,12 @@ function updateCertificationsPreview() {
         
         if (name || org) {
             html += `
-                <div class="education-item">
-                    <div class="degree-title">${name}</div>
-                    <div class="institution-info">${org} | ${date}</div>
-                    ${description ? `<div>${description}</div>` : ''}
-                </div>
-            `;
+    <div class="education-item">
+        <div class="degree-title">${degree}${concentration ? ' - ' + concentration : ''}</div>
+        <div class="institution-info">${institution} | ${year}</div>
+        ${description ? `<div>${description}</div>` : ''}
+    </div>
+`;
         }
     });
     
@@ -2649,6 +3251,44 @@ function updateVolunteerPreview() {
  cleanPreviewFromModalContent();	
 
 }
+
+function updateAchievementsPreview() {
+    const container = document.getElementById('preview-achievements');
+    const section = container.closest('.resume-section');
+    let html = '';
+    
+    const achievements = document.querySelectorAll('#achievements-container .dynamic-section');
+    achievements.forEach((achievement) => {
+        const title = achievement.querySelector('.achievement-title')?.value || '';
+        const role = achievement.querySelector('.achievement-role')?.value || '';
+        const company = achievement.querySelector('.achievement-company')?.value || '';
+        const date = achievement.querySelector('.achievement-date')?.value || '';
+        const description = achievement.querySelector('.achievement-description')?.value || '';
+        const results = achievement.querySelector('.achievement-results')?.value || '';
+        const skill = achievement.querySelector('.achievement-skill')?.value || '';
+        
+        if (title || role) {
+            html += `
+                <div class="experience-item">
+                    <div class="job-title">${title}</div>
+                    <div class="company-info">${role}${company ? ' | ' + company : ''}${date ? ' | ' + date : ''}</div>
+                    ${description ? `<div class="job-description">${description}</div>` : ''}
+                    ${results ? `<div class="job-description" style="margin-top: 8px;"><strong>${currentLang === 'es' ? 'Resultados:' : 'Results:'}</strong> ${results}</div>` : ''}
+                    ${skill ? `<div class="job-description" style="margin-top: 8px; font-style: italic;"><strong>${currentLang === 'es' ? 'Habilidades:' : 'Skills:'}</strong> ${skill}</div>` : ''}
+                </div>
+            `;
+        }
+    });
+    
+    if (html) {
+        container.innerHTML = html;
+        section.style.display = 'block';
+    } else {
+        container.innerHTML = currentLang === 'es' ? 'Tus logros destacados aparecerán aquí...' : 'Your key achievements will appear here...';
+        section.style.display = 'none';
+    }
+}
+
 function clearAll() {
     if (confirm(currentLang === 'es' ? '¿Seguro que quieres limpiar todo?' : 'Are you sure you want to clear everything?')) {
         // Limpiar información personal y resumen
@@ -2664,6 +3304,7 @@ document.getElementById('education-container').innerHTML = '';
 document.getElementById('skills-container').innerHTML = '';
 document.getElementById('certifications-container').innerHTML = '';
 document.getElementById('volunteer-container').innerHTML = '';
+document.getElementById('achievements-container').innerHTML = '';
 
 // Resetear contadores
 expCount = 0;
@@ -2671,6 +3312,7 @@ eduCount = 0;
 skillCount = 0;
 certCount = 0;
 volunteerCount = 0;
+achievementCount = 0;
 
 	// Resetear todos los selectores a valores originales
 	document.getElementById('language-select').value = 'es';
@@ -2707,7 +3349,7 @@ async function exportToPDF() {
         
         // Configuraciones mejoradas para html2canvas
         const canvas = await html2canvas(element, {
-            scale: 2,
+            scale: 3,
             useCORS: true,
             logging: false,
             backgroundColor: '#ffffff',
@@ -2716,24 +3358,104 @@ async function exportToPDF() {
             allowTaint: true,
             removeContainer: true,
             imageTimeout: 0,
-            onclone: function(clonedDoc) {
-                // Ajustar estilos en el clon para mejor rendering
-                const clonedElement = clonedDoc.getElementById('resume-preview');
-                if (clonedElement) {
-                    clonedElement.style.width = '800px';
-                    clonedElement.style.padding = '40px';
-                    clonedElement.style.boxSizing = 'border-box';
-                    clonedElement.style.fontSize = '14px';
-                    clonedElement.style.lineHeight = '1.4';
-                    
-                    // Prevenir que elementos se corten
-                    const sections = clonedElement.querySelectorAll('.resume-section, .experience-item, .education-item');
-                    sections.forEach(section => {
-                        section.style.breakInside = 'avoid';
-                        section.style.pageBreakInside = 'avoid';
-                    });
-                }
+           onclone: function(clonedDoc) {
+    const clonedElement = clonedDoc.getElementById('resume-preview');
+    if (clonedElement) {
+        clonedElement.style.width = '800px';
+        clonedElement.style.padding = '40px';
+        clonedElement.style.boxSizing = 'border-box';
+        clonedElement.style.fontSize = '14px';
+        clonedElement.style.lineHeight = '1.4';
+        
+        // Fix para Stockholm Pro grid layout
+        if (clonedElement.classList.contains('template-stockholm-pro')) {
+            clonedElement.style.display = 'grid';
+            clonedElement.style.gridTemplateColumns = '220px 1fr';
+            clonedElement.style.gap = '0';
+            
+            // Asegurar que left-column y right-column se vean bien
+            const leftCol = clonedElement.querySelector('.left-column');
+            const rightCol = clonedElement.querySelector('.right-column');
+            
+            if (leftCol) {
+    leftCol.style.gridColumn = '1';
+    leftCol.style.gridRow = '3';
+    leftCol.style.background = '#F9FAFB';
+    leftCol.style.padding = '0 25px 50px 25px';
+    leftCol.style.borderRight = '1px solid #E5E7EB';
+}
+
+if (rightCol) {
+    rightCol.style.gridColumn = '2';
+    rightCol.style.gridRow = '3';
+    rightCol.style.padding = '0 50px 50px 40px';
+    rightCol.style.background = 'white';
+}
+            
+            // Fix para resume-summary
+const summary = clonedElement.querySelector('.resume-summary');
+if (summary) {
+    summary.style.gridColumn = '1 / -1';
+    summary.style.padding = '0 50px 35px 50px';
+    summary.style.textAlign = 'center';
+    
+    const summaryH3 = summary.querySelector('h3');
+    if (summaryH3) {
+        summaryH3.style.display = 'inline-block';
+        summaryH3.style.textAlign = 'center';
+    }
+    
+    const summaryP = summary.querySelector('p');
+    if (summaryP) {
+        summaryP.style.textAlign = 'center';
+        summaryP.style.maxWidth = '700px';
+        summaryP.style.margin = '0 auto';
+    }
+}
+            
+            // Fix para resume-header
+            const header = clonedElement.querySelector('.resume-header');
+            if (header) {
+                header.style.gridColumn = '1 / -1';
+                header.style.padding = '50px 50px 30px 50px';
             }
+        }
+        
+        // Prevenir que elementos se corten - MEJORADO
+const sections = clonedElement.querySelectorAll('.resume-section, .experience-item, .education-item');
+sections.forEach(section => {
+    section.style.breakInside = 'avoid';
+    section.style.pageBreakInside = 'avoid';
+    section.style.breakBefore = 'auto';
+    section.style.breakAfter = 'auto';
+});
+
+// Prevenir cortes en párrafos y títulos
+const paragraphs = clonedElement.querySelectorAll('p, .job-title, .degree-title, .company-info, .institution-info');
+paragraphs.forEach(p => {
+    p.style.breakInside = 'avoid';
+    p.style.pageBreakInside = 'avoid';
+    p.style.wordBreak = 'keep-all';
+    p.style.hyphens = 'none';
+});
+
+// Asegurar que los títulos no queden solos al final de página
+const headings = clonedElement.querySelectorAll('h3, h4, .job-title, .degree-title');
+headings.forEach(h => {
+    h.style.breakAfter = 'avoid';
+    h.style.pageBreakAfter = 'avoid';
+});
+
+// Mantener experiencias/educación juntas
+const items = clonedElement.querySelectorAll('.experience-item, .education-item');
+items.forEach(item => {
+    item.style.breakInside = 'avoid';
+    item.style.pageBreakInside = 'avoid';
+    item.style.marginBottom = '20px';
+    item.style.paddingBottom = '15px';
+});
+    }
+}
         });
         
         const imgData = canvas.toDataURL('image/png', 1.0);
@@ -2761,36 +3483,48 @@ async function exportToPDF() {
             pdf.addImage(imgData, 'PNG', margin, margin, imgWidth, imgHeight);
         } else {
             // Si necesita múltiples páginas, dividir inteligentemente
-            const totalPages = Math.ceil(imgHeight / contentHeight);
-            
-            for (let page = 0; page < totalPages; page++) {
-                if (page > 0) {
-                    pdf.addPage();
-                }
-                
-                const yOffset = -(page * contentHeight);
-                const remainingHeight = imgHeight - (page * contentHeight);
-                const currentPageHeight = Math.min(contentHeight, remainingHeight);
-                
-                // Crear un canvas temporal para esta página
-                const pageCanvas = document.createElement('canvas');
-                const pageCtx = pageCanvas.getContext('2d');
-                
-                pageCanvas.width = canvas.width;
-                pageCanvas.height = (currentPageHeight * canvas.width) / imgWidth;
-                
-                // Copiar la porción correspondiente de la imagen original
-                pageCtx.drawImage(
-                    canvas,
-                    0, (page * contentHeight * canvas.width) / imgWidth,
-                    canvas.width, pageCanvas.height,
-                    0, 0,
-                    canvas.width, pageCanvas.height
-                );
-                
-                const pageImgData = pageCanvas.toDataURL('image/png', 1.0);
-                pdf.addImage(pageImgData, 'PNG', margin, margin, imgWidth, currentPageHeight);
-            }
+const totalPages = Math.ceil(imgHeight / contentHeight);
+
+// Añadir más margen de seguridad para evitar cortes
+const safeContentHeight = contentHeight - 20; // 20mm de buffer
+
+for (let page = 0; page < totalPages; page++) {
+    if (page > 0) {
+        pdf.addPage();
+    }
+    
+    // Calcular posición con margen de seguridad
+    const startY = page * safeContentHeight;
+    const remainingHeight = imgHeight - startY;
+    const currentPageHeight = Math.min(safeContentHeight, remainingHeight);
+    
+    // Crear un canvas temporal para esta página con overlap
+    const pageCanvas = document.createElement('canvas');
+    const pageCtx = pageCanvas.getContext('2d');
+    
+    // Añadir un pequeño overlap entre páginas (10mm)
+    const overlap = page > 0 ? 10 : 0;
+    const adjustedStartY = Math.max(0, startY - overlap);
+    
+    pageCanvas.width = canvas.width;
+    pageCanvas.height = ((currentPageHeight + overlap) * canvas.width) / imgWidth;
+    
+    // Fondo blanco para evitar transparencias
+    pageCtx.fillStyle = '#ffffff';
+    pageCtx.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
+    
+    // Copiar la porción correspondiente de la imagen original
+    pageCtx.drawImage(
+        canvas,
+        0, (adjustedStartY * canvas.width) / imgWidth,
+        canvas.width, pageCanvas.height,
+        0, 0,
+        canvas.width, pageCanvas.height
+    );
+    
+    const pageImgData = pageCanvas.toDataURL('image/png', 1.0);
+    pdf.addImage(pageImgData, 'PNG', margin, margin, imgWidth, currentPageHeight);
+}
         }
         
         // Guardar el PDF
@@ -3503,9 +4237,11 @@ function fillResumeDataToLetter() {
     if (useData) {
         document.getElementById('sender-name').value = document.getElementById('name').value || '';
         document.getElementById('sender-address').value = document.getElementById('location').value || '';
+        // El teléfono ya viene formateado del resumé
         document.getElementById('sender-phone').value = document.getElementById('phone').value || '';
         document.getElementById('sender-email').value = document.getElementById('email').value || '';
     }
+    updateLetterPreview();
 }
 
 function updateProfessionalLetterTexts() {
@@ -3740,11 +4476,92 @@ async function saveToUAGMPortal() {
         const element = document.getElementById('resume-preview');
         
         // Crear canvas del resumé
-        const canvas = await html2canvas(element, {
-            scale: 2,
-            useCORS: true,
-            backgroundColor: '#ffffff'
-        });
+const canvas = await html2canvas(element, {
+    scale: 3,
+    useCORS: true,
+    backgroundColor: '#ffffff',
+    height: element.scrollHeight,
+    windowWidth: element.scrollWidth,
+    allowTaint: true,
+    removeContainer: true,
+    imageTimeout: 0,
+    onclone: function(clonedDoc) {
+        const clonedElement = clonedDoc.getElementById('resume-preview');
+        if (clonedElement) {
+            clonedElement.style.width = '800px';
+            clonedElement.style.padding = '40px';
+            clonedElement.style.boxSizing = 'border-box';
+            clonedElement.style.fontSize = '14px';
+            clonedElement.style.lineHeight = '1.4';
+            
+            // Fix para Stockholm Pro grid layout
+            if (clonedElement.classList.contains('template-stockholm-pro')) {
+                clonedElement.style.display = 'grid';
+                clonedElement.style.gridTemplateColumns = '220px 1fr';
+                clonedElement.style.gap = '0';
+                
+                const leftCol = clonedElement.querySelector('.left-column');
+                const rightCol = clonedElement.querySelector('.right-column');
+                
+                if (leftCol) {
+                    leftCol.style.gridColumn = '1';
+                    leftCol.style.gridRow = '3';
+                    leftCol.style.background = '#F9FAFB';
+                    leftCol.style.padding = '0 25px 50px 25px';
+                    leftCol.style.borderRight = '1px solid #E5E7EB';
+                }
+                
+                if (rightCol) {
+                    rightCol.style.gridColumn = '2';
+                    rightCol.style.gridRow = '3';
+                    rightCol.style.padding = '0 50px 50px 40px';
+                    rightCol.style.background = 'white';
+                }
+                
+                const summary = clonedElement.querySelector('.resume-summary');
+                if (summary) {
+                    summary.style.gridColumn = '1 / -1';
+                    summary.style.padding = '0 50px 35px 50px';
+                    summary.style.textAlign = 'center';
+                    
+                    const summaryH3 = summary.querySelector('h3');
+                    if (summaryH3) {
+                        summaryH3.style.display = 'inline-block';
+                        summaryH3.style.textAlign = 'center';
+                    }
+                    
+                    const summaryP = summary.querySelector('p');
+                    if (summaryP) {
+                        summaryP.style.textAlign = 'center';
+                        summaryP.style.maxWidth = '700px';
+                        summaryP.style.margin = '0 auto';
+                    }
+                }
+                
+                const header = clonedElement.querySelector('.resume-header');
+                if (header) {
+                    header.style.gridColumn = '1 / -1';
+                    header.style.padding = '50px 50px 30px 50px';
+                }
+            }
+            
+            // Prevenir que elementos se corten
+            const sections = clonedElement.querySelectorAll('.resume-section, .experience-item, .education-item');
+            sections.forEach(section => {
+                section.style.breakInside = 'avoid';
+                section.style.pageBreakInside = 'avoid';
+            });
+            
+            const paragraphs = clonedElement.querySelectorAll('p, .job-title, .degree-title, .company-info, .institution-info');
+            paragraphs.forEach(p => {
+                p.style.breakInside = 'avoid';
+                p.style.pageBreakInside = 'avoid';
+                p.style.wordBreak = 'keep-all';
+                p.style.hyphens = 'none';
+            });
+        }
+    }
+});
         
         const imgData = canvas.toDataURL('image/png', 1.0);
         
@@ -3828,9 +4645,9 @@ async function saveToUAGMPortal() {
             </div>
             
             <div class="form-group">
-                <label id="sender-phone-label">Teléfono:</label>
-                <input type="text" id="sender-phone" oninput="updateLetterPreview()">
-            </div>
+    <label id="sender-phone-label">Teléfono:</label>
+    <input type="tel" id="sender-phone" placeholder="(787) 123-4567" oninput="formatPhoneNumber(this)" maxlength="14">
+</div>
             
             <div class="form-group">
                 <label id="sender-email-label">Email:</label>
