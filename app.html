@@ -2026,7 +2026,9 @@
                 <h2 class="section-title" id="achievements-title">Logros Destacados</h2>
                 <div id="achievements-container"></div>
                 <button class="btn btn-add btn-small" onclick="addAchievement()" id="add-achievement-btn">+ Agregar Logro</button>
-
+                <h2 class="section-title" id="awards-title">Premios y Reconocimientos</h2>
+                <div id="awards-container"></div>
+                <button class="btn btn-add btn-small" onclick="addAward()" id="add-award-btn">+ Agregar Premio</button>
             </div>
 
             <div class="preview-section">
@@ -2076,6 +2078,10 @@
         <div class="resume-section">
              <h3 id="preview-achievements-title">Logros Destacados</h3>
              <div id="preview-achievements">Tus logros destacados aparecerán aquí...</div>
+        </div>
+        <div class="resume-section">
+             <h3 id="preview-awards-title">Premios y Reconocimientos</h3>
+             <div id="preview-awards">Tus premios y reconocimientos aparecerán aquí...</div>
         </div>
     </div>
 </div>
@@ -2148,6 +2154,7 @@ let skillCount = 0;
 let certCount = 0;
 let volunteerCount = 0;
 let achievementCount = 0;
+let awardCount = 0;
 
 // Función para corregir acentos automáticamente
 function correctAccents(text) {
@@ -2300,6 +2307,12 @@ achievementsTitle: "Logros Destacados",
     achievementDescription: "Descripción Breve del Logro",
     achievementResults: "Resultados (números, cantidad, tiempo)",
     achievementSkill: "Habilidad Demostrada",
+awardsTitle: "Premios y Reconocimientos",
+    addAward: "+ Agregar Premio",
+    awardName: "Nombre del Premio/Reconocimiento",
+    awardOrganization: "Organización que lo Otorga",
+    awardReason: "Motivo del Reconocimiento",
+    awardDate: "Fecha (Mes/Año)",
         previewTitle: "Vista Previa",
         addExperience: "+ Agregar Experiencia",
         addEducation: "+ Agregar Educación",
@@ -2372,6 +2385,12 @@ achievementsTitle: "Key Achievements",
     achievementDescription: "Brief Description of Achievement",
     achievementResults: "Results (numbers, quantity, time)",
     achievementSkill: "Demonstrated Skill",
+awardsTitle: "Awards & Recognition",
+    addAward: "+ Add Award",
+    awardName: "Award/Recognition Name",
+    awardOrganization: "Awarding Organization",
+    awardReason: "Reason for Recognition",
+    awardDate: "Date (Month/Year)",
         previewTitle: "Preview",
         addExperience: "+ Add Experience",
         addEducation: "+ Add Education",
@@ -2520,6 +2539,8 @@ function updateLanguage() {
     document.getElementById('add-volunteer-btn').textContent = t.addVolunteer;
 document.getElementById('achievements-title').textContent = t.achievementsTitle;
 document.getElementById('add-achievement-btn').textContent = t.addAchievement;
+document.getElementById('awards-title').textContent = t.awardsTitle;
+document.getElementById('add-award-btn').textContent = t.addAward;
     
 
     document.getElementById('preview-summary-title').textContent = t.summaryTitle;
@@ -2529,6 +2550,7 @@ document.getElementById('add-achievement-btn').textContent = t.addAchievement;
     document.getElementById('preview-certifications-title').textContent = t.certificationsTitle;
     document.getElementById('preview-volunteer-title').textContent = t.volunteerTitle;
 document.getElementById('preview-achievements-title').textContent = t.achievementsTitle;
+document.getElementById('preview-awards-title').textContent = t.awardsTitle;
 
 // Actualizar placeholder del teléfono según idioma
     document.getElementById('phone').placeholder = currentLang === 'es' ? '(787) 123-4567' : '(787) 123-4567';
@@ -2960,6 +2982,51 @@ function addAchievement() {
     updatePreview();
 }
 
+function addAward() {
+    const container = document.getElementById('awards-container');
+    const t = texts[currentLang];
+    const id = awardCount++;
+    
+    const html = `
+        <div class="dynamic-section" id="award-${id}">
+            <button class="btn btn-remove btn-small remove-btn" onclick="removeItem('award-${id}')">
+                ${t.remove}
+            </button>
+            <h4>${t.awardsTitle} ${id + 1}</h4>
+            
+            <div class="form-group">
+                <label>${t.awardName}</label>
+                <input type="text" class="award-name" placeholder="${currentLang === 'es' ? 'Estudiante Distinguido del Año, Beca Especial' : 'Distinguished Student of the Year, Special Scholarship'}" oninput="updatePreview()">
+            </div>
+            
+            <div class="form-group">
+                <label>${t.awardOrganization}</label>
+                <input type="text" class="award-organization" placeholder="${currentLang === 'es' ? 'Universidad Ana G. Méndez' : 'Ana G. Méndez University'}" oninput="updatePreview()">
+            </div>
+            
+            <div class="form-group">
+                <label>${t.awardReason}</label>
+                <textarea class="award-reason" rows="2" placeholder="${currentLang === 'es' ? 'Por excelencia académica y contribución a la comunidad universitaria' : 'For academic excellence and contribution to the university community'}" oninput="updatePreview()"></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label>${t.awardDate}</label>
+                <input type="text" class="award-date" placeholder="${currentLang === 'es' ? 'Mayo 2024' : 'May 2024'}" oninput="updatePreview()">
+            </div>
+        </div>
+    `;
+    
+    container.insertAdjacentHTML('beforeend', html);
+    
+    // Activar corrección en nuevos campos
+    const newSection = document.getElementById(`award-${id}`);
+    newSection.querySelectorAll('input, textarea').forEach(field => {
+        field.addEventListener('input', applyAccentCorrection);
+    });
+    
+    updatePreview();
+}
+
 function addCustomSkill(categoryId, type) {
     const customInput = document.getElementById(`custom-skill-input-${type}-${categoryId}`);
     const skillValue = customInput.value.trim();
@@ -3099,6 +3166,7 @@ updateSkillsPreview();
 updateCertificationsPreview();
 updateVolunteerPreview();
 updateAchievementsPreview();
+updateAwardsPreview();
 }
 
 function updateExperiencePreview() {
@@ -3289,6 +3357,38 @@ function updateAchievementsPreview() {
     }
 }
 
+function updateAwardsPreview() {
+    const container = document.getElementById('preview-awards');
+    const section = container.closest('.resume-section');
+    let html = '';
+    
+    const awards = document.querySelectorAll('#awards-container .dynamic-section');
+    awards.forEach((award) => {
+        const name = award.querySelector('.award-name')?.value || '';
+        const organization = award.querySelector('.award-organization')?.value || '';
+        const reason = award.querySelector('.award-reason')?.value || '';
+        const date = award.querySelector('.award-date')?.value || '';
+        
+        if (name || organization) {
+            html += `
+                <div class="education-item">
+                    <div class="degree-title">🏆 ${name}</div>
+                    <div class="institution-info">${organization}${date ? ' | ' + date : ''}</div>
+                    ${reason ? `<div style="margin-top: 8px; color: #4a5568; font-size: 14px;">${reason}</div>` : ''}
+                </div>
+            `;
+        }
+    });
+    
+    if (html) {
+        container.innerHTML = html;
+        section.style.display = 'block';
+    } else {
+        container.innerHTML = currentLang === 'es' ? 'Tus premios y reconocimientos aparecerán aquí...' : 'Your awards and recognition will appear here...';
+        section.style.display = 'none';
+    }
+}
+
 function clearAll() {
     if (confirm(currentLang === 'es' ? '¿Seguro que quieres limpiar todo?' : 'Are you sure you want to clear everything?')) {
         // Limpiar información personal y resumen
@@ -3305,6 +3405,7 @@ document.getElementById('skills-container').innerHTML = '';
 document.getElementById('certifications-container').innerHTML = '';
 document.getElementById('volunteer-container').innerHTML = '';
 document.getElementById('achievements-container').innerHTML = '';
+document.getElementById('awards-container').innerHTML = '';
 
 // Resetear contadores
 expCount = 0;
@@ -3313,6 +3414,7 @@ skillCount = 0;
 certCount = 0;
 volunteerCount = 0;
 achievementCount = 0;
+awardCount = 0;
 
 	// Resetear todos los selectores a valores originales
 	document.getElementById('language-select').value = 'es';
