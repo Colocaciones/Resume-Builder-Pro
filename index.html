@@ -160,6 +160,33 @@
     margin-top: 20px;
 }
 
+.hero-back-btn {
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(10px);
+    color: white;
+    padding: 18px 45px;
+    font-size: 18px;
+    font-weight: bold;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50px;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
+    transition: all 0.3s ease;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+
+.hero-back-btn:hover {
+    background: rgba(255, 255, 255, 0.25);
+    border-color: rgba(255, 255, 255, 0.5);
+    transform: translateY(-3px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+}
+
+.hero-back-btn i {
+    margin-right: 8px;
+}
+
 .hero-cta:hover {
     transform: translateY(-3px);
     box-shadow: 0 15px 35px rgba(200, 16, 46, 0.5);
@@ -189,6 +216,14 @@
     .hero-subtitle { font-size: 18px; }
     .hero-logo { height: 80px; }
     .hero-content { padding: 30px 20px; }
+    
+    .hero-back-btn,
+    .hero-cta {
+        padding: 14px 30px;
+        font-size: 16px;
+        width: 100%;
+        text-align: center;
+    }
 }
 
 /* FEATURES SECTION */
@@ -1092,12 +1127,17 @@ console.log('✅ Resume Builder con Firebase cargado correctamente');
             </div>
             
             <div class="hero-content">
-                <img src="logo blanco.png" alt="UAGM Logo" class="hero-logo">
-                <h1 class="hero-title">📄 UAGM Resume Builder Pro</h1>
-                <p class="hero-subtitle">Crea tu resume profesional en minutos</p>
-                <div class="hero-institution">Universidad Ana G. Méndez - Oficina de Carreras y Colocaciones</div>
-                <a href="#registro" class="hero-cta">🚀 Comienza Ahora</a>
-            </div>
+    <img src="logo blanco.png" alt="UAGM Logo" class="hero-logo">
+    <h1 class="hero-title">📄 UAGM Resume Builder Pro</h1>
+    <p class="hero-subtitle">Crea tu resume profesional en minutos</p>
+    <div class="hero-institution">Universidad Ana G. Méndez - Oficina de Carreras y Colocaciones</div>
+    <div style="display: flex; gap: 20px; justify-content: center; align-items: center; margin-top: 20px; flex-wrap: wrap;">
+        <a href="portal-empleos/index.html" class="hero-back-btn">
+            <i class="fas fa-arrow-left"></i> Volver al Portal Principal
+        </a>
+        <a href="#registro" class="hero-cta">🚀 Comienza Ahora</a>
+    </div>
+</div>
             
             <div class="scroll-indicator">
                 <i class="fas fa-chevron-down"></i>
