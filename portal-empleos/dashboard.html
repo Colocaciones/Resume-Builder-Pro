@@ -2050,6 +2050,7 @@ case 'resumes':
                             <th>Ubicación</th>
                             <th>Salario</th>
                             <th>Tipo</th>
+                            <th>Sector</th>
                             <th>Fecha Límite</th>
                             <th>Estado</th>
                             <th>Acciones</th>
@@ -2073,7 +2074,8 @@ case 'resumes':
                         <td>${offer.location}</td>
                         <td>${offer.salary}</td>
                         <td><span class="status-badge">${getTypeLabel(offer.positionType)}</span></td>
-                        <td>${new Date(offer.deadline).toLocaleDateString('es-PR', { timeZone: 'America/Puerto_Rico' })}</td>
+<td>${getSectorLabel(offer.academicDivision)}</td>
+<td>${new Date(offer.deadline).toLocaleDateString('es-PR', { timeZone: 'America/Puerto_Rico' })}</td>
                         <td><span class="status-badge ${statusClass}">${statusText}</span></td>
                         <td>
                             <div class="actions">
@@ -2285,6 +2287,27 @@ ${application.status === 'rejected' ? `
             };
             return labels[type] || type;
         }
+
+// Obtener etiqueta de sector industrial
+function getSectorLabel(sector) {
+    const labels = {
+        'administracion': 'Administración',
+        'finanzas': 'Finanzas',
+        'salud': 'Salud',
+        'ciencias': 'Ciencias',
+        'tecnologia': 'Tecnología',
+        'ventas': 'Ventas',
+        'mercadeo': 'Mercadeo',
+        'servicios': 'Servicios al Cliente',
+        'operaciones': 'Operaciones',
+        'ingenieria': 'Ingeniería',
+        'hospitalidad': 'Hospitalidad',
+        'educacion': 'Educación',
+        'todos': 'Todos los sectores'
+    };
+    return labels[sector] || 'No especificado';
+}
+
 // Ver detalles de oferta
         function viewOfferDetails(offerId) {
             const offer = offers.find(o => o.id === offerId);
@@ -2319,7 +2342,8 @@ ${application.status === 'rejected' ? `
                         <h4 style="color: #c8102e; margin-bottom: 15px;">Detalles del Puesto</h4>
                         <p><strong>Posición:</strong> ${offer.position}</p>
                         <p><strong>Tipo:</strong> ${getTypeLabel(offer.positionType)}</p>
-                        <p><strong>Salario:</strong> ${offer.salary}</p>
+<p><strong>Sector Industrial:</strong> ${getSectorLabel(offer.academicDivision)}</p>
+<p><strong>Salario:</strong> ${offer.salary}</p>
                         <p><strong>Ubicación:</strong> ${offer.location}</p>
                         <p><strong>Fecha Límite:</strong> ${new Date(offer.deadline).toLocaleDateString()}</p>
                         <p><strong>Estado:</strong> <span class="status-badge ${getOfferStatus(offer.deadline) === 'expired' ? 'status-expired' : getOfferStatus(offer.deadline) === 'expiring' ? 'status-expiring' : 'status-active'}">${getOfferStatus(offer.deadline) === 'expired' ? 'Vencida' : getOfferStatus(offer.deadline) === 'expiring' ? 'Vence Pronto' : 'Activa'}</span></p>
@@ -2780,6 +2804,25 @@ localStorage.setItem('lastCheckedParticipants', lastCheckedParticipants.toString
                 </div>
             </div>
             
+<div class="form-group">
+    <label>Sector Industrial:</label>
+    <select id="edit-academicDivision" required>
+        <option value="">Seleccionar...</option>
+        <option value="administracion" ${offer.academicDivision === 'administracion' ? 'selected' : ''}>Administración</option>
+        <option value="finanzas" ${offer.academicDivision === 'finanzas' ? 'selected' : ''}>Finanzas</option>
+        <option value="salud" ${offer.academicDivision === 'salud' ? 'selected' : ''}>Salud</option>
+        <option value="ciencias" ${offer.academicDivision === 'ciencias' ? 'selected' : ''}>Ciencias</option>
+        <option value="tecnologia" ${offer.academicDivision === 'tecnologia' ? 'selected' : ''}>Tecnología y Sistemas</option>
+        <option value="ventas" ${offer.academicDivision === 'ventas' ? 'selected' : ''}>Ventas</option>
+        <option value="mercadeo" ${offer.academicDivision === 'mercadeo' ? 'selected' : ''}>Mercadeo</option>
+        <option value="servicios" ${offer.academicDivision === 'servicios' ? 'selected' : ''}>Servicios al Cliente</option>
+        <option value="operaciones" ${offer.academicDivision === 'operaciones' ? 'selected' : ''}>Operaciones y Logística</option>
+        <option value="ingenieria" ${offer.academicDivision === 'ingenieria' ? 'selected' : ''}>Ingeniería y Manufactura</option>
+        <option value="hospitalidad" ${offer.academicDivision === 'hospitalidad' ? 'selected' : ''}>Hospitalidad y Turismo</option>
+        <option value="educacion" ${offer.academicDivision === 'educacion' ? 'selected' : ''}>Educación</option>
+        <option value="todos" ${offer.academicDivision === 'todos' ? 'selected' : ''}>Todos los sectores</option>
+               </select>
+           </div>
             <div class="form-row">
                 <div class="form-group">
                     <label>Tipo de Posición:</label>
@@ -2840,6 +2883,7 @@ async function saveOfferChanges(offerId) {
         position: document.getElementById('edit-position').value,
         location: document.getElementById('edit-location').value,
         salary: document.getElementById('edit-salary').value,
+academicDivision: document.getElementById('edit-academicDivision').value,
         positionType: document.getElementById('edit-positionType').value,
         deadline: document.getElementById('edit-deadline').value,
         jobDescription: document.getElementById('edit-jobDescription').value,
@@ -3411,6 +3455,7 @@ if (sortFilter) {
                 'Recibida Por': offer.receivedThrough,
                 'Posición': offer.position,
                 'Tipo Posición': getTypeLabel(offer.positionType),
+'Sector Industrial': getSectorLabel(offer.academicDivision),
                 'Salario': offer.salary,
                 'Ubicación': offer.location,
                 'Fecha Límite': new Date(offer.deadline).toLocaleDateString(),
@@ -3520,6 +3565,7 @@ if (sortFilter) {
                     'Contacto': offer.contactPerson,
                     'Email': offer.email,
                     'Teléfono': offer.phone,
+'Sector Industrial': getSectorLabel(offer.academicDivision),
                     'Ubicación': offer.location,
                     'Salario': offer.salary,
                     'Estado': getOfferStatus(offer.deadline) === 'expired' ? 'Vencida' : 
@@ -3770,6 +3816,7 @@ function generateOffersReport() {
         'Recibida Por': offer.receivedThrough || 'N/A',
         'Posición Ofertada': offer.position,
         'Tipo Posición': getTypeLabel(offer.positionType),
+'Sector Industrial': getSectorLabel(offer.academicDivision),
         'Ubicación': offer.location,
         'Salario': offer.salary,
         'Fecha Límite': new Date(offer.deadline).toLocaleDateString('es-ES'),
@@ -5600,6 +5647,7 @@ function viewOfferRequirements(offerId) {
                    <p><strong>Ubicación:</strong> ${offer.location}</p>
                    <p><strong>Salario:</strong> ${offer.salary}</p>
                    <p><strong>Tipo:</strong> ${getTypeLabel(offer.positionType)}</p>
+<p><strong>Sector Industrial:</strong> ${getSectorLabel(offer.academicDivision)}</p>
                </div>
                
                <div style="margin-bottom: 20px;">
@@ -7423,6 +7471,14 @@ function generateOfferPDF(offerId) {
     addText('Posición Solicitada:', margin, yPos, 10, 'bold');
     addText(offer.position || 'No especificado', 100, yPos);
     yPos += lineHeight;
+
+addText('Posición Solicitada:', margin, yPos, 10, 'bold');
+addText(offer.position || 'No especificado', 100, yPos);
+yPos += lineHeight;
+
+addText('Sector Industrial:', margin, yPos, 10, 'bold');
+addText(getSectorLabel(offer.academicDivision), 100, yPos);
+yPos += lineHeight;
     
     // Descripción del empleo (texto largo)
     if (offer.jobDescription && offer.jobDescription.trim()) {
