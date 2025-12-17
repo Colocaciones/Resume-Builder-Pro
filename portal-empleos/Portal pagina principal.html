@@ -964,7 +964,7 @@
 </div>
 
 <!-- SECCIÓN PARTICIPANTES -->
-<section class="service-detail">
+<section class="service-detail" id="seccion-participantes">
     <div class="detail-content">
         <div class="detail-text">
             <div class="detail-icon"><i class="fas fa-users"></i></div>
@@ -978,7 +978,7 @@
                 <li><i class="fas fa-check-circle"></i> Notificaciones de nuevas oportunidades</li>
                 <li><i class="fas fa-check-circle"></i> Seguimiento de aplicaciones</li>
             </ul>
-            <button class="detail-btn" onclick="goToParticipantes()">Acceder al Portal</button>
+            <button class="detail-btn" onclick="window.location.href='portal-para-participantes.html'">Acceder al Portal</button>
         </div>
         <div class="detail-image">
             <img src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=600" alt="Estudiantes">
@@ -987,7 +987,7 @@
 </section>
 
 <!-- SECCIÓN PATRONOS -->
-<section class="service-detail alternate">
+<section class="service-detail alternate" id="seccion-patronos">
     <div class="detail-content">
         <div class="detail-image">
             <img src="https://images.unsplash.com/photo-1560179707-f14e90ef3623?w=600" alt="Empresas">
@@ -1004,13 +1004,13 @@
                 <li><i class="fas fa-check-circle"></i> Panel de gestión de aplicaciones</li>
                 <li><i class="fas fa-check-circle"></i> Estadísticas de reclutamiento</li>
             </ul>
-            <button class="detail-btn" onclick="goToPatronos()">Portal de Empresas</button>
+            <button class="detail-btn" onclick="window.location.href='acceso-patronos.html'">Portal de Empresas</button>
         </div>
     </div>
 </section>
 
 <!-- SECCIÓN INTERNADOS -->
-<section class="service-detail">
+<section class="service-detail" id="seccion-internados">
     <div class="detail-content">
         <div class="detail-text">
             <div class="detail-icon"><i class="fas fa-graduation-cap"></i></div>
@@ -1024,7 +1024,7 @@
                 <li><i class="fas fa-check-circle"></i> Supervisión académica y profesional</li>
                 <li><i class="fas fa-check-circle"></i> Créditos académicos aplicables</li>
             </ul>
-            <button class="detail-btn" onclick="goToInternados()">Explorar Internados</button>
+            <button class="detail-btn" onclick="window.location.href='https://forms.office.com/r/uXdaUXGby9'">Explorar Internados</button>
         </div>
         <div class="detail-image">
             <img src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=600" alt="Internados">
@@ -1033,7 +1033,7 @@
 </section>
 
 <!-- SECCIÓN MANPOWER -->
-<section class="service-detail alternate">
+<section class="service-detail alternate" id="seccion-manpower">
     <div class="detail-content">
         <div class="detail-image">
             <img src="https://images.unsplash.com/photo-1556761175-4b46a572b786?w=600" alt="Consultoría">
@@ -1050,13 +1050,13 @@
                 <li><i class="fas fa-check-circle"></i> Revisión de CV y perfil profesional</li>
                 <li><i class="fas fa-check-circle"></i> Estrategias de búsqueda efectiva</li>
             </ul>
-            <button class="detail-btn" onclick="goToManpower()">Agendar Cita</button>
+            <button class="detail-btn" onclick="window.location.href='https://colocaciones.github.io/Resume-Builder-Pro/portal-empleos/sistema-citas.html'">Agendar Cita</button>
         </div>
     </div>
 </section>
 
 <!-- SECCIÓN RESUME BUILDER -->
-<section class="service-detail">
+<section class="service-detail" id="seccion-resume">
     <div class="detail-content">
         <div class="detail-text">
             <div class="detail-icon"><i class="fas fa-file-alt"></i></div>
@@ -1070,7 +1070,7 @@
                 <li><i class="fas fa-check-circle"></i> Descarga en PDF y Word</li>
                 <li><i class="fas fa-check-circle"></i> Optimizado para ATS</li>
             </ul>
-            <button class="detail-btn" onclick="goToResumeBuilder()">Crear Currículum</button>
+            <button class="detail-btn" onclick="window.location.href='../index.html'">Crear Currículum</button>
         </div>
         <div class="detail-image">
             <img src="https://images.unsplash.com/photo-1586281380349-632531db7ed4?w=600" alt="Resume">
@@ -1289,29 +1289,45 @@
         }
 
         // Navegación a participantes
-        function goToParticipantes() {
-            window.location.href = 'portal-para-participantes.html';
-        }
+function goToParticipantes() {
+    document.getElementById('seccion-participantes').scrollIntoView({ 
+        behavior: 'smooth', 
+        block: 'start' 
+    });
+}
 
         // Navegación a patronos
-        function goToPatronos() {
-            window.location.href = 'acceso-patronos.html';
-        }
+function goToPatronos() {
+    document.getElementById('seccion-patronos').scrollIntoView({ 
+        behavior: 'smooth', 
+        block: 'start' 
+    });
+}
 
 // Navegación a internados
-        function goToInternados() {
-            window.location.href = 'https://forms.office.com/r/uXdaUXGby9';
-        }
+function goToInternados() {
+    document.getElementById('seccion-internados').scrollIntoView({ 
+        behavior: 'smooth', 
+        block: 'start' 
+    });
+}
 
 // Navegación a ManpowerGroup
 function goToManpower() {
-    window.location.href = 'https://colocaciones.github.io/Resume-Builder-Pro/portal-empleos/sistema-citas.html'; // Reemplaza con tu enlace real
+    document.getElementById('seccion-manpower').scrollIntoView({ 
+        behavior: 'smooth', 
+        block: 'start' 
+    });
 }
 
         // Navegación a Resume Builder
-        function goToResumeBuilder() {
-            window.location.href = '../index.html';
-        }
+function goToResumeBuilder() {
+    document.getElementById('seccion-resume').scrollIntoView({ 
+        behavior: 'smooth', 
+        block: 'start' 
+    });
+}
+
 
         // Abrir modal de login admin
         function openAdminLogin() {
