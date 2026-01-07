@@ -352,6 +352,203 @@
             margin-top: 5px;
             font-style: italic;
         }
+
+/* ===== ESTILOS PARA MÚLTIPLES OFERTAS ===== */
+
+.patron-info-section {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    padding: 30px;
+    border-radius: 20px;
+    margin-bottom: 40px;
+    border: 2px solid #dee2e6;
+}
+
+.offers-section {
+    margin-top: 40px;
+}
+
+.offer-card-container {
+    background: white;
+    border: 2px solid #e2e8f0;
+    border-radius: 15px;
+    margin-bottom: 20px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.offer-card-container:hover {
+    border-color: #c8102e;
+    box-shadow: 0 5px 20px rgba(200, 16, 46, 0.1);
+}
+
+.offer-card-header {
+    background: linear-gradient(135deg, #c8102e 0%, #8b0b1f 100%);
+    color: white;
+    padding: 20px 25px;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: all 0.3s ease;
+}
+
+.offer-card-header:hover {
+    background: linear-gradient(135deg, #a00d26 0%, #6d0918 100%);
+}
+
+.offer-card-header h4 {
+    margin: 0;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.offer-card-header .toggle-icon {
+    font-size: 20px;
+    transition: transform 0.3s ease;
+}
+
+.offer-card-header .toggle-icon.collapsed {
+    transform: rotate(-90deg);
+}
+
+.offer-card-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.delete-offer-btn {
+    background: rgba(255, 255, 255, 0.2);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    color: white;
+    padding: 8px 15px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.delete-offer-btn:hover {
+    background: rgba(220, 53, 69, 0.9);
+    border-color: #dc3545;
+    transform: scale(1.05);
+}
+
+.offer-card-body {
+    padding: 30px 25px;
+    display: none;
+}
+
+.offer-card-body.expanded {
+    display: block;
+}
+
+.offer-number-badge {
+    background: rgba(255, 255, 255, 0.2);
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+#offersSummary {
+    animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.summary-item {
+    background: white;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-left: 4px solid #339af0;
+}
+
+.summary-item strong {
+    color: #1971c2;
+}
+
+.summary-item span {
+    color: #495057;
+    font-size: 14px;
+}
+
+#submitAllBtn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+}
+
+#submitAllBtn:disabled:hover {
+    transform: none;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.empty-offers-message {
+    text-align: center;
+    padding: 40px;
+    background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+    border-radius: 15px;
+    border: 2px dashed #ffc107;
+    color: #856404;
+}
+
+.empty-offers-message i {
+    font-size: 48px;
+    margin-bottom: 15px;
+    opacity: 0.6;
+}
+
+.empty-offers-message h3 {
+    font-size: 20px;
+    margin-bottom: 10px;
+}
+
+.empty-offers-message p {
+    font-size: 14px;
+    margin: 0;
+}
+
+/* Responsive para múltiples ofertas */
+@media (max-width: 768px) {
+    .patron-info-section {
+        padding: 20px;
+    }
+    
+    .offer-card-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+    }
+    
+    .offer-card-actions {
+        width: 100%;
+        justify-content: space-between;
+    }
+    
+    .offer-card-body {
+        padding: 20px 15px;
+    }
+}
         
         @media (max-width: 768px) {
     .container {
@@ -422,218 +619,151 @@
             </div>
 
             <form id="offerForm">
-                <!-- Información General -->
-                <div class="section-title">
-                    <i class="fas fa-info-circle"></i>
-                    Información General
-                </div>
+    <!-- SECCIÓN 1: INFORMACIÓN DEL PATRONO (Se llena una sola vez) -->
+    <div class="patron-info-section">
+        <div class="section-title">
+            <i class="fas fa-building"></i>
+            Información del Patrono
+            <span style="font-size: 14px; font-weight: 400; margin-left: 10px; color: #6c757d;">
+                (Completa esta sección una sola vez)
+            </span>
+        </div>
 
-                <div class="form-group">
-                    <label>Fecha de Hoy <span class="required">*</span></label>
-                    <input type="date" id="today" required>
-                </div>
+        <div class="form-group">
+            <label>Fecha de Hoy <span class="required">*</span></label>
+            <input type="date" id="today" required>
+        </div>
 
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Tipo de Patrono <span class="required">*</span></label>
-                        <select id="patronType" required>
-                            <option value="">Seleccionar...</option>
-                            <option value="new">Patrono Nuevo</option>
-                            <option value="existing">Patrono Existente</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Nombre de la Empresa <span class="required">*</span></label>
-                        <input type="text" id="companyName" required placeholder="Ej: Microsoft Puerto Rico">
-                    </div>
-                </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>Tipo de Patrono <span class="required">*</span></label>
+                <select id="patronType" required>
+                    <option value="">Seleccionar...</option>
+                    <option value="new">Patrono Nuevo</option>
+                    <option value="existing">Patrono Existente</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Nombre de la Empresa <span class="required">*</span></label>
+                <input type="text" id="companyName" required placeholder="Ej: Microsoft Puerto Rico">
+            </div>
+        </div>
 
-                <!-- Información de Contacto -->
-                <div class="section-title">
-                    <i class="fas fa-address-card"></i>
-                    Información de Contacto
-                </div>
+        <div class="section-title" style="margin-top: 20px;">
+            <i class="fas fa-address-card"></i>
+            Información de Contacto
+        </div>
 
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Persona Contacto <span class="required">*</span></label>
-                        <input type="text" id="contactPerson" required placeholder="Nombre completo">
-                    </div>
-                    <div class="form-group">
-                        <label>Posición que ocupa</label>
-                        <input type="text" id="contactPosition" placeholder="Ej: Gerente de Recursos Humanos">
-                    </div>
-                </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>Persona Contacto <span class="required">*</span></label>
+                <input type="text" id="contactPerson" required placeholder="Nombre completo">
+            </div>
+            <div class="form-group">
+                <label>Posición que ocupa</label>
+                <input type="text" id="contactPosition" placeholder="Ej: Gerente de Recursos Humanos">
+            </div>
+        </div>
 
-                <div class="form-row">
-                    <div class="form-group">
-    <label>Teléfono <span class="required">*</span></label>
-    <input type="text" id="phone" required placeholder="787-555-1234" maxlength="12">
-</div>
-                    <div class="form-group">
-                        <label>Correo electrónico para referir candidatos <span class="required">*</span></label>
-                        <input type="email" id="email" required placeholder="rrhh@empresa.com">
-                    </div>
-                </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>Teléfono <span class="required">*</span></label>
+                <input type="text" id="phone" required placeholder="787-555-1234" maxlength="12">
+            </div>
+            <div class="form-group">
+                <label>Correo electrónico para referir candidatos <span class="required">*</span></label>
+                <input type="email" id="email" required placeholder="rrhh@empresa.com">
+            </div>
+        </div>
 
-                <div class="form-group">
-                    <label>La oferta fue recibida a través de <span class="required">*</span></label>
-                    <select id="receivedThrough" required>
-                        <option value="">Seleccionar...</option>
-                        <option value="email">Correo electrónico</option>
-                        <option value="presencial">Presencial</option>
-                        <option value="telefono">Teléfono</option>
-                    </select>
-                </div>
+        <div class="form-group">
+            <label>La oferta fue recibida a través de <span class="required">*</span></label>
+            <select id="receivedThrough" required>
+                <option value="">Seleccionar...</option>
+                <option value="email">Correo electrónico</option>
+                <option value="presencial">Presencial</option>
+                <option value="telefono">Teléfono</option>
+            </select>
+        </div>
 
-                <!-- Información del Puesto -->
-                <div class="section-title">
-                    <i class="fas fa-briefcase"></i>
-                    Información del Puesto
-                </div>
+        <div class="section-title" style="margin-top: 20px;">
+            <i class="fas fa-handshake"></i>
+            Actividades de Reclutamiento
+        </div>
 
-                <div class="form-group">
-                    <label>Posición solicitada <span class="required">*</span></label>
-                    <input type="text" id="position" required placeholder="Ej: Desarrollador Senior">
+        <div class="form-group">
+            <label>¿Te interesa participar en nuestras actividades de reclutamiento?</label>
+            <div class="checkbox-group">
+                <div class="checkbox-item">
+                    <input type="checkbox" id="feriaEmpleo" value="feria">
+                    <label for="feriaEmpleo">Ferias de Empleo</label>
                 </div>
-
-                <div class="form-group">
-                    <label>Descripción de Empleo</label>
-                    <textarea id="jobDescription" placeholder="Describe las responsabilidades principales del puesto..."></textarea>
+                <div class="checkbox-item">
+                    <input type="checkbox" id="mesasReclutamiento" value="mesas">
+                    <label for="mesasReclutamiento">Mesas de reclutamiento</label>
                 </div>
-
-                <div class="form-group">
-                    <label>Horarios y días de trabajo</label>
-                    <textarea id="schedule" placeholder="Ej: Lunes a Viernes, 8:00 AM - 5:00 PM"></textarea>
+                <div class="checkbox-item">
+                    <input type="checkbox" id="talleres" value="talleres">
+                    <label for="talleres">Ofrecimiento de Talleres</label>
                 </div>
-
-                <div class="form-group">
-                    <label>Requisitos de la posición <span class="required">*</span></label>
-                    <textarea id="requirements" required placeholder="Ej: Bachillerato en Ingeniería, 3 años de experiencia..."></textarea>
+                <div class="checkbox-item">
+                    <input type="checkbox" id="noInteresa" value="no">
+                    <label for="noInteresa">No me interesa participar de actividades</label>
                 </div>
+            </div>
+        </div>
 
-<div class="form-group">
-    <label>Sector Industrial <span class="required">*</span></label>
-    <select id="academicDivision" required>
-        <option value="">Seleccionar...</option>
-        <option value="administracion">Administración</option>
-        <option value="finanzas">Finanzas</option>
-        <option value="salud">Salud</option>
-        <option value="ciencias">Ciencias</option>
-        <option value="tecnologia">Tecnología y Sistemas</option>
-        <option value="ventas">Ventas</option>
-        <option value="mercadeo">Mercadeo</option>
-        <option value="servicios">Servicios al Cliente</option>
-        <option value="operaciones">Operaciones y Logística</option>
-        <option value="ingenieria">Ingeniería y Manufactura</option>
-        <option value="hospitalidad">Hospitalidad y Turismo</option>
-        <option value="educacion">Educación</option>
-        <option value="todos">Todos los sectores</option>
-    </select>
-    <div class="help-text">Selecciona el sector que mejor describe esta posición</div>
-                </div>
-
-                <!-- Detalles del Empleo -->
-                <div class="section-title">
-                    <i class="fas fa-clipboard-list"></i>
-                    Detalles del Empleo
-                </div>
-
-                <div class="form-row">
-    <div class="form-group">
-        <label>Jornada de trabajo <span class="required">*</span></label>
-        <select id="workSchedule" required>
-            <option value="">Seleccionar...</option>
-            <option value="part-time">Part-Time</option>
-            <option value="full-time">Full-Time</option>
-        </select>
+        <div class="form-group">
+            <label>Notas Adicionales</label>
+            <textarea id="notes" placeholder="Cualquier información adicional que consideres importante..."></textarea>
+        </div>
     </div>
-    <div class="form-group">
-        <label>Tipo de empleo <span class="required">*</span></label>
-        <select id="employmentType" required>
-            <option value="">Seleccionar...</option>
-            <option value="regular">Empleo Regular</option>
-            <option value="temporary">Empleo Temporero</option>
-        </select>
+
+    <!-- SECCIÓN 2: OFERTAS DE EMPLEO (Múltiples) -->
+    <div class="offers-section">
+        <div class="section-title" style="background: linear-gradient(135deg, rgba(40, 167, 69, 0.1) 0%, rgba(32, 201, 151, 0.05) 100%); border-left: 5px solid #28a745;">
+            <i class="fas fa-briefcase"></i>
+            Ofertas de Empleo
+            <span style="font-size: 14px; font-weight: 400; margin-left: 10px; color: #6c757d;">
+                (Puedes añadir múltiples posiciones)
+            </span>
+        </div>
+
+        <div id="offersContainer">
+            <!-- Las ofertas se añadirán aquí dinámicamente -->
+        </div>
+
+        <div style="text-align: center; margin: 30px 0;">
+            <button type="button" class="btn btn-secondary" onclick="addNewOffer()" id="addOfferBtn">
+                <i class="fas fa-plus-circle"></i> Añadir Oferta de Empleo
+            </button>
+        </div>
+
+        <!-- Resumen de ofertas añadidas -->
+        <div id="offersSummary" style="display: none; background: #e7f5ff; border: 2px solid #339af0; border-radius: 15px; padding: 20px; margin: 20px 0;">
+            <h4 style="color: #1971c2; margin-bottom: 15px;">
+                <i class="fas fa-clipboard-list"></i> Resumen de Ofertas
+            </h4>
+            <div id="summaryList"></div>
+        </div>
     </div>
-</div>
 
-<div class="form-row">
-    <div class="form-group">
-        <label>Salario a ofrecer <span class="required">*</span></label>
-        <input type="text" id="salary" required placeholder="Ej: $35,000 - $45,000 anuales">
+    <div style="background: #f8f9fa; border-left: 4px solid #c8102e; padding: 20px; border-radius: 8px; margin-top: 30px;">
+        <p style="color: #495057; line-height: 1.7; margin: 0; font-size: 14px;">
+            <strong>Nota:</strong> Todas las requisiciones serán atendidas según el orden que se reciban. Es importante que el patrono notifique acerca del proceso realizado con cada participante referido. 
+            Para mayor información puede comunicarse con la Oficina de Carreras y Colocaciones del Recinto de Cupey al teléfono <strong>787-766-1717 ext. 3662 / 3470</strong> o al correo electrónico: <strong>brgonzalez@uagm.edu</strong>
+        </p>
     </div>
-    <div class="form-group">
-        <!-- Espacio vacío para mantener grid -->
+
+    <div class="form-actions">
+        <button type="button" class="btn btn-secondary" onclick="resetForm()">
+            <i class="fas fa-undo"></i> Limpiar Todo
+        </button>
+        <button type="submit" class="btn btn-primary" id="submitAllBtn" disabled>
+            <i class="fas fa-paper-plane"></i> Publicar Todas las Ofertas (<span id="offerCount">0</span>)
+        </button>
     </div>
-</div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Localización donde estará trabajando <span class="required">*</span></label>
-                        <input type="text" id="location" required placeholder="Ej: San Juan, Puerto Rico">
-                    </div>
-                    <div class="form-group">
-                        <label>Fecha límite para referir candidatos <span class="required">*</span></label>
-                        <input type="date" id="deadline" required>
-                        <div class="help-text">Fecha hasta cuando aceptarán candidatos</div>
-                    </div>
-                </div>
-
-                <!-- Actividades de Reclutamiento -->
-                <div class="section-title">
-                    <i class="fas fa-handshake"></i>
-                    Actividades de Reclutamiento
-                </div>
-
-                <div class="form-group">
-                    <label>¿Te interesa participar en nuestras actividades de reclutamiento?</label>
-                    <div class="checkbox-group">
-                        <div class="checkbox-item">
-                            <input type="checkbox" id="feriaEmpleo" value="feria">
-                            <label for="feriaEmpleo">Ferias de Empleo</label>
-                        </div>
-                        <div class="checkbox-item">
-                            <input type="checkbox" id="mesasReclutamiento" value="mesas">
-                            <label for="mesasReclutamiento">Mesas de reclutamiento</label>
-                        </div>
-                        <div class="checkbox-item">
-                            <input type="checkbox" id="talleres" value="talleres">
-                            <label for="talleres">Ofrecimiento de Talleres</label>
-                        </div>
-                        <div class="checkbox-item">
-                            <input type="checkbox" id="noInteresa" value="no">
-                            <label for="noInteresa">No me interesa participar de actividades</label>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Información Adicional -->
-                <div class="section-title">
-                    <i class="fas fa-plus-circle"></i>
-                    Información Adicional
-                </div>
-
-                <div class="form-group">
-                    <label>Notas Adicionales</label>
-                    <textarea id="notes" placeholder="Cualquier información adicional que consideres importante..."></textarea>
-                </div>
-<div style="background: #f8f9fa; border-left: 4px solid #c8102e; padding: 20px; border-radius: 8px; margin-top: 30px;">
-    <p style="color: #495057; line-height: 1.7; margin: 0; font-size: 14px;">
-        <strong>Nota:</strong> Todas las requisiciones serán atendidas según el orden que se reciban. Es importante que el patrono notifique acerca del proceso realizado con cada participante referido. 
-        Para mayor información puede comunicarse con la Oficina de Carreras y Colocaciones del Recinto de Cupey al teléfono <strong>787-766-1717 ext. 3662 / 3470</strong> o al correo electrónico: <strong>brgonzalez@uagm.edu</strong>
-    </p>
-</div>
-
-                <div class="form-actions">
-                    <button type="button" class="btn btn-secondary" onclick="resetForm()">
-                        <i class="fas fa-undo"></i> Limpiar Formulario
-                    </button>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-paper-plane"></i> Publicar Oferta
-                    </button>
-                </div>
-            </form>
+</form>
         </div>
     </div>
 <script>
@@ -677,15 +807,311 @@
             }
         };
 
+        // Variables globales para múltiples ofertas
+        let offersArray = [];
+        let offerCounter = 0;
+
         // Inicializar cuando se carga la página
-      document.addEventListener('DOMContentLoaded', function() {
-    isFirebaseInitialized = initializeFirebase();
-    document.getElementById('today').value = new Date().toISOString().split('T')[0];
-    const today = new Date().toISOString().split('T')[0];
-    document.getElementById('deadline').min = today;
-    setupPhoneFormatting(); // ← NUEVA LÍNEA
-    console.log('Portal Patronos cargado correctamente');
-});
+        document.addEventListener('DOMContentLoaded', function() {
+            isFirebaseInitialized = initializeFirebase();
+            document.getElementById('today').value = new Date().toISOString().split('T')[0];
+            setupPhoneFormatting();
+            initializeMultipleOffers();
+            console.log('Portal Patronos cargado correctamente');
+        });
+
+        // Inicializar sistema de múltiples ofertas
+        function initializeMultipleOffers() {
+            showEmptyOffersMessage();
+            updateSubmitButton();
+        }
+
+        // Mostrar mensaje cuando no hay ofertas
+        function showEmptyOffersMessage() {
+            const container = document.getElementById('offersContainer');
+            container.innerHTML = `
+                <div class="empty-offers-message">
+                    <i class="fas fa-briefcase"></i>
+                    <h3>No has añadido ninguna oferta aún</h3>
+                    <p>Haz clic en "Añadir Oferta de Empleo" para comenzar</p>
+                </div>
+            `;
+        }
+
+        // Añadir nueva oferta
+        function addNewOffer() {
+            offerCounter++;
+            const offerId = `offer_${offerCounter}`;
+            
+            const offerCard = createOfferCard(offerId, offerCounter);
+            
+            const container = document.getElementById('offersContainer');
+            
+            // Remover mensaje vacío si existe
+            const emptyMessage = container.querySelector('.empty-offers-message');
+            if (emptyMessage) {
+                emptyMessage.remove();
+            }
+            
+            container.insertAdjacentHTML('beforeend', offerCard);
+            
+            // Añadir a array
+            offersArray.push({
+                id: offerId,
+                number: offerCounter,
+                data: {}
+            });
+            
+            // Configurar eventos
+            setupOfferEvents(offerId);
+            
+            // Actualizar botón y resumen
+            updateSubmitButton();
+            updateSummary();
+            
+            // Expandir automáticamente la nueva oferta
+            toggleOfferCard(offerId);
+            
+            showNotification(`Oferta #${offerCounter} añadida`, 'success');
+        }
+
+        // Crear HTML de tarjeta de oferta
+        function createOfferCard(offerId, offerNumber) {
+            const today = new Date().toISOString().split('T')[0];
+            
+            return `
+                <div class="offer-card-container" id="${offerId}">
+                    <div class="offer-card-header" onclick="toggleOfferCard('${offerId}')">
+                        <div style="display: flex; align-items: center; gap: 15px;">
+                            <span class="offer-number-badge">Oferta #${offerNumber}</span>
+                            <h4>
+                                <i class="fas fa-briefcase"></i>
+                                <span id="${offerId}_title">Nueva Oferta de Empleo</span>
+                            </h4>
+                        </div>
+                        <div class="offer-card-actions">
+                            <i class="fas fa-chevron-down toggle-icon" id="${offerId}_icon"></i>
+                            <button type="button" class="delete-offer-btn" onclick="event.stopPropagation(); deleteOffer('${offerId}')">
+                                <i class="fas fa-trash"></i> Eliminar
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="offer-card-body" id="${offerId}_body">
+                        <div class="section-title" style="margin-top: 0;">
+                            <i class="fas fa-briefcase"></i>
+                            Información del Puesto
+                        </div>
+
+                        <div class="form-group">
+                            <label>Posición solicitada <span class="required">*</span></label>
+                            <input type="text" id="${offerId}_position" class="offer-input" data-offer="${offerId}" required placeholder="Ej: Desarrollador Senior">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Descripción de Empleo</label>
+                            <textarea id="${offerId}_jobDescription" class="offer-input" data-offer="${offerId}" placeholder="Describe las responsabilidades principales del puesto..."></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Horarios y días de trabajo</label>
+                            <textarea id="${offerId}_schedule" class="offer-input" data-offer="${offerId}" placeholder="Ej: Lunes a Viernes, 8:00 AM - 5:00 PM"></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Requisitos de la posición <span class="required">*</span></label>
+                            <textarea id="${offerId}_requirements" class="offer-input" data-offer="${offerId}" required placeholder="Ej: Bachillerato en Ingeniería, 3 años de experiencia..."></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Sector Industrial <span class="required">*</span></label>
+                            <select id="${offerId}_academicDivision" class="offer-input" data-offer="${offerId}" required>
+                                <option value="">Seleccionar...</option>
+                                <option value="administracion">Administración</option>
+                                <option value="finanzas">Finanzas</option>
+                                <option value="salud">Salud</option>
+                                <option value="ciencias">Ciencias</option>
+                                <option value="tecnologia">Tecnología y Sistemas</option>
+                                <option value="ventas">Ventas</option>
+                                <option value="mercadeo">Mercadeo</option>
+                                <option value="servicios">Servicios al Cliente</option>
+                                <option value="operaciones">Operaciones y Logística</option>
+                                <option value="ingenieria">Ingeniería y Manufactura</option>
+                                <option value="hospitalidad">Hospitalidad y Turismo</option>
+                                <option value="educacion">Educación</option>
+                                <option value="todos">Todos los sectores</option>
+                            </select>
+                        </div>
+
+                        <div class="section-title">
+                            <i class="fas fa-clipboard-list"></i>
+                            Detalles del Empleo
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Jornada de trabajo <span class="required">*</span></label>
+                                <select id="${offerId}_workSchedule" class="offer-input" data-offer="${offerId}" required>
+                                    <option value="">Seleccionar...</option>
+                                    <option value="part-time">Part-Time</option>
+                                    <option value="full-time">Full-Time</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Tipo de empleo <span class="required">*</span></label>
+                                <select id="${offerId}_employmentType" class="offer-input" data-offer="${offerId}" required>
+                                    <option value="">Seleccionar...</option>
+                                    <option value="regular">Empleo Regular</option>
+                                    <option value="temporary">Empleo Temporero</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Salario a ofrecer <span class="required">*</span></label>
+                                <input type="text" id="${offerId}_salary" class="offer-input" data-offer="${offerId}" required placeholder="Ej: $35,000 - $45,000 anuales">
+                            </div>
+                            <div class="form-group">
+                                <!-- Espacio vacío -->
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Localización donde estará trabajando <span class="required">*</span></label>
+                                <input type="text" id="${offerId}_location" class="offer-input" data-offer="${offerId}" required placeholder="Ej: San Juan, Puerto Rico">
+                            </div>
+                            <div class="form-group">
+                                <label>Fecha límite para referir candidatos <span class="required">*</span></label>
+                                <input type="date" id="${offerId}_deadline" class="offer-input" data-offer="${offerId}" required min="${today}">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Configurar eventos para una oferta
+        function setupOfferEvents(offerId) {
+            const inputs = document.querySelectorAll(`[data-offer="${offerId}"]`);
+            
+            inputs.forEach(input => {
+                input.addEventListener('input', function() {
+                    updateOfferData(offerId);
+                    updateSummary();
+                });
+                
+                input.addEventListener('change', function() {
+                    updateOfferData(offerId);
+                    updateSummary();
+                });
+            });
+        }
+
+        // Actualizar datos de una oferta
+        function updateOfferData(offerId) {
+            const offer = offersArray.find(o => o.id === offerId);
+            if (!offer) return;
+            
+            offer.data = {
+                position: document.getElementById(`${offerId}_position`)?.value || '',
+                jobDescription: document.getElementById(`${offerId}_jobDescription`)?.value || '',
+                schedule: document.getElementById(`${offerId}_schedule`)?.value || '',
+                requirements: document.getElementById(`${offerId}_requirements`)?.value || '',
+                academicDivision: document.getElementById(`${offerId}_academicDivision`)?.value || '',
+                workSchedule: document.getElementById(`${offerId}_workSchedule`)?.value || '',
+                employmentType: document.getElementById(`${offerId}_employmentType`)?.value || '',
+                salary: document.getElementById(`${offerId}_salary`)?.value || '',
+                location: document.getElementById(`${offerId}_location`)?.value || '',
+                deadline: document.getElementById(`${offerId}_deadline`)?.value || ''
+            };
+            
+            // Actualizar título de la tarjeta
+            const position = offer.data.position || 'Nueva Oferta de Empleo';
+            document.getElementById(`${offerId}_title`).textContent = position;
+        }
+
+        // Toggle expandir/colapsar oferta
+        function toggleOfferCard(offerId) {
+            const body = document.getElementById(`${offerId}_body`);
+            const icon = document.getElementById(`${offerId}_icon`);
+            
+            body.classList.toggle('expanded');
+            icon.classList.toggle('collapsed');
+        }
+
+        // Eliminar oferta
+        function deleteOffer(offerId) {
+            if (!confirm('¿Estás seguro de eliminar esta oferta?')) return;
+            
+            // Remover del DOM
+            document.getElementById(offerId).remove();
+            
+            // Remover del array
+            offersArray = offersArray.filter(o => o.id !== offerId);
+            
+            // Actualizar UI
+            if (offersArray.length === 0) {
+                showEmptyOffersMessage();
+            }
+            
+            updateSubmitButton();
+            updateSummary();
+            
+            showNotification('Oferta eliminada', 'info');
+        }
+
+        // Actualizar botón de envío
+function updateSubmitButton() {
+    const btn = document.getElementById('submitAllBtn');
+    
+    if (!btn) {
+        console.error('Botón submitAllBtn no encontrado');
+        return;
+    }
+    
+    if (offersArray.length > 0) {
+        btn.disabled = false;
+        btn.innerHTML = `<i class="fas fa-paper-plane"></i> Publicar Todas las Ofertas (${offersArray.length})`;
+    } else {
+        btn.disabled = true;
+        btn.innerHTML = `<i class="fas fa-paper-plane"></i> Publicar Todas las Ofertas (0)`;
+    }
+}
+
+        // Actualizar resumen
+        function updateSummary() {
+            const summary = document.getElementById('offersSummary');
+            const summaryList = document.getElementById('summaryList');
+            
+            if (offersArray.length === 0) {
+                summary.style.display = 'none';
+                return;
+            }
+            
+            summary.style.display = 'block';
+            
+            let html = '';
+            offersArray.forEach(offer => {
+                const position = offer.data.position || 'Sin título';
+                const location = offer.data.location || 'Sin ubicación';
+                
+                html += `
+                    <div class="summary-item">
+                        <div>
+                            <strong>${position}</strong><br>
+                            <span><i class="fas fa-map-marker-alt"></i> ${location}</span>
+                        </div>
+                        <span class="offer-number-badge" style="background: #339af0; color: white;">
+                            Oferta #${offer.number}
+                        </span>
+                    </div>
+                `;
+            });
+            
+            summaryList.innerHTML = html;
+        }
 
 // Formatear teléfono automáticamente
 function setupPhoneFormatting() {
@@ -709,12 +1135,24 @@ function setupPhoneFormatting() {
             window.location.href = 'Portal pagina principal.html';
         }
 
-        // Limpiar formulario
+       // Limpiar formulario
         function resetForm() {
-            if (confirm('¿Estás seguro que quieres limpiar todo el formulario?')) {
+            if (confirm('¿Estás seguro que quieres limpiar todo el formulario y eliminar todas las ofertas?')) {
+                // Limpiar formulario principal
                 document.getElementById('offerForm').reset();
                 document.getElementById('today').value = new Date().toISOString().split('T')[0];
-                showNotification('Formulario limpiado', 'info');
+                
+                // Resetear ofertas
+                offersArray = [];
+                offerCounter = 0;
+                document.getElementById('offersContainer').innerHTML = '';
+                showEmptyOffersMessage();
+                
+                // Actualizar UI
+                updateSubmitButton();
+                document.getElementById('offersSummary').style.display = 'none';
+                
+                showNotification('Formulario limpiado completamente', 'info');
             }
         }
 
@@ -722,20 +1160,23 @@ function setupPhoneFormatting() {
         document.getElementById('offerForm').addEventListener('submit', function(e) {
             e.preventDefault();
             
-            if (!validateForm()) {
+            if (!validatePatronForm()) {
                 return;
             }
 
-            submitOffer();
+            if (!validateAllOffers()) {
+                return;
+            }
+
+            submitAllOffers();
         });
 
-        // Validar formulario
-        function validateForm() {
+        // Validar información del patrono
+        function validatePatronForm() {
             const requiredFields = [
-    'today', 'patronType', 'companyName', 'contactPerson', 
-    'phone', 'email', 'receivedThrough', 'position', 
-    'requirements', 'academicDivision', 'workSchedule', 'employmentType', 'salary', 'location', 'deadline'
-];
+                'today', 'patronType', 'companyName', 'contactPerson', 
+                'phone', 'email', 'receivedThrough'
+            ];
 
             for (let fieldId of requiredFields) {
                 const field = document.getElementById(fieldId);
@@ -753,23 +1194,72 @@ function setupPhoneFormatting() {
                 return false;
             }
 
-const phone = document.getElementById('phone').value;
-if (!isValidPhone(phone)) {
-    document.getElementById('phone').focus();
-    showNotification('Por favor ingresa un teléfono válido (formato: 787-555-1234)', 'error');
-    return false;
-}
-
-            const deadline = new Date(document.getElementById('deadline').value);
-            const today = new Date();
-            if (deadline <= today) {
-                document.getElementById('deadline').focus();
-                showNotification('La fecha límite debe ser posterior a hoy', 'error');
+            const phone = document.getElementById('phone').value;
+            if (!isValidPhone(phone)) {
+                document.getElementById('phone').focus();
+                showNotification('Por favor ingresa un teléfono válido (formato: 787-555-1234)', 'error');
                 return false;
             }
 
             return true;
         }
+
+        // Validar todas las ofertas
+        function validateAllOffers() {
+            if (offersArray.length === 0) {
+                showNotification('Debes añadir al menos una oferta de empleo', 'error');
+                return false;
+            }
+
+            for (let offer of offersArray) {
+                const offerId = offer.id;
+                
+                // Campos requeridos de cada oferta
+                const requiredFields = [
+                    { id: `${offerId}_position`, name: 'Posición' },
+                    { id: `${offerId}_requirements`, name: 'Requisitos' },
+                    { id: `${offerId}_academicDivision`, name: 'Sector Industrial' },
+                    { id: `${offerId}_workSchedule`, name: 'Jornada de trabajo' },
+                    { id: `${offerId}_employmentType`, name: 'Tipo de empleo' },
+                    { id: `${offerId}_salary`, name: 'Salario' },
+                    { id: `${offerId}_location`, name: 'Localización' },
+                    { id: `${offerId}_deadline`, name: 'Fecha límite' }
+                ];
+
+                for (let field of requiredFields) {
+                    const element = document.getElementById(field.id);
+                    if (!element.value.trim()) {
+                        // Expandir la oferta con error
+                        const body = document.getElementById(`${offerId}_body`);
+                        if (!body.classList.contains('expanded')) {
+                            toggleOfferCard(offerId);
+                        }
+                        
+                        element.focus();
+                        showNotification(`Oferta #${offer.number}: Por favor completa "${field.name}"`, 'error');
+                        return false;
+                    }
+                }
+
+                // Validar fecha límite
+                const deadline = new Date(document.getElementById(`${offerId}_deadline`).value);
+                const today = new Date();
+                if (deadline <= today) {
+                    const body = document.getElementById(`${offerId}_body`);
+                    if (!body.classList.contains('expanded')) {
+                        toggleOfferCard(offerId);
+                    }
+                    
+                    document.getElementById(`${offerId}_deadline`).focus();
+                    showNotification(`Oferta #${offer.number}: La fecha límite debe ser posterior a hoy`, 'error');
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        
 
         // Validar email
         function isValidEmail(email) {
@@ -785,78 +1275,117 @@ function isValidPhone(phone) {
     return phoneRegex.test(phone) || phoneOnlyNumbers.test(phone.replace(/\D/g, ''));
 }
 
-       // Enviar oferta a Firebase
-        async function submitOffer() {
+       // Enviar todas las ofertas a Firebase
+        async function submitAllOffers() {
             document.getElementById('loadingMessage').style.display = 'block';
             document.querySelector('form').style.display = 'none';
 
-            // Recopilar datos del formulario
-            const offerData = {
-    id: Date.now().toString(),
-    today: document.getElementById('today').value,
-    patronType: document.getElementById('patronType').value,
-    companyName: document.getElementById('companyName').value,
-    contactPerson: document.getElementById('contactPerson').value,
-    contactPosition: document.getElementById('contactPosition').value,
-    phone: document.getElementById('phone').value,
-    email: document.getElementById('email').value,
-    receivedThrough: document.getElementById('receivedThrough').value,
-    position: document.getElementById('position').value,
-    jobDescription: document.getElementById('jobDescription').value,
-    schedule: document.getElementById('schedule').value,
-    requirements: document.getElementById('requirements').value,
-    academicDivision: document.getElementById('academicDivision').value,
-    workSchedule: document.getElementById('workSchedule').value,
-    employmentType: document.getElementById('employmentType').value,
-    salary: document.getElementById('salary').value,
-    location: document.getElementById('location').value,
-    deadline: document.getElementById('deadline').value,
-    notes: document.getElementById('notes').value,
-    status: 'active',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-};
+            // Actualizar mensaje de loading
+            const loadingMsg = document.querySelector('.loading p');
+            loadingMsg.textContent = `Publicando ${offersArray.length} oferta(s) de empleo...`;
+
+            // Recopilar datos del patrono (común para todas las ofertas)
+            const patronData = {
+                today: document.getElementById('today').value,
+                patronType: document.getElementById('patronType').value,
+                companyName: document.getElementById('companyName').value,
+                contactPerson: document.getElementById('contactPerson').value,
+                contactPosition: document.getElementById('contactPosition').value,
+                phone: document.getElementById('phone').value,
+                email: document.getElementById('email').value,
+                receivedThrough: document.getElementById('receivedThrough').value,
+                notes: document.getElementById('notes').value
+            };
 
             // Recopilar actividades seleccionadas
             const activities = [];
             document.querySelectorAll('input[type="checkbox"]:checked').forEach(checkbox => {
                 activities.push(checkbox.value);
             });
-            offerData.activities = activities;
+            patronData.activities = activities;
 
-            try {
-                // Intentar guardar en Firebase
-                if (isFirebaseInitialized) {
-                    const result = await FirebaseHelper.saveDoc('jobOffers', offerData);
-                    if (result.success) {
-                        console.log('Oferta guardada en Firebase:', result.id);
-                        showNotification('¡Oferta publicada en Firebase!', 'success');
+            let successCount = 0;
+            let errorCount = 0;
+            const savedOffers = [];
+
+            // Procesar cada oferta
+            for (let offer of offersArray) {
+                const offerData = {
+                    id: Date.now().toString() + '_' + offer.number,
+                    ...patronData, // Datos del patrono
+                    position: offer.data.position,
+                    jobDescription: offer.data.jobDescription,
+                    schedule: offer.data.schedule,
+                    requirements: offer.data.requirements,
+                    academicDivision: offer.data.academicDivision,
+                    workSchedule: offer.data.workSchedule,
+                    employmentType: offer.data.employmentType,
+                    salary: offer.data.salary,
+                    location: offer.data.location,
+                    deadline: offer.data.deadline,
+                    status: 'active',
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString()
+                };
+
+                try {
+                    // Intentar guardar en Firebase
+                    if (isFirebaseInitialized) {
+                        const result = await FirebaseHelper.saveDoc('jobOffers', offerData);
+                        if (result.success) {
+                            console.log(`Oferta #${offer.number} guardada en Firebase:`, result.id);
+                            successCount++;
+                            savedOffers.push(offerData);
+                        } else {
+                            throw new Error('Error de Firebase');
+                        }
                     } else {
-                        throw new Error('Error de Firebase');
+                        throw new Error('Firebase no inicializado');
                     }
-                } else {
-                    throw new Error('Firebase no inicializado');
+                } catch (error) {
+                    console.error(`Error con Firebase para oferta #${offer.number}, usando localStorage:`, error);
+                    errorCount++;
+                    savedOffers.push(offerData);
                 }
-            } catch (error) {
-                console.error('Error con Firebase, usando localStorage:', error);
-                showNotification('Guardado localmente (Firebase falló)', 'warning');
+
+                // Guardar también en localStorage como respaldo
+                saveOfferLocally(offerData);
             }
 
-            // Guardar también en localStorage como respaldo
-            saveOfferLocally(offerData);
-            
-            // Mostrar éxito
+            // Mostrar mensaje de éxito
             document.getElementById('loadingMessage').style.display = 'none';
-            document.getElementById('successMessage').style.display = 'block';
-            showNotification('¡Oferta publicada exitosamente!', 'success');
+            const successMessage = document.getElementById('successMessage');
             
+            if (successCount > 0) {
+                successMessage.innerHTML = `
+                    <i class="fas fa-check-circle" style="font-size: 24px; margin-bottom: 10px;"></i>
+                    <h3>¡${successCount} Oferta(s) Publicada(s) Exitosamente!</h3>
+                    <p>Las ofertas de empleo han sido registradas y estarán disponibles para los participantes.</p>
+                    ${errorCount > 0 ? `<p style="font-size: 14px; margin-top: 10px;">⚠️ ${errorCount} oferta(s) guardada(s) localmente</p>` : ''}
+                `;
+            } else {
+                successMessage.innerHTML = `
+                    <i class="fas fa-exclamation-triangle" style="font-size: 24px; margin-bottom: 10px;"></i>
+                    <h3>Ofertas Guardadas Localmente</h3>
+                    <p>Las ${offersArray.length} ofertas se guardaron localmente (Firebase no disponible).</p>
+                `;
+                successMessage.style.background = 'linear-gradient(135deg, #ffc107 0%, #ff9800 100%)';
+            }
+            
+            successMessage.style.display = 'block';
+            
+            showNotification(
+                `✅ ${successCount} oferta(s) publicada(s) exitosamente`, 
+                'success'
+            );
+
             // Resetear formulario después de 3 segundos
             setTimeout(() => {
-                document.getElementById('offerForm').reset();
-                document.getElementById('today').value = new Date().toISOString().split('T')[0];
-                document.getElementById('successMessage').style.display = 'none';
+                resetForm();
+                successMessage.style.display = 'none';
+                successMessage.style.background = 'linear-gradient(135deg, #28a745 0%, #20c997 100%)';
                 document.querySelector('form').style.display = 'block';
-            }, 3000);
+            }, 4000);
         }
 
         // Guardar oferta localmente (respaldo)
@@ -931,6 +1460,11 @@ function isValidPhone(phone) {
             }, 5000);
         }
 
+// Hacer funciones globales para el HTML
+        window.addNewOffer = addNewOffer;
+        window.toggleOfferCard = toggleOfferCard;
+        window.deleteOffer = deleteOffer;
+
         // Validación en tiempo real
         document.getElementById('email').addEventListener('blur', function() {
             if (this.value && !isValidEmail(this.value)) {
@@ -941,16 +1475,7 @@ function isValidPhone(phone) {
             }
         });
 
-        document.getElementById('deadline').addEventListener('change', function() {
-            const deadline = new Date(this.value);
-            const today = new Date();
-            if (deadline <= today) {
-                this.style.borderColor = '#dc3545';
-                showNotification('La fecha límite debe ser posterior a hoy', 'warning');
-            } else {
-                this.style.borderColor = '#e2e8f0';
-            }
-        });
+        
 
         // Manejar checkbox "No me interesa"
         document.getElementById('noInteresa').addEventListener('change', function() {
