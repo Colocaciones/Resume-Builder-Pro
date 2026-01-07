@@ -799,7 +799,6 @@
                             <label>Correo electrónico <span class="required">*</span></label>
                             <input type="email" id="email" required>
                         </div>
-                    </div>
 
                     <div class="form-group">
                         <label>Pueblo al que pertenece <span class="required">*</span></label>
@@ -1189,16 +1188,19 @@ function initializeFirebase() {
 
         // Cambiar entre tabs
         function switchTab(tabName) {
-            // Actualizar tabs
+            // Actualizar tabs activos
             document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
             
             if (tabName === 'register') {
-                document.querySelector('.tab').classList.add('active');
+                // Activar tab de registro
+                document.querySelectorAll('.tab')[0].classList.add('active');
                 document.getElementById('registerContent').classList.add('active');
             } else if (tabName === 'offers') {
+                // Activar tab de ofertas
                 document.querySelectorAll('.tab')[1].classList.add('active');
                 document.getElementById('offersContent').classList.add('active');
+                // Cargar ofertas
                 loadOffersDisplay();
             }
         }
