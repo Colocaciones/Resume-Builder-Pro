@@ -668,24 +668,6 @@ body {
         let isFirebaseInitialized = false;
         let isWaitlistModeEnabled = false; 
 
-// Función para obtener fechas bloqueadas desde Firebase
-async function getBlockedDatesFromFirebase() {
-    try {
-        const snapshot = await db.collection('blocked_dates').get();
-        const firebaseBlockedDates = [];
-        snapshot.forEach(doc => {
-            const data = doc.data();
-            if (data.date) {
-                firebaseBlockedDates.push(data.date);
-            }
-        });
-        console.log('Fechas bloqueadas obtenidas:', firebaseBlockedDates);
-        return firebaseBlockedDates;
-    } catch (error) {
-        console.error('Error obteniendo fechas bloqueadas:', error);
-        return [];
-    }
-}
 
         function initializeFirebase() {
             try {
@@ -724,43 +706,33 @@ document.addEventListener('DOMContentLoaded', async function() {
     checkAdminSession();
     console.log('✅ Sistema de Citas cargado correctamente');
 });
-async function generateWednesdayDates() {
-    const dateSelect = document.getElementById('appointmentDate');
-    const today = new Date();
-    const wednesdays = [];
 
-    // **MODIFICADO: Solo retornar si está en modo lista de espera**
+function generateWednesdayDates() {
+    const dateSelect = document.getElementById('appointmentDate');
+    
+    // Si está en modo lista de espera, no generar fechas
     if (isWaitlistModeEnabled) {
         console.log('⏸️ Modo lista de espera activo - no generar fechas');
         return;
     }
 
-    // Obtener fechas bloqueadas de Firebase
-    let blockedDatesFromFirebase = [];
-    if (isFirebaseInitialized) {
-        blockedDatesFromFirebase = await getBlockedDatesFromFirebase();
-    }
-
-    // Generar próximos miércoles (8 semanas)
-    for (let i = 0; i < 56; i++) {
-        const date = new Date(today);
-        date.setDate(today.getDate() + i);
-        
-        if (date.getDay() === 3) { // Miércoles = 3
-            const dateString = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-            
-            // Verificar si la fecha NO está bloqueada en Firebase
-            if (!blockedDatesFromFirebase.includes(dateString)) {
-                wednesdays.push({ date, dateString });
-            }
-        }
-    }
+    // ✅ FECHAS ESPECÍFICAS (formato: YYYY-MM-DD)
+    const specificDates = [
+        '2026-01-28',  // Miércoles 28 de enero 2026
+        '2026-02-18',  // Miércoles 18 de febrero 2026
+        '2026-03-11',  // Miércoles 11 de marzo 2026
+        '2026-04-08',  // Miércoles 8 de abril 2026
+        '2026-04-29'   // Miércoles 29 de abril 2026
+    ];
 
     // Limpiar opciones anteriores
     dateSelect.innerHTML = '<option value="">Seleccionar miércoles...</option>';
 
-    // Agregar opciones disponibles al select
-    wednesdays.forEach(({ date, dateString }) => {
+    // Agregar las fechas específicas al select
+    specificDates.forEach(dateString => {
+        const [year, month, day] = dateString.split('-');
+        const date = new Date(year, month - 1, day);
+        
         const option = document.createElement('option');
         const displayDate = date.toLocaleDateString('es-ES', {
             weekday: 'long',
@@ -775,7 +747,7 @@ async function generateWednesdayDates() {
     });
 
     // Si no hay fechas disponibles
-    if (wednesdays.length === 0) {
+    if (specificDates.length === 0) {
         const option = document.createElement('option');
         option.value = '';
         option.textContent = 'No hay fechas disponibles';
@@ -783,7 +755,7 @@ async function generateWednesdayDates() {
         dateSelect.appendChild(option);
     }
 
-    console.log(`Se generaron ${wednesdays.length} miércoles disponibles`);
+    console.log(`Se cargaron ${specificDates.length} fechas específicas`);
 }
 
 // **NUEVA FUNCIÓN: Activar modo lista de espera**
