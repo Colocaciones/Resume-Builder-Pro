@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro de Seguimiento - ManpowerGroup</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+    background: #f8f9fa;
+}
+
+/* Hero Section */
+.hero {
+    position: relative;
+    height: 60vh;
+    min-height: 500px;
+    background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)),
+                url('https://images.unsplash.com/photo-1556761175-b413da4baf72?w=1920&q=80') center/cover;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    text-align: center;
+    animation: fadeIn 1s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.hero-content {
+    position: relative;
+    z-index: 2;
+    max-width: 800px;
+    padding: 0 20px;
+    animation: fadeInUp 0.8s ease;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.hero h1 {
+    font-size: 48px;
+    font-weight: 800;
+    margin-bottom: 20px;
+    text-shadow: 2px 2px 8px rgba(0,0,0,0.3);
+}
+
+.hero p {
+    font-size: 20px;
+    margin-bottom: 10px;
+    opacity: 0.95;
+}
+
+/* Back Button */
+.back-button {
+    position: fixed;
+    top: 30px;
+    left: 30px;
+    z-index: 100;
+    background: rgba(255,255,255,0.2);
+    backdrop-filter: blur(10px);
+    border: 2px solid rgba(255,255,255,0.3);
+    color: white;
+    padding: 12px 20px;
+    border-radius: 50px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.back-button:hover {
+    background: rgba(255,255,255,0.3);
+    transform: translateX(-5px);
+}
+
+/* Container */
+.container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 60px 20px;
+    background: white;
+}
+
+/* Form Card */
+.form-card {
+    background: white;
+    padding: 0;
+    box-shadow: none;
+    animation: fadeIn 0.6s ease;
+}
+
+/* Section Titles */
+.section-title {
+    font-size: 24px;
+    color: #2d3748;
+    margin: 40px 0 25px 0;
+    padding: 15px 20px;
+    background: linear-gradient(to right, rgba(200,16,46,0.05), transparent);
+    border-left: 5px solid #c8102e;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.section-title:first-of-type {
+    margin-top: 0;
+}
+
+.section-title i {
+    color: #c8102e;
+    font-size: 24px;
+}
+
+/* Form Groups */
+.form-group {
+    margin-bottom: 25px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #2d3748;
+    font-size: 14px;
+}
+
+.required {
+    color: #dc3545;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: 14px 18px;
+    border: 2px solid #e2e8f0;
+    border-radius: 10px;
+    font-size: 15px;
+    transition: all 0.3s ease;
+    font-family: inherit;
+    background: white;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: #c8102e;
+    box-shadow: 0 0 0 3px rgba(200,16,46,0.1);
+    transform: translateY(-2px);
+}
+
+.form-group textarea {
+    min-height: 100px;
+    resize: vertical;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+/* Buttons */
+.btn-container {
+    text-align: center;
+    margin-top: 40px;
+}
+
+.btn {
+    padding: 16px 50px;
+    border: none;
+    border-radius: 50px;
+    font-weight: 700;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #c8102e 0%, #8b0b1f 100%);
+    color: white;
+}
+
+.btn-primary:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(200,16,46,0.4);
+}
+
+/* Success Message */
+.success-message {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    color: white;
+    padding: 40px;
+    border-radius: 20px;
+    text-align: center;
+    margin-bottom: 30px;
+    display: none;
+    box-shadow: 0 10px 40px rgba(40,167,69,0.3);
+}
+
+.success-message i {
+    font-size: 64px;
+    margin-bottom: 20px;
+}
+
+.success-message h3 {
+    font-size: 28px;
+    margin-bottom: 15px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .hero {
+        height: 50vh;
+        min-height: 400px;
+    }
+    
+    .hero h1 {
+        font-size: 32px;
+    }
+    
+    .hero p {
+        font-size: 16px;
+    }
+    
+    .container {
+        padding: 40px 20px;
+    }
+    
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .back-button {
+        top: 20px;
+        left: 20px;
+        padding: 10px 16px;
+        font-size: 14px;
+    }
+}
+
+@media (max-width: 480px) {
+    .hero h1 {
+        font-size: 26px;
+    }
+    
+    .section-title {
+        font-size: 20px;
+        padding: 12px 15px;
+    }
+    
+    .btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+</style>
+    
+    <!-- Scripts Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+</head>
+<body>
+    <body>
+    <!-- Hero Section -->
+    <div class="hero">
+        <div class="hero-content">
+            <h1><i class="fas fa-clipboard-check"></i> Registro de Seguimiento</h1>
+            <p>Participantes Atendidos por ManpowerGroup</p>
+            <p style="font-size: 16px; opacity: 0.9; margin-top: 10px;">Universidad Ana G. Méndez - Recinto de Cupey</p>
+        </div>
+    </div>
+
+    <!-- Back Button -->
+    <a href="Portal pagina principal.html" class="back-button">
+        <i class="fas fa-arrow-left"></i> Volver al Portal Principal
+    </a>
+
+    <!-- Container -->
+    <div class="container">
+        <!-- Success Message -->
+        <div class="success-message" id="successMessage">
+            <i class="fas fa-check-circle"></i>
+            <h3>¡Seguimiento Registrado Exitosamente!</h3>
+            <div id="followupDetails"></div>
+        </div>
+
+        <!-- Form Card -->
+        <div class="form-card">
+            <form id="followupForm">
+
+                <!-- Información del Participante -->
+                <div class="section-title">
+                    <i class="fas fa-user"></i>
+                    Información del Participante
+                </div>
+
+                <div class="form-group">
+                    <label>Nombre Completo <span class="required">*</span></label>
+                    <input type="text" id="fullName" required placeholder="Ej: Juan Pérez García">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Correo Electrónico <span class="required">*</span></label>
+                        <input type="email" id="email" required placeholder="ejemplo@correo.com">
+                    </div>
+                    <div class="form-group">
+                        <label>Teléfono <span class="required">*</span></label>
+                        <input type="tel" id="phone" required placeholder="787-555-1234" maxlength="12">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Concentración <span class="required">*</span></label>
+                    <input type="text" id="concentration" required placeholder="Ej: Administración de Empresas">
+                </div>
+
+                <!-- Información de la Sesión -->
+                <div class="section-title">
+                    <i class="fas fa-calendar-check"></i>
+                    Información de la Sesión
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Fecha de la Cita Atendida <span class="required">*</span></label>
+                        <input type="date" id="appointmentDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Tipo de Participante <span class="required">*</span></label>
+                        <select id="participantType" required>
+                            <option value="">Seleccionar...</option>
+                            <option value="citado">Citado (Cita Agendada)</option>
+                            <option value="walk-in">Walk-in (Sin cita previa)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Servicio Ofrecido <span class="required">*</span></label>
+                    <textarea id="serviceOffered" required placeholder="Describe el servicio o servicios brindados al participante..."></textarea>
+                </div>
+
+                <!-- Botón de Envío -->
+                <div class="btn-container">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Registrar Seguimiento
+                    </button>
+                </div>
+
+            </form>
+        </div>
+    </div>
+<script>
+    // ====================================
+    // CONFIGURACIÓN FIREBASE
+    // ====================================
+    const firebaseConfig = {
+        apiKey: "AIzaSyBFgSuKNJMUoVcKgHjsqOsInArSPBsb32A",
+        authDomain: "uagm-portal-de-empleo-17aed.firebaseapp.com",
+        projectId: "uagm-portal-de-empleo-17aed",
+        storageBucket: "uagm-portal-de-empleo-17aed.firebasestorage.app",
+        messagingSenderId: "582147767835",
+        appId: "1:582147767835:web:546ab8f2557b6da6ccc2be"
+    };
+
+    // Variables globales Firebase
+    let app, db;
+    let isFirebaseInitialized = false;
+
+    // Inicializar Firebase
+    function initializeFirebase() {
+        try {
+            app = firebase.initializeApp(firebaseConfig);
+            db = firebase.firestore();
+            console.log('✅ Firebase inicializado correctamente en Registro de Seguimiento');
+            isFirebaseInitialized = true;
+            return true;
+        } catch (error) {
+            console.error('❌ Error inicializando Firebase:', error);
+            return false;
+        }
+    }
+
+    // Helper para guardar documentos
+    const FirebaseHelper = {
+        async saveDoc(collection, data) {
+            try {
+                const docRef = await db.collection(collection).add(data);
+                console.log('✅ Documento guardado con ID:', docRef.id);
+                return { success: true, id: docRef.id };
+            } catch (error) {
+                console.error('❌ Error guardando documento:', error);
+                return { success: false, error };
+            }
+        }
+    };
+
+    // ====================================
+    // INICIALIZACIÓN AL CARGAR LA PÁGINA
+    // ====================================
+    document.addEventListener('DOMContentLoaded', function() {
+        isFirebaseInitialized = initializeFirebase();
+        setupEventListeners();
+        setMaxDate();
+        console.log('✅ Sistema de Seguimiento cargado correctamente');
+    });
+// ====================================
+    // CONFIGURAR EVENT LISTENERS
+    // ====================================
+    function setupEventListeners() {
+        // Manejar envío del formulario
+        document.getElementById('followupForm').addEventListener('submit', handleSubmit);
+        
+        // Formatear teléfono automáticamente
+        document.getElementById('phone').addEventListener('input', formatPhoneNumber);
+    }
+
+    // ====================================
+    // ESTABLECER FECHA MÁXIMA (HOY)
+    // ====================================
+    function setMaxDate() {
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('appointmentDate').setAttribute('max', today);
+    }
+
+    // ====================================
+    // FORMATEAR TELÉFONO AUTOMÁTICAMENTE
+    // ====================================
+    function formatPhoneNumber(e) {
+        let value = e.target.value.replace(/\D/g, ''); // Eliminar todo excepto números
+        
+        // Limitar a 10 dígitos
+        if (value.length > 10) {
+            value = value.slice(0, 10);
+        }
+        
+        // Formatear: 787-555-1234
+        if (value.length > 6) {
+            value = value.slice(0, 3) + '-' + value.slice(3, 6) + '-' + value.slice(6);
+        } else if (value.length > 3) {
+            value = value.slice(0, 3) + '-' + value.slice(3);
+        }
+        
+        e.target.value = value;
+    }
+
+    // ====================================
+    // VALIDAR EMAIL
+    // ====================================
+    function isValidEmail(email) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailRegex.test(email);
+    }
+
+    // ====================================
+    // VALIDAR FORMULARIO
+    // ====================================
+    function validateForm() {
+        const requiredFields = [
+            'fullName', 
+            'email', 
+            'phone', 
+            'concentration',
+            'appointmentDate',
+            'participantType',
+            'serviceOffered'
+        ];
+
+        for (let fieldId of requiredFields) {
+            const field = document.getElementById(fieldId);
+            if (!field.value.trim()) {
+                field.focus();
+                showNotification(`Por favor completa: ${field.previousElementSibling.textContent.replace(' *', '')}`, 'error');
+                return false;
+            }
+        }
+
+        // Validar email
+        const email = document.getElementById('email').value;
+        if (!isValidEmail(email)) {
+            document.getElementById('email').focus();
+            showNotification('Por favor ingresa un email válido', 'error');
+            return false;
+        }
+
+        // Validar teléfono (debe tener 12 caracteres con guiones)
+        const phone = document.getElementById('phone').value;
+        if (phone.length < 12) {
+            document.getElementById('phone').focus();
+            showNotification('Por favor ingresa un teléfono válido (10 dígitos)', 'error');
+            return false;
+        }
+
+        return true;
+    }
+
+    // ====================================
+    // MANEJAR ENVÍO DEL FORMULARIO
+    // ====================================
+    function handleSubmit(e) {
+        e.preventDefault();
+        
+        if (!validateForm()) {
+            return;
+        }
+
+        submitFollowup();
+    }
+// ====================================
+    // ENVIAR SEGUIMIENTO A FIREBASE
+    // ====================================
+    async function submitFollowup() {
+        const followupData = {
+            // Información del participante
+            fullName: document.getElementById('fullName').value,
+            email: document.getElementById('email').value,
+            phone: document.getElementById('phone').value,
+            concentration: document.getElementById('concentration').value,
+            
+            // Información de la sesión
+            appointmentDate: document.getElementById('appointmentDate').value,
+            participantType: document.getElementById('participantType').value,
+            serviceOffered: document.getElementById('serviceOffered').value,
+            
+            // Metadata
+            createdAt: new Date().toISOString(),
+            source: 'registro-seguimiento',
+            status: 'completed'
+        };
+
+        try {
+            showNotification('Guardando información...', 'info');
+            
+            // Guardar en Firebase
+            if (isFirebaseInitialized) {
+                const result = await FirebaseHelper.saveDoc('followups', followupData);
+                
+                if (result.success) {
+                    console.log('✅ Seguimiento guardado con ID:', result.id);
+                    showSuccessMessage(followupData);
+                } else {
+                    throw new Error('Error de Firebase');
+                }
+            } else {
+                throw new Error('Firebase no inicializado');
+            }
+        } catch (error) {
+            console.error('❌ Error guardando seguimiento:', error);
+            showNotification('Error al registrar el seguimiento. Por favor intenta de nuevo.', 'error');
+        }
+    }
+
+    // ====================================
+    // MOSTRAR MENSAJE DE ÉXITO
+    // ====================================
+    function showSuccessMessage(followupData) {
+        // Formatear fecha
+        const dateObj = new Date(followupData.appointmentDate + 'T00:00:00');
+        const displayDate = dateObj.toLocaleDateString('es-ES', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+
+        // Traducir tipo de participante
+        const participantTypeText = followupData.participantType === 'citado' 
+            ? 'Citado (Cita Agendada)' 
+            : 'Walk-in (Sin cita previa)';
+
+        const detailsHTML = `
+            <div style="text-align: left; background: rgba(255,255,255,0.2); padding: 20px; border-radius: 10px; margin-top: 20px;">
+                <strong>📋 Detalles del Seguimiento:</strong><br><br>
+                👤 <strong>Participante:</strong> ${followupData.fullName}<br>
+                📧 <strong>Email:</strong> ${followupData.email}<br>
+                📱 <strong>Teléfono:</strong> ${followupData.phone}<br>
+                🎓 <strong>Concentración:</strong> ${followupData.concentration}<br><br>
+                📅 <strong>Fecha Atendida:</strong> ${displayDate}<br>
+                🚶 <strong>Tipo:</strong> ${participantTypeText}<br><br>
+                💼 <strong>Servicio Ofrecido:</strong><br>
+                <em style="display: block; margin-top: 5px; padding: 10px; background: rgba(0,0,0,0.1); border-radius: 5px;">
+                    ${followupData.serviceOffered}
+                </em>
+            </div>
+        `;
+
+        document.getElementById('followupDetails').innerHTML = detailsHTML;
+        document.getElementById('successMessage').style.display = 'block';
+        document.getElementById('followupForm').style.display = 'none';
+
+        showNotification('¡Seguimiento registrado exitosamente!', 'success');
+        
+        // Scroll al mensaje de éxito
+        document.getElementById('successMessage').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    // ====================================
+    // MOSTRAR NOTIFICACIONES
+    // ====================================
+    function showNotification(message, type = 'info') {
+        // Crear elemento de notificación
+        const notification = document.createElement('div');
+        notification.className = `notification notification-${type}`;
+        notification.innerHTML = `
+            <i class="fas ${type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle'}"></i>
+            <span>${message}</span>
+            <i class="fas fa-times notification-close"></i>
+        `;
+
+        // Estilos CSS para la notificación
+        const style = document.createElement('style');
+        style.textContent = `
+            .notification {
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 15px 20px;
+                border-radius: 8px;
+                color: white;
+                font-weight: 500;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                z-index: 1000;
+                max-width: 400px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+                animation: slideIn 0.3s ease-out;
+            }
+            
+            .notification-success { background: #28a745; }
+            .notification-error { background: #dc3545; }
+            .notification-info { background: #17a2b8; }
+            
+            .notification-close {
+                cursor: pointer;
+                margin-left: auto;
+                opacity: 0.8;
+            }
+            
+            .notification-close:hover {
+                opacity: 1;
+            }
+            
+            @keyframes slideIn {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+        `;
+
+        // Añadir estilos si no existen
+        if (!document.querySelector('style[data-notifications]')) {
+            style.setAttribute('data-notifications', 'true');
+            document.head.appendChild(style);
+        }
+
+        // Añadir al body
+        document.body.appendChild(notification);
+
+        // Cerrar al hacer click en X
+        notification.querySelector('.notification-close').addEventListener('click', () => {
+            notification.remove();
+        });
+
+        // Auto-cerrar después de 5 segundos
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.remove();
+            }
+        }, 5000);
+    }
+</script>
+</script>
+</body>
+</html>
