@@ -901,6 +901,25 @@
                         </select>
                     </div>
 
+<!-- Servicios Solicitados -->
+                    <div class="section-title">
+                        <i class="fas fa-hands-helping"></i>
+                        Servicios Solicitados
+                    </div>
+
+                    <div class="form-group">
+                        <label>Selecciona los servicios que necesitas <span class="required">*</span></label>
+                        <select id="requestedServices" required>
+    <option value="">Seleccionar servicio...</option>
+    <option value="orientacion">Orientación de servicios y temas de Empleabilidad</option>
+    <option value="interesado">Interesado en listado de Ofertas de Empleo</option>
+    <option value="resume">Redacción y Revisión de Resumé</option>
+    <option value="carta">Redacción Carta de Presentación o Agradecimiento</option>
+</select>
+                    </div>
+
+
+
                     <!-- Resumé -->
                     <div class="section-title">
                         <i class="fas fa-file-upload"></i>
@@ -1186,8 +1205,8 @@ function initializeFirebase() {
             window.location.href = 'Portal pagina principal.html';
         }
 
-        // Cambiar entre tabs
-        function switchTab(tabName) {
+       // Cambiar entre tabs
+        window.switchTab = function(tabName) {
             // Actualizar tabs activos
             document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
@@ -1260,16 +1279,74 @@ function initializeFirebase() {
             });
         }
 
-// Configurar eventos para campos condicionales
-        function setupConditionalFields() {
+function setupConditionalFields() {
             const studentTypeSelect = document.getElementById('studentType');
+            const servicesSelect = document.getElementById('requestedServices');
             
             // Agregar evento cuando cambie la selección
             studentTypeSelect.addEventListener('change', toggleStudentFields);
+            servicesSelect.addEventListener('change', toggleManpowerField);
             
             // Ejecutar al cargar la página para estado inicial
             toggleStudentFields();
+            toggleManpowerField();
         }
+// Mostrar/ocultar campo de resumé según servicio seleccionado
+function toggleManpowerField() {
+    const servicesSelect = document.getElementById('requestedServices');
+    const selectedService = servicesSelect.value;
+    
+    // ===== SECCIÓN RESUMÉ =====
+    const resumeSection = document.querySelector('.section-title:has(i.fa-file-upload)');
+    const resumeFormGroup = document.getElementById('resume')?.closest('.form-group');
+    const resumeInput = document.getElementById('resume');
+    const uploadContainer = document.getElementById('resumeUpload');
+    
+    // Verificar que los elementos existen antes de manipularlos
+    if (!resumeSection || !resumeFormGroup || !resumeInput || !uploadContainer) {
+        console.error('No se encontraron elementos del resumé');
+        return;
+    }
+    
+    if (selectedService === 'interesado') {
+        // INTERESADO EN OFERTAS: Mostrar y hacer OBLIGATORIO
+        resumeSection.style.display = 'flex';
+        resumeFormGroup.style.display = 'block';
+        resumeInput.required = true;
+        
+        // Actualizar el label del resumé
+        const label = resumeFormGroup.querySelector('label');
+        if (label) {
+            label.innerHTML = 'Subir Resumé (PDF recomendado) <span class="required">*</span>';
+        }
+        
+    } else if (selectedService === 'resume') {
+        // REDACCIÓN DE RESUMÉ: Mostrar pero hacer OPCIONAL
+        resumeSection.style.display = 'flex';
+        resumeFormGroup.style.display = 'block';
+        resumeInput.required = false; // ← NO OBLIGATORIO
+        
+        // Actualizar el label del resumé (sin asterisco)
+        const label = resumeFormGroup.querySelector('label');
+        if (label) {
+            label.innerHTML = 'Subir Resumé (PDF recomendado) <span style="color: #6c757d; font-size: 13px;">(Opcional)</span><br><small style="color: #6c757d; font-size: 12px;">Si no tienes un resumé creado, envía toda la información detallada que desees incluir al correo: <strong>brgonzalez@uagm.edu</strong></small>';
+        }
+        
+    } else {
+        // OTROS SERVICIOS: Ocultar sección de resumé
+        resumeSection.style.display = 'none';
+        resumeFormGroup.style.display = 'none';
+        resumeInput.required = false;
+        resumeInput.value = '';
+        uploadContainer.classList.remove('has-file');
+        
+        // Resetear el label
+        const labelSpan = uploadContainer.querySelector('.file-upload-label span');
+        if (labelSpan) {
+            labelSpan.textContent = 'Haz clic para seleccionar tu resumé';
+        }
+    }
+}
 
         // Manejar registro
         document.getElementById('registrationForm').addEventListener('submit', function(e) {
@@ -1304,13 +1381,13 @@ function setupPhoneFormatting() {
             const studentType = document.getElementById('studentType').value;
             let requiredFields = [
                 'participantType', 'firstName', 'lastName', 'phone', 'email', 'city',
-                'studentType', 'concentration', 'academicDegree'
+                'studentType', 'concentration', 'academicDegree', 'requestedServices'
             ];
 
             // Agregar campos adicionales solo si es estudiante
             if (studentType === 'student') {
                 requiredFields = requiredFields.concat([
-                    'campus', 'studentId', 'schedule', 'studyYear', 
+                   'campus', 'studentId', 'schedule', 'studyYear', 'requestedServices', 
                     'academicDivision', 'graduationCandidate'
                 ]);
             }
@@ -1340,12 +1417,15 @@ if (!isValidPhone(phone)) {
     return false;
 }
 
-            // Validar archivo
-            const fileInput = document.getElementById('resume');
-            if (!fileInput.files.length) {
-                showNotification('Por favor selecciona tu resumé', 'error');
-                return false;
-            }
+           // Validar archivo (solo si es requerido según el servicio)
+const fileInput = document.getElementById('resume');
+const selectedService = document.getElementById('requestedServices').value;
+
+// Solo obligatorio para "Interesado en Ofertas de Empleo"
+if (selectedService === 'interesado' && !fileInput.files.length) {
+    showNotification('Por favor selecciona tu resumé para este servicio', 'error');
+    return false;
+}
 
            // Validar ID estudiante solo si es estudiante
             if (studentType === 'student') {
@@ -1375,6 +1455,9 @@ function isValidPhone(phone) {
 
         // Enviar registro
 async function submitRegistration() {
+    // Obtener el archivo PRIMERO
+    const resumeFile = document.getElementById('resume').files[0];
+    
     const formData = {
         id: Date.now().toString(),
         participantType: document.getElementById('participantType').value,
@@ -1392,14 +1475,15 @@ async function submitRegistration() {
         graduationCandidate: document.getElementById('graduationCandidate').value,
         academicDegree: document.getElementById('academicDegree').value,
         academicDivision: document.getElementById('academicDivision').value,
-        resume: 'uploading...', // Se actualizará después de subir
+        requestedServices: document.getElementById('requestedServices').value,
+        resume: resumeFile ? 'uploading...' : 'No proporcionado', // Se actualizará después de subir
         registeredAt: new Date().toISOString()
     };
 
     try {
-        // Subir archivo de resumé a Storage
+        // Subir archivo de resumé a Storage (si existe)
         const resumeFile = document.getElementById('resume').files[0];
-        if (resumeFile) {
+        if (resumeFile && resumeFile.size > 0) {
             const storageRef = storage.ref(`resumes/${formData.id}_${resumeFile.name}`);
             const uploadTask = await storageRef.put(resumeFile);
             const downloadURL = await uploadTask.ref.getDownloadURL();
@@ -1432,20 +1516,32 @@ async function submitRegistration() {
     localStorage.setItem('participants', JSON.stringify(participants));
 
     currentUser = formData;
-if (promoOfferId) {
-    createAutoApplication(formData, promoOfferId);
-}
+    if (promoOfferId) {
+        createAutoApplication(formData, promoOfferId);
+    }
 
-    // Mostrar mensaje de éxito
+   // Mostrar mensaje de éxito
     document.getElementById('successMessage').style.display = 'block';
-    document.getElementById('offersTab').style.display = 'flex';
     
-    showNotification('¡Registro completado exitosamente!', 'success');
-
-    // Cambiar a tab de ofertas después de 2 segundos
-    setTimeout(() => {
-        switchTab('offers');
-    }, 2000);
+    const selectedService = formData.requestedServices;
+    
+    // Solo redirigir a ofertas si seleccionó "Interesado en ofertas"
+    if (selectedService === 'interesado') {
+        document.getElementById('offersTab').style.display = 'flex';
+        showNotification('¡Registro completado! Redirigiendo a ofertas de empleo...', 'success');
+        
+        // Cambiar a tab de ofertas después de 2 segundos
+        setTimeout(() => {
+            switchTab('offers');
+        }, 2000);
+    } else {
+        // Para cualquier otro servicio, redirigir al portal principal
+        showNotification('¡Registro completado exitosamente! Redirigiendo al portal principal...', 'success');
+        
+        setTimeout(() => {
+            window.location.href = 'Portal pagina principal.html';
+        }, 2000);
+    }
 }
 
 async function createAutoApplication(participantData, offerId) {
