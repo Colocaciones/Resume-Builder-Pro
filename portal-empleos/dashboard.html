@@ -838,6 +838,13 @@
                 <span class="stat-number" id="totalResumeRegistrations">0</span>
                 <div class="stat-label">Registros Resume Builder</div>
             </div>
+<div class="stat-card" style="border-left: 4px solid #28a745;">
+    <div class="stat-icon" style="color: #28a745;">
+        <i class="fas fa-clipboard-check"></i>
+    </div>
+    <span class="stat-number" id="totalFollowups">0</span>
+    <div class="stat-label">Seguimientos Manpower</div>
+            </div>
 
         </div>
 
@@ -884,6 +891,9 @@
                     </button>
                     <button class="tab" onclick="switchTab('resumes')">
                         <i class="fas fa-file-alt"></i> Resume Builder
+                    </button>
+                    <button class="tab" onclick="switchTab('followups')">
+                        <i class="fas fa-clipboard-check"></i> Seguimientos Manpower
                     </button>
                 </div>
 
@@ -1227,6 +1237,55 @@
     </div>
 
     <div id="resumeRegistrationsTableContainer">
+        <!-- Tabla se genera dinámicamente -->
+    </div>
+</div>
+
+<!-- Tab Seguimientos Manpower -->
+<div class="tab-content" id="followupsContent">
+    <div class="quick-stats">
+        <div class="quick-stat">
+            <div class="quick-stat-number" id="newFollowups">0</div>
+            <div class="quick-stat-label">Nuevos Participantes</div>
+        </div>
+        <div class="quick-stat">
+            <div class="quick-stat-number" id="returningFollowups">0</div>
+            <div class="quick-stat-label">Seguimiento</div>
+        </div>
+        <div class="quick-stat">
+            <div class="quick-stat-number" id="thisMonthFollowups">0</div>
+            <div class="quick-stat-label">Este Mes</div>
+        </div>
+        <div class="quick-stat">
+            <div class="quick-stat-number" id="citadosFollowups">0</div>
+            <div class="quick-stat-label">Citados</div>
+        </div>
+    </div>
+
+    <div class="search-filter-bar">
+        <input type="text" class="search-input" id="followupsSearch" placeholder="🔍 Buscar seguimientos..." oninput="filterFollowups()">
+        <select class="filter-select" id="followupsTypeFilter" onchange="filterFollowups()">
+            <option value="">Todos los Tipos</option>
+            <option value="new">Nuevos</option>
+            <option value="returning">Seguimiento</option>
+        </select>
+        <select class="filter-select" id="followupsParticipantTypeFilter" onchange="filterFollowups()">
+            <option value="">Tipo Participante</option>
+            <option value="citado">Citado</option>
+            <option value="walk-in">Walk-in</option>
+        </select>
+        <select class="filter-select" id="followupsDateFilter" onchange="filterFollowups()">
+            <option value="">Todas las Fechas</option>
+            <option value="today">Hoy</option>
+            <option value="week">Esta Semana</option>
+            <option value="month">Este Mes</option>
+        </select>
+        <button class="btn btn-primary" onclick="exportFollowupsData()">
+            <i class="fas fa-file-excel"></i> Exportar
+        </button>
+    </div>
+
+    <div id="followupsTableContainer">
         <!-- Tabla se genera dinámicamente -->
     </div>
 </div>
@@ -1609,7 +1668,19 @@
         let placements = [];
         let allOffersHistory = [];
         let resumeRegistrations = [];
+        let followups = [];
         let participantHistory = []; // Array para guardar todo el historial de participantes
+
+// Variables para mantener estado de filtros
+let currentFilters = {
+    offers: { search: '', status: '', sort: '' },
+    participants: { search: '', campus: '', type: '' },
+    applications: { search: '', status: '' },
+    appointments: { search: '', status: '', date: '' },
+    placements: { search: '', type: '', date: '' },
+    resumes: { search: '', type: '', userType: '', date: '' },
+    followups: { search: '', type: '', participantType: '', date: '' }
+};
 
 // Sistema de notificaciones
 let notifications = JSON.parse(localStorage.getItem('adminNotifications')) || [];
@@ -1734,6 +1805,13 @@ const resumeRegsResult = await FirebaseHelper.getDocs('resumeRegistrations');
 if (resumeRegsResult.success) {
     resumeRegistrations = resumeRegsResult.docs;
     console.log('Registros Resume Builder cargados desde Firebase:', resumeRegistrations.length);
+}
+
+// Cargar seguimientos de Manpower desde Firebase
+const followupsResult = await FirebaseHelper.getDocs('followups');
+if (followupsResult.success) {
+    followups = followupsResult.docs;
+    console.log('Seguimientos Manpower cargados desde Firebase:', followups.length);
 }
 
 // Registrar eventos de Resume Builder para registros sin historial
@@ -1942,7 +2020,36 @@ if (document.getElementById('studentRegistrations')) {
 if (document.getElementById('thisMonthResumes')) {
     document.getElementById('thisMonthResumes').textContent = thisMonthResumes;
 }
-        
+
+
+
+// Stats para Seguimientos Manpower
+const totalFollowups = followups.length;
+const newFollowups = followups.filter(f => f.participantType === 'new').length;
+const returningFollowups = followups.filter(f => f.participantType === 'returning').length;
+const citadosFollowups = followups.filter(f => f.type === 'citado').length;
+const thisMonthFollowups = followups.filter(f => {
+    const fDate = new Date(f.createdAt);
+    return fDate.getMonth() === today.getMonth() && 
+           fDate.getFullYear() === today.getFullYear();
+}).length;
+
+// Actualizar elementos Seguimientos
+if (document.getElementById('totalFollowups')) {
+    document.getElementById('totalFollowups').textContent = totalFollowups;
+}
+if (document.getElementById('newFollowups')) {
+    document.getElementById('newFollowups').textContent = newFollowups;
+}
+if (document.getElementById('returningFollowups')) {
+    document.getElementById('returningFollowups').textContent = returningFollowups;
+}
+if (document.getElementById('citadosFollowups')) {
+    document.getElementById('citadosFollowups').textContent = citadosFollowups;
+}
+if (document.getElementById('thisMonthFollowups')) {
+    document.getElementById('thisMonthFollowups').textContent = thisMonthFollowups;
+}        
         // Stats para solicitudes pendientes
         const pendingAppsCount = applications.filter(app => app.status === 'pending').length;
         const approvedToday = applications.filter(app => 
@@ -1989,7 +2096,7 @@ function switchTab(tabName) {
     document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
     
     // Activar tab correspondiente
-    const tabIndex = ['offers', 'participants', 'applications', 'reports', 'appointments', 'pending', 'placements', 'resumes'].indexOf(tabName);
+    const tabIndex = ['offers', 'participants', 'applications', 'reports', 'appointments', 'pending', 'placements', 'resumes', 'followups'].indexOf(tabName);
     if (tabIndex !== -1) {
         document.querySelectorAll('.tab')[tabIndex].classList.add('active');
     }
@@ -2020,6 +2127,10 @@ case 'placements':
             break;
 case 'resumes':
     loadResumeRegistrationsTable();
+    break;
+
+case 'followups':
+    loadFollowupsTable();
     break;
 
     }
@@ -2288,6 +2399,26 @@ ${application.status === 'rejected' ? `
             return labels[type] || type;
         }
 
+// Obtener etiqueta de servicio solicitado
+function getServiceLabel(service) {
+    if (!service) return 'No especificado';
+    
+    const labels = {
+        'orientacion': 'Orientación de servicios y temas de Empleabilidad',
+        'interesado': 'Interesado en listado de Ofertas de Empleo',
+        'referido': 'Referido a puesto laboral',
+        'colocado': 'Colocados en Empleo',
+        'resume': 'Redacción y Revisión de Resumé',
+        'carta': 'Redacción Carta de Presentación o Agradecimiento',
+        'talleres': 'Talleres Profesionales',
+        'eventos': 'Eventos de Empleabilidad',
+        'manpower': 'Servicios Manpower',
+        'divulgacion': 'Divulgación de ofertas de empleo'
+    };
+    
+    return labels[service] || service;
+}
+
 // Obtener etiqueta de sector industrial
 function getSectorLabel(sector) {
     const labels = {
@@ -2433,49 +2564,78 @@ function getSectorLabel(sector) {
             };
 
             document.getElementById('modalTitle').textContent = `Participante: ${participant.firstName} ${participant.lastName}`;
-            document.getElementById('modalBody').innerHTML = `
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 20px;">
-                    <div>
-                        <h4 style="color: #c8102e; margin-bottom: 15px;">Información Personal</h4>
-                        <p><strong>Nombre:</strong> ${participant.firstName} ${participant.lastName}</p>
-                        <p><strong>Tipo:</strong> ${participant.participantType === 'new' ? 'Nuevo' : 'Participante de Seguimiento'}</p>
-                        <p><strong>Email:</strong> ${participant.email}</p>
-                        <p><strong>Teléfono:</strong> ${participant.phone}</p>
-                        <p><strong>Ciudad:</strong> ${participant.city}</p>
-                        <p><strong>Fecha de Registro:</strong> ${new Date(participant.registeredAt).toLocaleDateString()}</p>
-                    </div>
-                    <div>
-                        <h4 style="color: #c8102e; margin-bottom: 15px;">Información Académica</h4>
-                        <p><strong>Tipo de Estudiante:</strong> ${studentTypeLabels[participant.studentType]}</p>
-                        <p><strong>Recinto:</strong> ${campusLabels[participant.campus]}</p>
-                        <p><strong>ID Estudiante:</strong> ${participant.studentId}</p>
-                        <p><strong>Horario:</strong> ${scheduleLabels[participant.schedule]}</p>
-                        <p><strong>Año de Estudios:</strong> ${participant.studyYear}</p>
-                        <p><strong>Concentración:</strong> ${participant.concentration}</p>
-                    </div>
-                </div>
-                
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 20px;">
-                    <div>
-                        <h4 style="color: #c8102e; margin-bottom: 15px;">Información Académica Detallada</h4>
-                        <p><strong>Candidato a Graduación:</strong> ${participant.graduationCandidate === 'yes' ? 'Sí' : 'No'}</p>
-                        <p><strong>Grado Académico:</strong> ${degreeLabels[participant.academicDegree]}</p>
-                        <p><strong>División Académica:</strong> ${divisionLabels[participant.academicDivision]}</p>
-                    </div>
-                    <div>
-                        <h4 style="color: #c8102e; margin-bottom: 15px;">Documentos</h4>
-                        <p><strong>Resumé:</strong> ${participant.resume}</p>
-                        <button class="btn btn-info btn-small" onclick="downloadResume('${participant.id}')">
-                            <i class="fas fa-download"></i> Descargar Resumé
-                        </button>
-                    </div>
-                </div>
-                
-                <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0;">
-                    <h4 style="color: #c8102e; margin-bottom: 15px;">Actividad del Participante</h4>
-                    <div id="participantActivity">Cargando actividad...</div>
-                </div>
-            `;
+document.getElementById('modalBody').innerHTML = `
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 25px;">
+        <div>
+            <h4 style="color: #c8102e; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #e2e8f0;">
+                👤 INFORMACIÓN PERSONAL
+            </h4>
+            <p style="margin: 8px 0;"><strong>Nombre:</strong> ${participant.firstName} ${participant.lastName}</p>
+            <p style="margin: 8px 0;"><strong>Tipo:</strong> ${participant.participantType === 'new' ? 'Nuevo' : 'Participante de Seguimiento'}</p>
+            <p style="margin: 8px 0;"><strong>Email:</strong> ${participant.email}</p>
+            <p style="margin: 8px 0;"><strong>Teléfono:</strong> ${participant.phone}</p>
+            <p style="margin: 8px 0;"><strong>Ciudad:</strong> ${participant.city}</p>
+            <p style="margin: 8px 0;"><strong>Fecha de Registro:</strong> ${new Date(participant.registeredAt).toLocaleDateString()}</p>
+        </div>
+        
+        <div>
+            <h4 style="color: #c8102e; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #e2e8f0;">
+                📋 SERVICIO SOLICITADO
+            </h4>
+            <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; border-left: 4px solid #c8102e;">
+                <p style="margin: 0; font-weight: 600; color: #2d3748;">
+                    ${getServiceLabel(participant.requestedServices)}
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 25px;">
+        <div>
+            <h4 style="color: #c8102e; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #e2e8f0;">
+                🎓 INFORMACIÓN ACADÉMICA
+            </h4>
+            <p style="margin: 8px 0;"><strong>Tipo de Estudiante:</strong> ${studentTypeLabels[participant.studentType]}</p>
+            <p style="margin: 8px 0;"><strong>Recinto:</strong> ${campusLabels[participant.campus]}</p>
+            <p style="margin: 8px 0;"><strong>ID Estudiante:</strong> ${participant.studentId}</p>
+            <p style="margin: 8px 0;"><strong>Horario:</strong> ${scheduleLabels[participant.schedule]}</p>
+            <p style="margin: 8px 0;"><strong>Año de Estudios:</strong> ${participant.studyYear}</p>
+            <p style="margin: 8px 0;"><strong>Concentración:</strong> ${participant.concentration}</p>
+        </div>
+        
+        <div>
+            <h4 style="color: #c8102e; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #e2e8f0;">
+                📚 INFORMACIÓN ADICIONAL
+            </h4>
+            <p style="margin: 8px 0;"><strong>Candidato a Graduación:</strong> ${participant.graduationCandidate === 'yes' ? 'Sí' : 'No'}</p>
+            <p style="margin: 8px 0;"><strong>Grado Académico:</strong> ${degreeLabels[participant.academicDegree]}</p>
+            <p style="margin: 8px 0;"><strong>División Académica:</strong> ${divisionLabels[participant.academicDivision]}</p>
+        </div>
+    </div>
+    
+    <div style="margin-bottom: 25px;">
+        <h4 style="color: #c8102e; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #e2e8f0;">
+            📄 DOCUMENTOS
+        </h4>
+        <p style="margin: 8px 0;">
+    <strong>Resumé:</strong> 
+    ${participant.resume && participant.resume.startsWith('http') 
+        ? '<span style="color: #22c55e; font-weight: 600;">✓ Resumé adjuntado</span>' 
+        : '<span style="color: #94a3b8;">No disponible</span>'}
+</p>
+        <button class="btn btn-info btn-small" onclick="downloadResume('${participant.id}')">
+            <i class="fas fa-download"></i> Descargar Resumé
+        </button>
+    </div>
+    
+    <div style="margin-top: 25px; padding-top: 20px; border-top: 2px solid #e2e8f0;">
+        <h4 style="color: #c8102e; margin-bottom: 15px;">
+            📊 ACTIVIDAD DEL PARTICIPANTE
+        </h4>
+        <div id="participantActivity">Cargando actividad...</div>
+    </div>
+`;
+
 
             // Cargar actividad del participante
             setTimeout(() => {
@@ -2681,7 +2841,7 @@ async function deleteApplication(applicationId) {
             
             // Actualizar interfaz
             updateStats();
-            loadApplicationsTable();
+            filterApplications();
             closeDetailsModal();
             showNotification('Solicitud eliminada exitosamente', 'success');
 
@@ -2759,7 +2919,7 @@ localStorage.setItem('lastCheckedApplications', lastCheckedApplications.toString
             
             // Actualizar interfaz
             updateStats();
-            loadParticipantsTable();
+            filterParticipants();
             showNotification('Participante eliminado exitosamente', 'success');
 
 // Ajustar contador de participantes  
@@ -3074,7 +3234,7 @@ function closePromoModal() {
             
             // Actualizar interfaz
             updateStats();
-            loadOffersTable();
+            filterOffers();
             showNotification('Oferta eliminada exitosamente', 'success');
 
 // Ajustar contador de ofertas
@@ -3088,48 +3248,52 @@ localStorage.setItem('lastCheckedOffers', lastCheckedOffers.toString());
     }
 }
 // Filtrar ofertas
-        function filterOffers() {
-            const search = document.getElementById('offersSearch').value.toLowerCase();
-            const statusFilter = document.getElementById('offersStatusFilter').value;
- 	    const sortFilter = document.getElementById('offersSortFilter').value;
-            
-            let filteredOffers = offers;
-            
-            if (search) {
-                filteredOffers = filteredOffers.filter(offer => 
-                    offer.companyName.toLowerCase().includes(search) ||
-                    offer.position.toLowerCase().includes(search) ||
-                    offer.location.toLowerCase().includes(search) ||
-                    offer.contactPerson.toLowerCase().includes(search)
-                );
+function filterOffers() {
+    // Guardar valores actuales de los filtros
+    currentFilters.offers.search = document.getElementById('offersSearch').value.toLowerCase();
+    currentFilters.offers.status = document.getElementById('offersStatusFilter').value;
+    currentFilters.offers.sort = document.getElementById('offersSortFilter').value;
+    
+    let filteredOffers = offers;
+    
+    // Filtro de búsqueda
+    if (currentFilters.offers.search) {
+        filteredOffers = filteredOffers.filter(offer => 
+            offer.companyName.toLowerCase().includes(currentFilters.offers.search) ||
+            offer.position.toLowerCase().includes(currentFilters.offers.search) ||
+            offer.location.toLowerCase().includes(currentFilters.offers.search) ||
+            offer.contactPerson.toLowerCase().includes(currentFilters.offers.search)
+        );
+    }
+    
+    // Filtro de estado
+    if (currentFilters.offers.status) {
+        filteredOffers = filteredOffers.filter(offer => {
+            const status = getOfferStatus(offer.deadline);
+            return status === currentFilters.offers.status;
+        });
+    }
+    
+    // Ordenamiento
+    if (currentFilters.offers.sort) {
+        filteredOffers.sort((a, b) => {
+            switch(currentFilters.offers.sort) {
+                case 'newest':
+                    return new Date(b.today || b.createdAt || '1900-01-01') - new Date(a.today || a.createdAt || '1900-01-01');
+                case 'oldest':
+                    return new Date(a.today || a.createdAt || '1900-01-01') - new Date(b.today || b.createdAt || '1900-01-01');
+                case 'deadline-asc':
+                    return new Date(a.deadline) - new Date(b.deadline);
+                case 'deadline-desc':
+                    return new Date(b.deadline) - new Date(a.deadline);
+                default:
+                    return 0;
             }
-            
-            if (statusFilter) {
-                filteredOffers = filteredOffers.filter(offer => {
-                    const status = getOfferStatus(offer.deadline);
-                    return status === statusFilter;
-                });
-            }
-            
-// Ordenamiento
-if (sortFilter) {
-    filteredOffers.sort((a, b) => {
-        switch(sortFilter) {
-            case 'newest':
-                return new Date(b.today || b.createdAt || '1900-01-01') - new Date(a.today || a.createdAt || '1900-01-01');
-            case 'oldest':
-                return new Date(a.today || a.createdAt || '1900-01-01') - new Date(b.today || b.createdAt || '1900-01-01');
-            case 'deadline-asc':
-                return new Date(a.deadline) - new Date(b.deadline);
-            case 'deadline-desc':
-                return new Date(b.deadline) - new Date(a.deadline);
-            default:
-                return 0;
-        }
-    });
+        });
+    }
+    
+    displayFilteredOffers(filteredOffers);
 }
-            displayFilteredOffers(filteredOffers);
-        }
 
         // Mostrar ofertas filtradas
         function displayFilteredOffers(filteredOffers) {
@@ -3210,36 +3374,40 @@ if (sortFilter) {
         }
 
         // Filtrar participantes
-        function filterParticipants() {
-            const search = document.getElementById('participantsSearch').value.toLowerCase();
-            const campusFilter = document.getElementById('participantsCampusFilter').value;
-            const typeFilter = document.getElementById('participantsTypeFilter').value;
-            
-            let filteredParticipants = participants;
-            
-            if (search) {
-                filteredParticipants = filteredParticipants.filter(participant => 
-                    `${participant.firstName} ${participant.lastName}`.toLowerCase().includes(search) ||
-                    participant.email.toLowerCase().includes(search) ||
-                    participant.studentId.toLowerCase().includes(search) ||
-                    participant.concentration.toLowerCase().includes(search)
-                );
-            }
-            
-            if (campusFilter) {
-                filteredParticipants = filteredParticipants.filter(participant => 
-                    participant.campus === campusFilter
-                );
-            }
-            
-            if (typeFilter) {
-                filteredParticipants = filteredParticipants.filter(participant => 
-                    participant.participantType === typeFilter
-                );
-            }
-            
-            displayFilteredParticipants(filteredParticipants);
-        }
+function filterParticipants() {
+    // Guardar valores actuales de los filtros
+    currentFilters.participants.search = document.getElementById('participantsSearch').value.toLowerCase();
+    currentFilters.participants.campus = document.getElementById('participantsCampusFilter').value;
+    currentFilters.participants.type = document.getElementById('participantsTypeFilter').value;
+    
+    let filteredParticipants = participants;
+    
+    // Filtro de búsqueda
+    if (currentFilters.participants.search) {
+        filteredParticipants = filteredParticipants.filter(participant => 
+            `${participant.firstName} ${participant.lastName}`.toLowerCase().includes(currentFilters.participants.search) ||
+            participant.email.toLowerCase().includes(currentFilters.participants.search) ||
+            participant.studentId.toLowerCase().includes(currentFilters.participants.search) ||
+            participant.concentration.toLowerCase().includes(currentFilters.participants.search)
+        );
+    }
+    
+    // Filtro de campus
+    if (currentFilters.participants.campus) {
+        filteredParticipants = filteredParticipants.filter(participant => 
+            participant.campus === currentFilters.participants.campus
+        );
+    }
+    
+    // Filtro de tipo
+    if (currentFilters.participants.type) {
+        filteredParticipants = filteredParticipants.filter(participant => 
+            participant.participantType === currentFilters.participants.type
+        );
+    }
+    
+    displayFilteredParticipants(filteredParticipants);
+}
 
         // Mostrar participantes filtrados
         function displayFilteredParticipants(filteredParticipants) {
@@ -3321,29 +3489,32 @@ if (sortFilter) {
         }
 
         // Filtrar aplicaciones
-        function filterApplications() {
-            const search = document.getElementById('applicationsSearch').value.toLowerCase();
-            const statusFilter = document.getElementById('applicationsStatusFilter').value;
-            
-            let filteredApplications = applications;
-            
-            if (search) {
-                filteredApplications = filteredApplications.filter(application => 
-                    application.participantName.toLowerCase().includes(search) ||
-                    application.companyName.toLowerCase().includes(search) ||
-                    application.offerTitle.toLowerCase().includes(search) ||
-                    application.participantEmail.toLowerCase().includes(search)
-                );
-            }
-            
-            if (statusFilter) {
-                filteredApplications = filteredApplications.filter(application => 
-                    application.status === statusFilter
-                );
-            }
-            
-            displayFilteredApplications(filteredApplications);
-        }
+function filterApplications() {
+    // Guardar valores actuales de los filtros
+    currentFilters.applications.search = document.getElementById('applicationsSearch').value.toLowerCase();
+    currentFilters.applications.status = document.getElementById('applicationsStatusFilter').value;
+    
+    let filteredApplications = applications;
+    
+    // Filtro de búsqueda
+    if (currentFilters.applications.search) {
+        filteredApplications = filteredApplications.filter(application => 
+            application.participantName.toLowerCase().includes(currentFilters.applications.search) ||
+            application.companyName.toLowerCase().includes(currentFilters.applications.search) ||
+            application.offerTitle.toLowerCase().includes(currentFilters.applications.search) ||
+            application.participantEmail.toLowerCase().includes(currentFilters.applications.search)
+        );
+    }
+    
+    // Filtro de estado
+    if (currentFilters.applications.status) {
+        filteredApplications = filteredApplications.filter(application => 
+            application.status === currentFilters.applications.status
+        );
+    }
+    
+    displayFilteredApplications(filteredApplications);
+}
 
         // Mostrar aplicaciones filtradas
         function displayFilteredApplications(filteredApplications) {
@@ -4796,7 +4967,7 @@ const formattedDate = appointmentDate.toLocaleDateString('es-ES', {
                     
                     // Actualizar interfaz
                     updateStats();
-                    loadAppointmentsTable();
+                    filterAppointments();
                     showNotification('Cita eliminada permanentemente', 'success');
 
 // Ajustar contador de citas
@@ -4810,56 +4981,57 @@ localStorage.setItem('lastCheckedAppointments', lastCheckedAppointments.toString
             }
         }
 // Filtrar citas
-        function filterAppointments() {
-            const search = document.getElementById('appointmentsSearch').value.toLowerCase();
-            const statusFilter = document.getElementById('appointmentsStatusFilter').value;
-            const dateFilter = document.getElementById('appointmentsDateFilter').value;
+function filterAppointments() {
+    // Guardar valores actuales de los filtros
+    currentFilters.appointments.search = document.getElementById('appointmentsSearch').value.toLowerCase();
+    currentFilters.appointments.status = document.getElementById('appointmentsStatusFilter').value;
+    currentFilters.appointments.date = document.getElementById('appointmentsDateFilter').value;
+    
+    let filteredAppointments = appointments;
+    
+    // Filtro de búsqueda
+    if (currentFilters.appointments.search) {
+        filteredAppointments = filteredAppointments.filter(appointment => 
+            `${appointment.firstName} ${appointment.lastName}`.toLowerCase().includes(currentFilters.appointments.search) ||
+            appointment.email.toLowerCase().includes(currentFilters.appointments.search) ||
+            appointment.phone.includes(currentFilters.appointments.search) ||
+            appointment.concentration.toLowerCase().includes(currentFilters.appointments.search) ||
+            (appointment.studentId && appointment.studentId.toLowerCase().includes(currentFilters.appointments.search))
+        );
+    }
+    
+    // Filtro de estado
+    if (currentFilters.appointments.status) {
+        filteredAppointments = filteredAppointments.filter(appointment => 
+            appointment.status === currentFilters.appointments.status
+        );
+    }
+    
+    // Filtro de fecha
+    if (currentFilters.appointments.date) {
+        const today = new Date();
+        filteredAppointments = filteredAppointments.filter(appointment => {
+            const [year, month, day] = appointment.appointmentDate.split('-');
+            const appointmentDate = new Date(year, month - 1, day);
             
-            let filteredAppointments = appointments;
-            
-            // Filtro de búsqueda
-            if (search) {
-                filteredAppointments = filteredAppointments.filter(appointment => 
-                    `${appointment.firstName} ${appointment.lastName}`.toLowerCase().includes(search) ||
-                    appointment.email.toLowerCase().includes(search) ||
-                    appointment.phone.includes(search) ||
-                    appointment.concentration.toLowerCase().includes(search) ||
-                    (appointment.studentId && appointment.studentId.toLowerCase().includes(search))
-                );
+            switch(currentFilters.appointments.date) {
+                case 'today':
+                    return appointmentDate.toDateString() === today.toDateString();
+                case 'week':
+                    const weekFromNow = new Date(today);
+                    weekFromNow.setDate(today.getDate() + 7);
+                    return appointmentDate >= today && appointmentDate <= weekFromNow;
+                case 'month':
+                    return appointmentDate.getMonth() === today.getMonth() && 
+                           appointmentDate.getFullYear() === today.getFullYear();
+                default:
+                    return true;
             }
-            
-            // Filtro de estado
-            if (statusFilter) {
-                filteredAppointments = filteredAppointments.filter(appointment => 
-                    appointment.status === statusFilter
-                );
-            }
-            
-            // Filtro de fecha
-            if (dateFilter) {
-                const today = new Date();
-                filteredAppointments = filteredAppointments.filter(appointment => {
-                   const [year, month, day] = appointment.appointmentDate.split('-');
-const appointmentDate = new Date(year, month - 1, day);
-                    
-                    switch(dateFilter) {
-                        case 'today':
-                            return appointmentDate.toDateString() === today.toDateString();
-                        case 'week':
-                            const weekFromNow = new Date(today);
-                            weekFromNow.setDate(today.getDate() + 7);
-                            return appointmentDate >= today && appointmentDate <= weekFromNow;
-                        case 'month':
-                            return appointmentDate.getMonth() === today.getMonth() && 
-                                   appointmentDate.getFullYear() === today.getFullYear();
-                        default:
-                            return true;
-                    }
-                });
-            }
-            
-            displayFilteredAppointments(filteredAppointments);
-        }
+        });
+    }
+    
+    displayFilteredAppointments(filteredAppointments);
+}
 
         // Mostrar citas filtradas
         function displayFilteredAppointments(filteredAppointments) {
@@ -6497,7 +6669,7 @@ async function deletePlacement(placementId) {
             localStorage.setItem('placements', JSON.stringify(placements));
             
             // Actualizar interfaz
-            loadPlacementsTable();
+            filterPlacements();
             updateStats();
             
             showNotification('Colocado eliminado exitosamente', 'success');
@@ -6511,37 +6683,38 @@ async function deletePlacement(placementId) {
 
 // Filtrar colocados
 function filterPlacements() {
-    const search = document.getElementById('placementsSearch').value.toLowerCase();
-    const typeFilter = document.getElementById('placementsTypeFilter').value;
-    const dateFilter = document.getElementById('placementsDateFilter').value;
+    // Guardar valores actuales de los filtros
+    currentFilters.placements.search = document.getElementById('placementsSearch').value.toLowerCase();
+    currentFilters.placements.type = document.getElementById('placementsTypeFilter').value;
+    currentFilters.placements.date = document.getElementById('placementsDateFilter').value;
     
     let filteredPlacements = placements;
     
     // Filtro de búsqueda
-    if (search) {
+    if (currentFilters.placements.search) {
         filteredPlacements = filteredPlacements.filter(placement => 
-            placement.participantName.toLowerCase().includes(search) ||
-            placement.company.toLowerCase().includes(search) ||
-            placement.position.toLowerCase().includes(search) ||
-            placement.concentration.toLowerCase().includes(search) ||
-            (placement.email && placement.email.toLowerCase().includes(search))
+            placement.participantName.toLowerCase().includes(currentFilters.placements.search) ||
+            placement.company.toLowerCase().includes(currentFilters.placements.search) ||
+            placement.position.toLowerCase().includes(currentFilters.placements.search) ||
+            placement.concentration.toLowerCase().includes(currentFilters.placements.search) ||
+            (placement.email && placement.email.toLowerCase().includes(currentFilters.placements.search))
         );
     }
     
     // Filtro de tipo
-    if (typeFilter) {
+    if (currentFilters.placements.type) {
         filteredPlacements = filteredPlacements.filter(placement => 
-            placement.trackingType === typeFilter
+            placement.trackingType === currentFilters.placements.type
         );
     }
     
     // Filtro de fecha
-    if (dateFilter) {
+    if (currentFilters.placements.date) {
         const today = new Date();
         filteredPlacements = filteredPlacements.filter(placement => {
             const placementDate = new Date(placement.placementDate);
             
-            switch(dateFilter) {
+            switch(currentFilters.placements.date) {
                 case 'month':
                     return placementDate.getMonth() === today.getMonth() && 
                            placementDate.getFullYear() === today.getFullYear();
@@ -8012,7 +8185,7 @@ async function deleteResumeRegistration(regId) {
             localStorage.setItem('resumeRegistrations', JSON.stringify(resumeRegistrations));
             
             // Actualizar interfaz
-            loadResumeRegistrationsTable();
+            filterResumeRegistrations();
             updateStats();
             showNotification('Registro eliminado exitosamente', 'success');
             
@@ -8025,41 +8198,42 @@ async function deleteResumeRegistration(regId) {
 
 // Filtrar registros Resume Builder
 function filterResumeRegistrations() {
-    const search = document.getElementById('resumesSearch').value.toLowerCase();
-    const typeFilter = document.getElementById('resumesTypeFilter').value;
-    const userTypeFilter = document.getElementById('resumesUserTypeFilter').value;
-    const dateFilter = document.getElementById('resumesDateFilter').value;
+    // Guardar valores actuales de los filtros
+    currentFilters.resumes.search = document.getElementById('resumesSearch').value.toLowerCase();
+    currentFilters.resumes.type = document.getElementById('resumesTypeFilter').value;
+    currentFilters.resumes.userType = document.getElementById('resumesUserTypeFilter').value;
+    currentFilters.resumes.date = document.getElementById('resumesDateFilter').value;
     
     let filtered = resumeRegistrations;
     
     // Filtro de búsqueda
-    if (search) {
+    if (currentFilters.resumes.search) {
         filtered = filtered.filter(reg => 
-            `${reg.firstName} ${reg.lastName}`.toLowerCase().includes(search) ||
-            reg.email.toLowerCase().includes(search) ||
-            reg.phone.includes(search) ||
-            (reg.concentration && reg.concentration.toLowerCase().includes(search)) ||
-            (reg.studentId && reg.studentId.toLowerCase().includes(search))
+            `${reg.firstName} ${reg.lastName}`.toLowerCase().includes(currentFilters.resumes.search) ||
+            reg.email.toLowerCase().includes(currentFilters.resumes.search) ||
+            reg.phone.includes(currentFilters.resumes.search) ||
+            (reg.concentration && reg.concentration.toLowerCase().includes(currentFilters.resumes.search)) ||
+            (reg.studentId && reg.studentId.toLowerCase().includes(currentFilters.resumes.search))
         );
     }
     
     // Filtro de tipo de participante
-    if (typeFilter) {
-        filtered = filtered.filter(reg => reg.participantType === typeFilter);
+    if (currentFilters.resumes.type) {
+        filtered = filtered.filter(reg => reg.participantType === currentFilters.resumes.type);
     }
     
     // Filtro de tipo de usuario
-    if (userTypeFilter) {
-        filtered = filtered.filter(reg => reg.userType === userTypeFilter);
+    if (currentFilters.resumes.userType) {
+        filtered = filtered.filter(reg => reg.userType === currentFilters.resumes.userType);
     }
     
     // Filtro de fecha
-    if (dateFilter) {
+    if (currentFilters.resumes.date) {
         const today = new Date();
         filtered = filtered.filter(reg => {
             const regDate = new Date(reg.registrationDate);
             
-            switch(dateFilter) {
+            switch(currentFilters.resumes.date) {
                 case 'today':
                     return regDate.toDateString() === today.toDateString();
                 case 'week':
@@ -8935,6 +9109,315 @@ function generateParticipantHistoryPDF() {
 }
 
 // ============= FIN FUNCIÓN PARA GENERAR PDF DEL HISTORIAL =============
+
+// ============= FUNCIONES PARA SEGUIMIENTOS MANPOWER =============
+
+// Cargar tabla de seguimientos
+function loadFollowupsTable() {
+    const container = document.getElementById('followupsTableContainer');
+    
+    if (followups.length === 0) {
+        container.innerHTML = `
+            <div class="no-data">
+                <i class="fas fa-clipboard-check"></i>
+                <h3>No hay seguimientos registrados</h3>
+                <p>Los seguimientos de Manpower aparecerán aquí</p>
+            </div>
+        `;
+        return;
+    }
+
+    let html = `
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Fecha</th>
+                    <th>Nombre</th>
+                    <th>Email</th>
+                    <th>Teléfono</th>
+                    <th>Tipo Participante</th>
+                    <th>Concentración</th>
+                    <th>Servicio Ofrecido</th>
+                    <th>Tipo</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+
+    followups.forEach(followup => {
+        const followupDate = followup.appointmentDate ? formatLocalDate(followup.appointmentDate) : 
+                            (followup.createdAt ? new Date(followup.createdAt).toLocaleDateString('es-ES') : 'Sin fecha');
+        
+        const participantTypeLabel = followup.participantType === 'new' ? 'Nuevo' : 'Seguimiento';
+        const typeLabel = followup.type === 'citado' ? 'Citado' : 'Walk-in';
+
+        html += `
+            <tr>
+                <td>${followupDate}</td>
+                <td><strong>${followup.fullName}</strong></td>
+                <td>${followup.email}</td>
+                <td>${followup.phone}</td>
+                <td><span class="status-badge ${followup.participantType === 'new' ? 'status-active' : 'status-approved'}">${participantTypeLabel}</span></td>
+                <td>${followup.concentration}</td>
+                <td>${followup.serviceOffered ? followup.serviceOffered.substring(0, 50) + '...' : 'N/A'}</td>
+                <td><span class="status-badge ${followup.type === 'citado' ? 'status-approved' : 'status-pending'}">${typeLabel}</span></td>
+                <td>
+                    <div class="actions">
+                        <button class="btn btn-info btn-small" onclick="viewFollowupDetails('${followup.id}')" title="Ver detalles">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button class="btn btn-danger btn-small" onclick="deleteFollowup('${followup.id}')" title="Eliminar">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    });
+
+    html += '</tbody></table>';
+    container.innerHTML = html;
+}
+
+// Ver detalles de seguimiento
+function viewFollowupDetails(followupId) {
+    const followup = followups.find(f => f.id === followupId);
+    if (!followup) return;
+
+    const participantTypeLabel = followup.participantType === 'new' ? 'Nuevo Participante' : 'Participante de Seguimiento';
+    const typeLabel = followup.type === 'citado' ? 'Citado (Cita Agendada)' : 'Walk-in (Sin cita previa)';
+    const followupDate = followup.appointmentDate ? formatLocalDate(followup.appointmentDate) : 
+                        (followup.createdAt ? new Date(followup.createdAt).toLocaleDateString('es-ES') : 'Sin fecha');
+
+    document.getElementById('modalTitle').textContent = `Seguimiento: ${followup.fullName}`;
+    document.getElementById('modalBody').innerHTML = `
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 20px;">
+            <div>
+                <h4 style="color: #28a745; margin-bottom: 15px;">👤 Información del Participante</h4>
+                <p><strong>Nombre Completo:</strong> ${followup.fullName}</p>
+                <p><strong>Email:</strong> ${followup.email}</p>
+                <p><strong>Teléfono:</strong> ${followup.phone}</p>
+                <p><strong>Concentración:</strong> ${followup.concentration}</p>
+                <p><strong>Tipo:</strong> <span class="status-badge status-active">${participantTypeLabel}</span></p>
+            </div>
+            <div>
+                <h4 style="color: #28a745; margin-bottom: 15px;">📋 Información de la Sesión</h4>
+                <p><strong>Fecha Atendida:</strong> ${followupDate}</p>
+                <p><strong>Tipo de Participante:</strong> <span class="status-badge ${followup.type === 'citado' ? 'status-approved' : 'status-pending'}">${typeLabel}</span></p>
+                <p><strong>Registrado:</strong> ${new Date(followup.createdAt).toLocaleString('es-ES')}</p>
+                <p><strong>Fuente:</strong> ${followup.source || 'Registro de Seguimiento'}</p>
+            </div>
+        </div>
+        
+        <div style="margin-bottom: 20px;">
+            <h4 style="color: #28a745; margin-bottom: 15px;">💼 Servicio Ofrecido</h4>
+            <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; white-space: pre-wrap;">
+                ${followup.serviceOffered || 'No especificado'}
+            </div>
+        </div>
+    `;
+
+    document.getElementById('detailsModal').style.display = 'flex';
+}
+
+// Eliminar seguimiento
+async function deleteFollowup(followupId) {
+    const followup = followups.find(f => f.id === followupId);
+    if (!followup) return;
+    
+    if (confirm(`¿Estás seguro de que quieres eliminar el seguimiento de "${followup.fullName}"?`)) {
+        try {
+            // Eliminar de Firebase
+            if (isFirebaseInitialized) {
+                const snapshot = await db.collection('followups')
+                    .where('id', '==', followupId)
+                    .get();
+                
+                if (!snapshot.empty) {
+                    const batch = db.batch();
+                    snapshot.docs.forEach(doc => {
+                        batch.delete(doc.ref);
+                    });
+                    await batch.commit();
+                    console.log('Seguimiento eliminado de Firebase:', followupId);
+                }
+            }
+            
+            // Eliminar de memoria local
+            followups = followups.filter(f => f.id !== followupId);
+            
+            // Actualizar localStorage
+            localStorage.setItem('followups', JSON.stringify(followups));
+            
+            // Actualizar interfaz
+            filterFollowups();
+            updateStats();
+            showNotification('Seguimiento eliminado exitosamente', 'success');
+            
+        } catch (error) {
+            console.error('Error eliminando seguimiento:', error);
+            showNotification('Error eliminando el seguimiento. Intenta de nuevo.', 'error');
+        }
+    }
+}
+
+// Filtrar seguimientos
+function filterFollowups() {
+    // Guardar valores actuales de los filtros
+    currentFilters.followups.search = document.getElementById('followupsSearch').value.toLowerCase();
+    currentFilters.followups.type = document.getElementById('followupsTypeFilter').value;
+    currentFilters.followups.participantType = document.getElementById('followupsParticipantTypeFilter').value;
+    currentFilters.followups.date = document.getElementById('followupsDateFilter').value;
+    
+    let filtered = followups;
+    
+    // Filtro de búsqueda
+    if (currentFilters.followups.search) {
+        filtered = filtered.filter(followup => 
+            followup.fullName.toLowerCase().includes(currentFilters.followups.search) ||
+            followup.email.toLowerCase().includes(currentFilters.followups.search) ||
+            followup.phone.includes(currentFilters.followups.search) ||
+            followup.concentration.toLowerCase().includes(currentFilters.followups.search) ||
+            (followup.serviceOffered && followup.serviceOffered.toLowerCase().includes(currentFilters.followups.search))
+        );
+    }
+    
+    // Filtro de tipo de participante
+    if (currentFilters.followups.type) {
+        filtered = filtered.filter(followup => followup.participantType === currentFilters.followups.type);
+    }
+    
+    // Filtro de tipo (citado/walk-in)
+    if (currentFilters.followups.participantType) {
+        filtered = filtered.filter(followup => followup.type === currentFilters.followups.participantType);
+    }
+    
+    // Filtro de fecha
+    if (currentFilters.followups.date) {
+        const today = new Date();
+        filtered = filtered.filter(followup => {
+            const fDate = new Date(followup.createdAt);
+            
+            switch(currentFilters.followups.date) {
+                case 'today':
+                    return fDate.toDateString() === today.toDateString();
+                case 'week':
+                    const weekAgo = new Date(today);
+                    weekAgo.setDate(today.getDate() - 7);
+                    return fDate >= weekAgo;
+                case 'month':
+                    return fDate.getMonth() === today.getMonth() && 
+                           fDate.getFullYear() === today.getFullYear();
+                default:
+                    return true;
+            }
+        });
+    }
+    
+    displayFilteredFollowups(filtered);
+}
+
+// Mostrar seguimientos filtrados
+function displayFilteredFollowups(filtered) {
+    const container = document.getElementById('followupsTableContainer');
+    
+    if (filtered.length === 0) {
+        container.innerHTML = `
+            <div class="no-data">
+                <i class="fas fa-search"></i>
+                <h3>No se encontraron seguimientos</h3>
+                <p>No hay seguimientos que coincidan con los filtros aplicados</p>
+            </div>
+        `;
+        return;
+    }
+
+    let html = `
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Fecha</th>
+                    <th>Nombre</th>
+                    <th>Email</th>
+                    <th>Teléfono</th>
+                    <th>Tipo Participante</th>
+                    <th>Concentración</th>
+                    <th>Servicio Ofrecido</th>
+                    <th>Tipo</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+
+    filtered.forEach(followup => {
+        const followupDate = followup.appointmentDate ? formatLocalDate(followup.appointmentDate) : 
+                            (followup.createdAt ? new Date(followup.createdAt).toLocaleDateString('es-ES') : 'Sin fecha');
+        
+        const participantTypeLabel = followup.participantType === 'new' ? 'Nuevo' : 'Seguimiento';
+        const typeLabel = followup.type === 'citado' ? 'Citado' : 'Walk-in';
+
+        html += `
+            <tr>
+                <td>${followupDate}</td>
+                <td><strong>${followup.fullName}</strong></td>
+                <td>${followup.email}</td>
+                <td>${followup.phone}</td>
+                <td><span class="status-badge ${followup.participantType === 'new' ? 'status-active' : 'status-approved'}">${participantTypeLabel}</span></td>
+                <td>${followup.concentration}</td>
+                <td>${followup.serviceOffered ? followup.serviceOffered.substring(0, 50) + '...' : 'N/A'}</td>
+                <td><span class="status-badge ${followup.type === 'citado' ? 'status-approved' : 'status-pending'}">${typeLabel}</span></td>
+                <td>
+                    <div class="actions">
+                        <button class="btn btn-info btn-small" onclick="viewFollowupDetails('${followup.id}')" title="Ver detalles">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button class="btn btn-danger btn-small" onclick="deleteFollowup('${followup.id}')" title="Eliminar">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    });
+
+    html += '</tbody></table>';
+    container.innerHTML = html;
+}
+
+// Exportar seguimientos
+function exportFollowupsData() {
+    if (followups.length === 0) {
+        showNotification('No hay seguimientos para exportar', 'warning');
+        return;
+    }
+
+    const data = followups.map(followup => ({
+        'Fecha': followup.appointmentDate ? formatLocalDate(followup.appointmentDate) : 
+                (followup.createdAt ? new Date(followup.createdAt).toLocaleDateString('es-ES') : 'Sin fecha'),
+        'Nombre Completo': followup.fullName,
+        'Email': followup.email,
+        'Teléfono': followup.phone,
+        'Concentración': followup.concentration,
+        'Tipo Participante': followup.participantType === 'new' ? 'Nuevo' : 'Seguimiento',
+        'Tipo': followup.type === 'citado' ? 'Citado (Cita Agendada)' : 'Walk-in (Sin cita previa)',
+        'Servicio Ofrecido': followup.serviceOffered || 'No especificado',
+        'Fecha Registro': new Date(followup.createdAt).toLocaleDateString('es-ES'),
+        'Fuente': followup.source || 'Registro de Seguimiento'
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Seguimientos Manpower");
+    
+    const filename = `Seguimientos_Manpower_${new Date().toISOString().split('T')[0]}.xlsx`;
+    XLSX.writeFile(wb, filename);
+    
+    showNotification('Seguimientos exportados exitosamente', 'success');
+}
+
+// ============= FIN FUNCIONES SEGUIMIENTOS MANPOWER =============
 
     </script>
 </body>
