@@ -1851,15 +1851,18 @@ if (followupsResult.success) {
                 } else {
                     throw new Error('Firebase no inicializado');
                 }
-            } catch (error) {
-                console.error('Error cargando desde Firebase, usando localStorage:', error);
-                // Fallback a localStorage
-                offers = JSON.parse(localStorage.getItem('jobOffers')) || [];
-                participants = JSON.parse(localStorage.getItem('participants')) || [];
-                applications = JSON.parse(localStorage.getItem('applications')) || [];
-                appointments = JSON.parse(localStorage.getItem('appointments')) || [];
-                placements = JSON.parse(localStorage.getItem('placements')) || [];
-            }
+           } catch (error) {
+    console.error('Error cargando desde Firebase, usando localStorage:', error);
+
+    // Fallback a localStorage
+    offers = JSON.parse(localStorage.getItem('jobOffers')) || [];
+    participants = JSON.parse(localStorage.getItem('participants')) || [];
+    applications = JSON.parse(localStorage.getItem('applications')) || [];
+    appointments = JSON.parse(localStorage.getItem('appointments')) || [];
+    placements = JSON.parse(localStorage.getItem('placements')) || [];
+    resumeRegistrations = JSON.parse(localStorage.getItem('resumeRegistrations')) || [];
+    followups = JSON.parse(localStorage.getItem('followups')) || [];
+}
 // Verificar notificaciones después de cargar datos
         setTimeout(() => {
             checkForNewItems();
@@ -8162,32 +8165,52 @@ async function deleteResumeRegistration(regId) {
     
     if (confirm(`¿Estás seguro de que quieres eliminar el registro de "${reg.firstName} ${reg.lastName}"?`)) {
         try {
+            let deletedFromFirebase = false;
+            
             // Eliminar de Firebase
             if (isFirebaseInitialized) {
-                const snapshot = await db.collection('resumeRegistrations')
-                    .where('id', '==', regId)
-                    .get();
-                
-                if (!snapshot.empty) {
-                    const batch = db.batch();
-                    snapshot.docs.forEach(doc => {
-                        batch.delete(doc.ref);
-                    });
-                    await batch.commit();
-                    console.log('Registro Resume Builder eliminado de Firebase:', regId);
+                try {
+                    // Intentar encontrar por campo 'id'
+                    const snapshot = await db.collection('resumeRegistrations')
+                        .where('id', '==', regId)
+                        .get();
+                    
+                    if (!snapshot.empty) {
+                        const batch = db.batch();
+                        snapshot.docs.forEach(doc => {
+                            batch.delete(doc.ref);
+                        });
+                        await batch.commit();
+                        deletedFromFirebase = true;
+                        console.log('Registro Resume Builder eliminado de Firebase (por campo id):', regId);
+                    } else {
+                        // Si no lo encuentra por campo, intentar por document ID
+                        try {
+                            await db.collection('resumeRegistrations').doc(regId).delete();
+                            deletedFromFirebase = true;
+                            console.log('Registro Resume Builder eliminado de Firebase (por document ID):', regId);
+                        } catch (docError) {
+                            console.warn('No se pudo eliminar por document ID:', docError);
+                        }
+                    }
+                } catch (fbError) {
+                    console.error('Error eliminando de Firebase:', fbError);
                 }
             }
             
-            // Eliminar de memoria local
+            // Siempre eliminar de memoria local y localStorage
             resumeRegistrations = resumeRegistrations.filter(r => r.id !== regId);
-            
-            // Actualizar localStorage
             localStorage.setItem('resumeRegistrations', JSON.stringify(resumeRegistrations));
             
             // Actualizar interfaz
             filterResumeRegistrations();
             updateStats();
-            showNotification('Registro eliminado exitosamente', 'success');
+            
+            if (deletedFromFirebase || !isFirebaseInitialized) {
+                showNotification('Registro eliminado exitosamente', 'success');
+            } else {
+                showNotification('Registro eliminado localmente (verifica Firebase)', 'warning');
+            }
             
         } catch (error) {
             console.error('Error eliminando registro:', error);
@@ -9228,32 +9251,52 @@ async function deleteFollowup(followupId) {
     
     if (confirm(`¿Estás seguro de que quieres eliminar el seguimiento de "${followup.fullName}"?`)) {
         try {
+            let deletedFromFirebase = false;
+            
             // Eliminar de Firebase
             if (isFirebaseInitialized) {
-                const snapshot = await db.collection('followups')
-                    .where('id', '==', followupId)
-                    .get();
-                
-                if (!snapshot.empty) {
-                    const batch = db.batch();
-                    snapshot.docs.forEach(doc => {
-                        batch.delete(doc.ref);
-                    });
-                    await batch.commit();
-                    console.log('Seguimiento eliminado de Firebase:', followupId);
+                try {
+                    // Intentar encontrar por campo 'id'
+                    const snapshot = await db.collection('followups')
+                        .where('id', '==', followupId)
+                        .get();
+                    
+                    if (!snapshot.empty) {
+                        const batch = db.batch();
+                        snapshot.docs.forEach(doc => {
+                            batch.delete(doc.ref);
+                        });
+                        await batch.commit();
+                        deletedFromFirebase = true;
+                        console.log('Seguimiento eliminado de Firebase (por campo id):', followupId);
+                    } else {
+                        // Si no lo encuentra por campo, intentar por document ID
+                        try {
+                            await db.collection('followups').doc(followupId).delete();
+                            deletedFromFirebase = true;
+                            console.log('Seguimiento eliminado de Firebase (por document ID):', followupId);
+                        } catch (docError) {
+                            console.warn('No se pudo eliminar por document ID:', docError);
+                        }
+                    }
+                } catch (fbError) {
+                    console.error('Error eliminando de Firebase:', fbError);
                 }
             }
             
-            // Eliminar de memoria local
+            // Siempre eliminar de memoria local y localStorage
             followups = followups.filter(f => f.id !== followupId);
-            
-            // Actualizar localStorage
             localStorage.setItem('followups', JSON.stringify(followups));
             
             // Actualizar interfaz
             filterFollowups();
             updateStats();
-            showNotification('Seguimiento eliminado exitosamente', 'success');
+            
+            if (deletedFromFirebase || !isFirebaseInitialized) {
+                showNotification('Seguimiento eliminado exitosamente', 'success');
+            } else {
+                showNotification('Seguimiento eliminado localmente (verifica Firebase)', 'warning');
+            }
             
         } catch (error) {
             console.error('Error eliminando seguimiento:', error);
