@@ -1692,8 +1692,17 @@ let lastCheckedAppointments = localStorage.getItem('lastCheckedAppointments') ? 
         // Inicializar dashboard
         document.addEventListener('DOMContentLoaded', async function() {
     isFirebaseInitialized = initializeFirebase();
-    await loadAllData();
+    
+    // 1. PRIMERO cargar historial
     await loadParticipantHistory();
+    
+    // 2. LUEGO cargar datos
+    await loadAllData();
+    
+    // 3. Inicializar historial faltante (solo ejecutar si es necesario)
+    // DESCOMENTA ESTA LÍNEA SOLO UNA VEZ PARA ARREGLAR DATOS EXISTENTES:
+    // await initializeParticipantHistoryOnce();
+    
     updateExpiredOffers(); 
     updateStats();
     updateNotificationBadge();
@@ -1722,28 +1731,9 @@ let lastCheckedAppointments = localStorage.getItem('lastCheckedAppointments') ? 
                         console.log('Participantes cargados desde Firebase:', participants.length);
                     }
 
-// Registrar evento de registro para participantes que no tienen historial
-                    if (participantsResult.success && participants.length > 0) {
-                        for (const participant of participants) {
-                            const hasHistory = participantHistory.some(h => 
-                                h.participantId === participant.id && h.eventType === 'registration'
-                            );
-                            
-                            if (!hasHistory) {
-                                await addToParticipantHistory(participant.id, {
-                                    eventType: 'registration',
-                                    eventTitle: 'Registro Inicial',
-                                    description: 'Se registró en el portal de empleos',
-                                    data: {
-                                        participantName: `${participant.firstName} ${participant.lastName}`,
-                                        campus: participant.campus,
-                                        studentType: participant.studentType,
-                                        concentration: participant.concentration
-                                    }
-                                });
-                            }
-                        }
-                    }
+// NO HACER NADA AQUÍ - Los registros históricos se crearán solo cuando sea necesario
+// El historial inicial se debe crear UNA SOLA VEZ cuando el participante se registra por primera vez
+
 
                     // Cargar aplicaciones desde Firebase
                     const applicationsResult = await FirebaseHelper.getDocs('applications');
@@ -8439,6 +8429,140 @@ async function loadParticipantHistory() {
     } catch (error) {
         console.error('Error cargando historial:', error);
         participantHistory = JSON.parse(localStorage.getItem('participantHistory')) || [];
+    }
+}
+
+// Función para crear historial inicial de participantes (ejecutar UNA SOLA VEZ)
+async function initializeParticipantHistoryOnce() {
+    if (!isFirebaseInitialized) return;
+    
+    try {
+        console.log('Verificando historial de participantes...');
+        
+        for (const participant of participants) {
+            // Verificar si ya tiene registro inicial
+            const hasRegistration = participantHistory.some(h => 
+                h.participantId === participant.id && h.eventType === 'registration'
+            );
+            
+            if (!hasRegistration && participant.registeredAt) {
+                // Crear registro inicial con la fecha CORRECTA
+                const historyEntry = {
+                    id: `hist_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                    participantId: participant.id,
+                    timestamp: participant.registeredAt, // ✅ USA LA FECHA REAL
+                    eventType: 'registration',
+                    eventTitle: 'Registro Inicial',
+                    description: 'Se registró en el portal de empleos',
+                    data: {
+                        participantName: `${participant.firstName} ${participant.lastName}`,
+                        campus: participant.campus,
+                        studentType: participant.studentType,
+                        concentration: participant.concentration
+                    }
+                };
+                
+                // Guardar en Firebase
+                await db.collection('participantHistory').add(historyEntry);
+                
+                // Agregar a memoria local
+                participantHistory.push(historyEntry);
+                
+                console.log(`✅ Historial inicial creado para: ${participant.firstName} ${participant.lastName}`);
+            }
+        }
+        
+        // Guardar en localStorage
+        localStorage.setItem('participantHistory', JSON.stringify(participantHistory));
+        
+    } catch (error) {
+        console.error('Error inicializando historial:', error);
+    }
+}
+
+// Función para limpiar duplicados en el historial (EJECUTAR UNA SOLA VEZ)
+async function cleanDuplicateHistory() {
+    if (!isFirebaseInitialized) {
+        console.log('Firebase no inicializado');
+        return;
+    }
+    
+    if (!confirm('⚠️ Esto eliminará registros duplicados del historial. ¿Continuar?')) {
+        return;
+    }
+    
+    try {
+        console.log('Limpiando duplicados...');
+        
+        // Agrupar por participante
+        const grouped = {};
+        participantHistory.forEach(entry => {
+            if (!grouped[entry.participantId]) {
+                grouped[entry.participantId] = [];
+            }
+            grouped[entry.participantId].push(entry);
+        });
+        
+        let duplicatesFound = 0;
+        let duplicatesDeleted = 0;
+        
+        // Para cada participante
+        for (const participantId in grouped) {
+            const entries = grouped[participantId];
+            
+            // Encontrar duplicados de tipo 'registration'
+            const registrations = entries.filter(e => e.eventType === 'registration');
+            
+            if (registrations.length > 1) {
+                duplicatesFound += registrations.length - 1;
+                
+                // Ordenar por timestamp (más antiguo primero)
+                registrations.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+                
+                // Mantener solo el más antiguo, eliminar el resto
+                const toKeep = registrations[0];
+                const toDelete = registrations.slice(1);
+                
+                console.log(`Participante ${participantId}: manteniendo registro de ${new Date(toKeep.timestamp).toLocaleDateString()}, eliminando ${toDelete.length} duplicados`);
+                
+                // Eliminar de Firebase
+                for (const dup of toDelete) {
+                    try {
+                        const snapshot = await db.collection('participantHistory')
+                            .where('id', '==', dup.id)
+                            .get();
+                        
+                        if (!snapshot.empty) {
+                            const batch = db.batch();
+                            snapshot.docs.forEach(doc => {
+                                batch.delete(doc.ref);
+                            });
+                            await batch.commit();
+                            duplicatesDeleted++;
+                        }
+                    } catch (error) {
+                        console.error('Error eliminando duplicado:', error);
+                    }
+                }
+                
+                // Eliminar de memoria local
+                participantHistory = participantHistory.filter(h => 
+                    !(h.participantId === participantId && 
+                      h.eventType === 'registration' && 
+                      h.id !== toKeep.id)
+                );
+            }
+        }
+        
+        // Guardar en localStorage
+        localStorage.setItem('participantHistory', JSON.stringify(participantHistory));
+        
+        console.log(`✅ Limpieza completada. Duplicados encontrados: ${duplicatesFound}, eliminados: ${duplicatesDeleted}`);
+        alert(`Limpieza completada.\n\nDuplicados encontrados: ${duplicatesFound}\nDuplicados eliminados: ${duplicatesDeleted}\n\nRecarga la página para ver los cambios.`);
+        
+    } catch (error) {
+        console.error('Error limpiando duplicados:', error);
+        alert('Error limpiando duplicados. Revisa la consola.');
     }
 }
 
