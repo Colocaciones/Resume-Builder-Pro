@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard — Colocados 2026</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --navy: #1F3864;
+    --blue: #2E75B6;
+    --sky: #9DC3E6;
+    --pale: #DEEAF1;
+    --accent: #ED7D31;
+    --green: #548235;
+    --bg: #F4F7FB;
+    --white: #FFFFFF;
+    --text: #1a2a40;
+    --muted: #6b7f99;
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  header {
+    background: linear-gradient(135deg, var(--navy) 0%, var(--blue) 100%);
+    padding: 2.5rem 3rem;
+    position: relative;
+    overflow: hidden;
+  }
+  header::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 300px; height: 300px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.05);
+  }
+  header::after {
+    content: '';
+    position: absolute;
+    bottom: -80px; left: 40%;
+    width: 400px; height: 200px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.04);
+  }
+  .header-inner { position: relative; z-index: 1; }
+  header h1 {
+    font-family: 'DM Serif Display', serif;
+    color: white;
+    font-size: 2rem;
+    letter-spacing: -0.01em;
+    line-height: 1.2;
+  }
+  header p {
+    color: rgba(255,255,255,0.7);
+    margin-top: 0.4rem;
+    font-size: 0.95rem;
+    font-weight: 300;
+  }
+  .badge {
+    display: inline-block;
+    background: var(--accent);
+    color: white;
+    font-weight: 600;
+    font-size: 0.8rem;
+    padding: 0.25rem 0.75rem;
+    border-radius: 999px;
+    margin-top: 0.75rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  main { padding: 2rem 3rem 3rem; max-width: 1300px; margin: 0 auto; }
+
+  /* KPI Row */
+  .kpis {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+  .kpi {
+    background: var(--white);
+    border-radius: 14px;
+    padding: 1.4rem 1.5rem;
+    box-shadow: 0 2px 12px rgba(31,56,100,0.07);
+    border-top: 4px solid var(--navy);
+    transition: transform 0.2s;
+  }
+  .kpi:hover { transform: translateY(-3px); }
+  .kpi:nth-child(2) { border-top-color: var(--blue); }
+  .kpi:nth-child(3) { border-top-color: var(--accent); }
+  .kpi:nth-child(4) { border-top-color: var(--green); }
+  .kpi-num {
+    font-family: 'DM Serif Display', serif;
+    font-size: 2.4rem;
+    color: var(--navy);
+    line-height: 1;
+  }
+  .kpi:nth-child(2) .kpi-num { color: var(--blue); }
+  .kpi:nth-child(3) .kpi-num { color: var(--accent); }
+  .kpi:nth-child(4) .kpi-num { color: var(--green); }
+  .kpi-label { font-size: 0.82rem; color: var(--muted); margin-top: 0.35rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; }
+
+  /* Charts grid */
+  .charts-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.25rem;
+    margin-bottom: 1.25rem;
+  }
+  .card {
+    background: var(--white);
+    border-radius: 14px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 12px rgba(31,56,100,0.07);
+  }
+  .card.full { grid-column: 1 / -1; }
+  .card h2 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.05rem;
+    color: var(--navy);
+    margin-bottom: 1.2rem;
+    padding-bottom: 0.6rem;
+    border-bottom: 2px solid var(--pale);
+  }
+  .chart-wrap { position: relative; height: 260px; }
+  .chart-wrap.tall { height: 340px; }
+
+  /* Table */
+  .table-scroll { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+  thead tr { background: var(--navy); }
+  thead th { color: white; padding: 0.7rem 1rem; text-align: left; font-weight: 600; letter-spacing: 0.03em; white-space: nowrap; }
+  tbody tr:nth-child(even) { background: var(--pale); }
+  tbody tr:hover { background: #c8dff0; }
+  tbody td { padding: 0.6rem 1rem; border-bottom: 1px solid #e2ecf5; }
+  .div-pill {
+    display: inline-block;
+    padding: 0.2rem 0.6rem;
+    border-radius: 999px;
+    font-size: 0.76rem;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .pill-salud { background: #d6f0e8; color: #1a6640; }
+  .pill-artes { background: #fde8d0; color: #8a3a00; }
+  .pill-negocios { background: #e3e8f8; color: #2d3a8a; }
+
+  .num-cell { text-align: center; font-weight: 600; color: var(--navy); }
+  .pct-bar-cell { min-width: 120px; }
+  .pct-bar-wrap { display: flex; align-items: center; gap: 0.5rem; }
+  .pct-bar-bg { flex: 1; height: 8px; background: var(--pale); border-radius: 4px; overflow: hidden; }
+  .pct-bar-fill { height: 100%; border-radius: 4px; background: var(--blue); }
+  .pct-text { font-size: 0.8rem; color: var(--muted); white-space: nowrap; font-weight: 500; }
+
+  footer { text-align: center; padding: 1.5rem; color: var(--muted); font-size: 0.8rem; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <h1>Reporte de Colocados</h1>
+    <p>Concentración · División Académica · Año de Graduación</p>
+    <span class="badge">Corte: 3 de marzo 2026</span>
+  </div>
+</header>
+
+<main>
+
+  <!-- KPIs -->
+  <div class="kpis">
+    <div class="kpi">
+      <div class="kpi-num">49</div>
+      <div class="kpi-label">Total Colocados</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-num">3</div>
+      <div class="kpi-label">Divisiones Académicas</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-num">17</div>
+      <div class="kpi-label">Concentraciones</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-num">2024</div>
+      <div class="kpi-label">Año con más colocados</div>
+    </div>
+  </div>
+
+  <!-- Row 1: Division pie + Year bar -->
+  <div class="charts-row">
+    <div class="card">
+      <h2>Colocados por División Académica</h2>
+      <div class="chart-wrap">
+        <canvas id="chartDiv"></canvas>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Colocados por Año de Graduación</h2>
+      <div class="chart-wrap">
+        <canvas id="chartYear"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Row 2: Concentración horizontal bar -->
+  <div class="charts-row">
+    <div class="card full">
+      <h2>Colocados por Concentración (agrupadas)</h2>
+      <div class="chart-wrap tall">
+        <canvas id="chartConc"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Table -->
+  <div class="card full">
+    <h2>Detalle por División Académica y Concentración</h2>
+    <div class="table-scroll">
+      <table id="detailTable">
+        <thead>
+          <tr>
+            <th>División Académica</th>
+            <th>Concentración</th>
+            <th style="text-align:center">Colocados</th>
+            <th>% dentro de División</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+</main>
+
+<footer>Generado automáticamente · Datos: Reporte_Colocados_2026-03-03</footer>
+
+<script>
+const COLORS = {
+  navy: '#1F3864', blue: '#2E75B6', sky: '#9DC3E6', accent: '#ED7D31',
+  green: '#548235', teal: '#17A589', purple: '#7D3C98', rose: '#C0392B'
+};
+
+// ---- Data ----
+const divData = {
+  labels: ['Ciencias de la Salud', 'Artes Liberales', 'Negocios'],
+  values: [29, 16, 4]
+};
+
+const yearData = {
+  labels: ['2015', '2024', '2025', '2028', 'Sin fecha'],
+  values: [1, 41, 1, 1, 5]
+};
+
+// Concentración grouped/normalized
+const concRaw = [
+  { conc: 'Enfermería', n: 10 },
+  { conc: 'Enseñanza', n: 7 },
+  { conc: 'Seguridad Pública', n: 6 },
+  { conc: 'Enf. c/Manejo de Caso', n: 5 },
+  { conc: 'Sonografía Médica', n: 3 },
+  { conc: 'Técnico de Farmacia', n: 4 },
+  { conc: 'Psicología', n: 1 },
+  { conc: 'Mercadeo', n: 1 },
+  { conc: 'Gerencia', n: 1 },
+  { conc: 'Recursos Humanos', n: 1 },
+  { conc: 'Administración', n: 1 },
+  { conc: 'Educación Física', n: 1 },
+  { conc: 'Terapia Respiratoria', n: 1 },
+  { conc: 'C. Crítico del Adulto', n: 2 },
+  { conc: 'Sonografía Vascular', n: 1 },
+].sort((a,b) => b.n - a.n);
+
+const tableRows = [
+  { div: 'Ciencias de la Salud', conc: 'Enfermería', n: 10, divTotal: 29 },
+  { div: 'Ciencias de la Salud', conc: 'Enf. c/Manejo de Caso', n: 5, divTotal: 29 },
+  { div: 'Ciencias de la Salud', conc: 'Sonografía Médica', n: 3, divTotal: 29 },
+  { div: 'Ciencias de la Salud', conc: 'Técnico de Farmacia', n: 4, divTotal: 29 },
+  { div: 'Ciencias de la Salud', conc: 'C. Crítico del Adulto', n: 2, divTotal: 29 },
+  { div: 'Ciencias de la Salud', conc: 'Terapia Respiratoria', n: 1, divTotal: 29 },
+  { div: 'Ciencias de la Salud', conc: 'Sonografía Vascular', n: 1, divTotal: 29 },
+  { div: 'Ciencias de la Salud', conc: 'Otros (Cuidado Crítico)', n: 3, divTotal: 29 },
+  { div: 'Artes Liberales', conc: 'Enseñanza', n: 7, divTotal: 16 },
+  { div: 'Artes Liberales', conc: 'Seguridad Pública', n: 6, divTotal: 16 },
+  { div: 'Artes Liberales', conc: 'Psicología', n: 1, divTotal: 16 },
+  { div: 'Artes Liberales', conc: 'Educación Física', n: 1, divTotal: 16 },
+  { div: 'Artes Liberales', conc: 'Educación', n: 1, divTotal: 16 },
+  { div: 'Negocios', conc: 'Mercadeo', n: 1, divTotal: 4 },
+  { div: 'Negocios', conc: 'Gerencia', n: 1, divTotal: 4 },
+  { div: 'Negocios', conc: 'Recursos Humanos', n: 1, divTotal: 4 },
+  { div: 'Negocios', conc: 'Administración', n: 1, divTotal: 4 },
+];
+
+const pillClass = { 'Ciencias de la Salud': 'pill-salud', 'Artes Liberales': 'pill-artes', 'Negocios': 'pill-negocios' };
+
+// Build table
+const tbody = document.getElementById('tableBody');
+tableRows.forEach(r => {
+  const pct = (r.n / r.divTotal * 100).toFixed(1);
+  const barW = Math.round(r.n / r.divTotal * 100);
+  tbody.innerHTML += `
+    <tr>
+      <td><span class="div-pill ${pillClass[r.div]}">${r.div}</span></td>
+      <td>${r.conc}</td>
+      <td class="num-cell">${r.n}</td>
+      <td class="pct-bar-cell">
+        <div class="pct-bar-wrap">
+          <div class="pct-bar-bg"><div class="pct-bar-fill" style="width:${barW}%"></div></div>
+          <span class="pct-text">${pct}%</span>
+        </div>
+      </td>
+    </tr>`;
+});
+
+// ---- Chart: Division Doughnut ----
+new Chart(document.getElementById('chartDiv'), {
+  type: 'doughnut',
+  data: {
+    labels: divData.labels,
+    datasets: [{
+      data: divData.values,
+      backgroundColor: [COLORS.blue, COLORS.accent, COLORS.green],
+      borderWidth: 3,
+      borderColor: '#fff',
+      hoverOffset: 8
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { position: 'bottom', labels: { font: { family: 'DM Sans', size: 12 }, padding: 16 } },
+      tooltip: { callbacks: { label: ctx => ` ${ctx.label}: ${ctx.parsed} (${(ctx.parsed/49*100).toFixed(1)}%)` } }
+    },
+    cutout: '62%'
+  }
+});
+
+// ---- Chart: Year Bar ----
+new Chart(document.getElementById('chartYear'), {
+  type: 'bar',
+  data: {
+    labels: yearData.labels,
+    datasets: [{
+      label: 'Colocados',
+      data: yearData.values,
+      backgroundColor: [COLORS.sky, COLORS.blue, COLORS.accent, COLORS.teal, COLORS.muted || '#aaa'],
+      borderRadius: 6,
+      borderSkipped: false
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false },
+      tooltip: { callbacks: { label: ctx => ` ${ctx.parsed.y} colocados` } }
+    },
+    scales: {
+      y: { beginAtZero: true, grid: { color: '#edf2f8' }, ticks: { font: { family: 'DM Sans' } } },
+      x: { grid: { display: false }, ticks: { font: { family: 'DM Sans' } } }
+    }
+  }
+});
+
+// ---- Chart: Concentration Horizontal Bar ----
+new Chart(document.getElementById('chartConc'), {
+  type: 'bar',
+  data: {
+    labels: concRaw.map(d => d.conc),
+    datasets: [{
+      label: 'Colocados',
+      data: concRaw.map(d => d.n),
+      backgroundColor: concRaw.map((_, i) => i < 3 ? COLORS.navy : i < 6 ? COLORS.blue : COLORS.sky),
+      borderRadius: 4,
+      borderSkipped: false
+    }]
+  },
+  options: {
+    indexAxis: 'y',
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { beginAtZero: true, grid: { color: '#edf2f8' }, ticks: { font: { family: 'DM Sans' }, stepSize: 1 } },
+      y: { grid: { display: false }, ticks: { font: { family: 'DM Sans', size: 11 } } }
+    }
+  }
+});
+</script>
+</body>
+</html>
