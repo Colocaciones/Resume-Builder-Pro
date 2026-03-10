@@ -118,17 +118,26 @@
   thead th { color: white; padding: 0.7rem 1rem; text-align: left; font-weight: 600; letter-spacing: 0.03em; white-space: nowrap; }
   tbody tr:nth-child(even) { background: var(--pale); }
   tbody tr:hover { background: #c8dff0; }
-  tbody td { padding: 0.6rem 1rem; border-bottom: 1px solid #e2ecf5; }
+  tbody td { padding: 0.6rem 1rem; border-bottom: 1px solid #e2ecf5; vertical-align: middle; }
   .div-pill { display: inline-block; padding: 0.2rem 0.6rem; border-radius: 999px; font-size: 0.76rem; font-weight: 600; white-space: nowrap; }
   .pill-salud { background: #d6f0e8; color: #1a6640; }
   .pill-artes { background: #fde8d0; color: #8a3a00; }
   .pill-negocios { background: #e3e8f8; color: #2d3a8a; }
-  .num-cell { text-align: center; font-weight: 600; color: var(--navy); }
-  .pct-bar-cell { min-width: 120px; }
-  .pct-bar-wrap { display: flex; align-items: center; gap: 0.5rem; }
-  .pct-bar-bg { flex: 1; height: 8px; background: var(--pale); border-radius: 4px; overflow: hidden; }
-  .pct-bar-fill { height: 100%; border-radius: 4px; background: var(--blue); }
-  .pct-text { font-size: 0.8rem; color: var(--muted); white-space: nowrap; font-weight: 500; }
+  .grado-pill { display: inline-block; padding: 0.15rem 0.5rem; border-radius: 999px; font-size: 0.73rem; font-weight: 600; white-space: nowrap; }
+  .pill-bach { background: #dbeafe; color: #1d4ed8; }
+  .pill-maes { background: #ede9fe; color: #6d28d9; }
+  .pill-asoc { background: #dcfce7; color: #166534; }
+  .pill-doc  { background: #fce7f3; color: #9d174d; }
+  .tipo-pill { display: inline-block; padding: 0.15rem 0.5rem; border-radius: 999px; font-size: 0.73rem; font-weight: 600; }
+  .pill-ft { background: #e0f2fe; color: #0369a1; }
+  .pill-pt { background: #fff7ed; color: #c2410c; }
+  .empresa-cell { font-weight: 500; color: var(--navy); }
+  .posicion-cell { color: var(--text); }
+  .search-bar { display:flex; gap:0.75rem; margin-bottom:1rem; align-items:center; flex-wrap:wrap; }
+  .search-bar input { flex:1; min-width:180px; padding:0.5rem 0.9rem; border:1.5px solid var(--pale); border-radius:8px; font-family:'DM Sans',sans-serif; font-size:0.88rem; outline:none; transition:border-color .2s; }
+  .search-bar input:focus { border-color:var(--blue); }
+  .search-bar select { padding:0.5rem 0.8rem; border:1.5px solid var(--pale); border-radius:8px; font-family:'DM Sans',sans-serif; font-size:0.85rem; outline:none; background:white; cursor:pointer; }
+  .row-count { font-size:0.8rem; color:var(--muted); margin-left:auto; }
 
   footer { text-align: center; padding: 1.5rem; color: var(--muted); font-size: 0.8rem; }
 </style>
@@ -224,17 +233,38 @@
   </div>
 
   <!-- ═══ Tabla detalle ═══ -->
-  <div class="section-label">🗂️ Detalle Completo por División y Concentración</div>
+  <div class="section-label">🗂️ Detalle Completo de Colocados</div>
   <div class="card full">
-    <h2>Detalle por División Académica y Concentración</h2>
+    <h2>Registro Individual de Colocados</h2>
+    <div class="search-bar">
+      <input type="text" id="searchInput" placeholder="🔍 Buscar por nombre, empresa o posición…" oninput="filterTable()">
+      <select id="filterDiv" onchange="filterTable()">
+        <option value="">Todas las divisiones</option>
+        <option>Ciencias de la Salud</option>
+        <option>Artes Liberales</option>
+        <option>Negocios</option>
+      </select>
+      <select id="filterGrado" onchange="filterTable()">
+        <option value="">Todos los grados</option>
+        <option>Bachillerato</option>
+        <option>Maestría</option>
+        <option>Grado Asociado</option>
+        <option>Doctorado</option>
+      </select>
+      <span class="row-count" id="rowCount"></span>
+    </div>
     <div class="table-scroll">
       <table>
         <thead>
           <tr>
-            <th>División Académica</th>
+            <th>#</th>
+            <th>Participante</th>
+            <th>Posición</th>
+            <th>Empresa / Lugar</th>
+            <th>Grado</th>
             <th>Concentración</th>
-            <th style="text-align:center">Colocados</th>
-            <th>% dentro de División</th>
+            <th>División Académica</th>
+            <th>Tipo</th>
           </tr>
         </thead>
         <tbody id="tableBody"></tbody>
@@ -277,42 +307,93 @@ const concRaw = [
   {conc:'Educación Física',n:1},{conc:'Terapia Respiratoria',n:1},{conc:'Sonografía Vascular',n:1},
 ].sort((a,b)=>b.n-a.n);
 
-const tableRows = [
-  {div:'Ciencias de la Salud',conc:'Enfermería',n:10,divTotal:29},
-  {div:'Ciencias de la Salud',conc:'Enf. c/Manejo de Caso',n:5,divTotal:29},
-  {div:'Ciencias de la Salud',conc:'Técnico de Farmacia',n:4,divTotal:29},
-  {div:'Ciencias de la Salud',conc:'Sonografía Médica',n:3,divTotal:29},
-  {div:'Ciencias de la Salud',conc:'C. Crítico del Adulto',n:2,divTotal:29},
-  {div:'Ciencias de la Salud',conc:'Terapia Respiratoria',n:1,divTotal:29},
-  {div:'Ciencias de la Salud',conc:'Sonografía Vascular',n:1,divTotal:29},
-  {div:'Ciencias de la Salud',conc:'Otros (Cuidado Crítico)',n:3,divTotal:29},
-  {div:'Artes Liberales',conc:'Enseñanza',n:7,divTotal:16},
-  {div:'Artes Liberales',conc:'Seguridad Pública',n:6,divTotal:16},
-  {div:'Artes Liberales',conc:'Psicología',n:1,divTotal:16},
-  {div:'Artes Liberales',conc:'Educación Física',n:1,divTotal:16},
-  {div:'Artes Liberales',conc:'Educación',n:1,divTotal:16},
-  {div:'Negocios',conc:'Mercadeo',n:1,divTotal:4},
-  {div:'Negocios',conc:'Gerencia',n:1,divTotal:4},
-  {div:'Negocios',conc:'Recursos Humanos',n:1,divTotal:4},
-  {div:'Negocios',conc:'Administración',n:1,divTotal:4},
+const allRows = [
+  {nombre:"Gabriela Mayol Ojeda",empresa:"Bayamón Medical Center",posicion:"Enfermera Graduada",tipo_pos:"Full Time",grado:"Bachillerato",concentracion:"Enfermería",division:"Ciencias de la Salud"},
+  {nombre:"Maria Colón Martínez",empresa:"Hospital Pavia",posicion:"Supervisora de Terapia Respiratoria",tipo_pos:"Full Time",grado:"Bachillerato",concentracion:"Terapia Respiratoria",division:"Ciencias de la Salud"},
+  {nombre:"Lyneris Mojica Rivera",empresa:"Corporación Las Vegas",posicion:"Supervisora",tipo_pos:"Full Time",grado:"Maestría",concentracion:"Enf. con Manejo de Caso",division:"Ciencias de la Salud"},
+  {nombre:"Darvin Barreto Soto",empresa:"Departamento de Educación",posicion:"Auxiliar",tipo_pos:"Full Time",grado:"Grado Asociado",concentracion:"Técnico de Farmacia",division:"Ciencias de la Salud"},
+  {nombre:"Carlos Aleman Encarnacion",empresa:"Municipal de San Juan",posicion:"Enfermero",tipo_pos:"Full Time",grado:"Bachillerato",concentracion:"Enfermería",division:"Ciencias de la Salud"},
+  {nombre:"Elisabet Rivera Lopez",empresa:"Doctor Center Bayamon",posicion:"Guardia de Seguridad Armada",tipo_pos:"Full Time",grado:"Bachillerato",concentracion:"Seguridad Pública",division:"Artes Liberales"},
+  {nombre:"Avilys Santiago Bayron",empresa:"MCS",posicion:"Auditora",tipo_pos:"Full Time",grado:"Maestría",concentracion:"Cuidado Crítico del Adulto",division:"Ciencias de la Salud"},
+  {nombre:"Vaeria Baez Torres",empresa:"MCS",posicion:"Técnica de Farmacia",tipo_pos:"Full Time",grado:"Grado Asociado",concentracion:"Técnico de Farmacia",division:"Ciencias de la Salud"},
+  {nombre:"Alexander Hernandez Ramirez",empresa:"Dept. Educación",posicion:"Maestro",tipo_pos:"Full Time",grado:"Maestría",concentracion:"Enseñanza",division:"Artes Liberales"},
+  {nombre:"Jesus Pagán Benítez",empresa:"MCS",posicion:"Representante de Éxito del Cliente",tipo_pos:"Full Time",grado:"Bachillerato",concentracion:"Mercadeo",division:"Negocios"},
+  {nombre:"Alejandra Burgos",empresa:"Tienda 5.11",posicion:"Asistente Administrativa",tipo_pos:"Full Time",grado:"Maestría",concentracion:"Administración",division:"Negocios"},
+  {nombre:"Grisela Margolla Coll",empresa:"Dept. Hacienda",posicion:"Auxiliar de Colecto",tipo_pos:"Full Time",grado:"Bachillerato",concentracion:"Enseñanza",division:"Artes Liberales"},
+  {nombre:"Nellie Caballero Acosta",empresa:"Hospital Ashford",posicion:"Enfermera",tipo_pos:"Full Time",grado:"Bachillerato",concentracion:"Enfermería",division:"Ciencias de la Salud"},
+  {nombre:"Charlene Marie Gatón",empresa:"Doctor's Center Hospital Santurce",posicion:"Enfermera Pediátrica",tipo_pos:"Full Time",grado:"Bachillerato",concentracion:"Enfermería",division:"Ciencias de la Salud"},
+  {nombre:"Ysatis Medina Ramirez",empresa:"Asociación Deportiva",posicion:"Maestra Deportiva",tipo_pos:"Full Time",grado:"Bachillerato",concentracion:"Educación Física",division:"Artes Liberales"},
+  {nombre:"Julitza Valle Hernandez",empresa:"Centro Médico",posicion:"Enfermera",tipo_pos:"Full Time",grado:"Bachillerato",concentracion:"Enfermería",division:"Ciencias de la Salud"},
+  {nombre:"Dexter Adorno Betancourt",empresa:"Hospital Veterano",posicion:"Enfermero",tipo_pos:"Full Time",grado:"Maestría",concentracion:"Enf. con Manejo de Caso",division:"Ciencias de la Salud"},
+  {nombre:"Zorangibeth Lebron Saez",empresa:"Priority Care Services",posicion:"Cuidador / Enfermera",tipo_pos:"Full Time",grado:"Bachillerato",concentracion:"Enfermería",division:"Ciencias de la Salud"},
+  {nombre:"Stephanie Cruz Castro",empresa:"Hospital en Carolina",posicion:"Enfermera",tipo_pos:"Full Time",grado:"Bachillerato",concentracion:"Enfermería",division:"Ciencias de la Salud"},
+  {nombre:"Maria De Jesus Perez",empresa:"Dept. Policía Isabela",posicion:"Policía",tipo_pos:"Full Time",grado:"Bachillerato",concentracion:"Seguridad Pública",division:"Artes Liberales"},
+  {nombre:"Kevin Tavarez Tirado",empresa:"Negociado de Bomberos",posicion:"Bombero",tipo_pos:"Full Time",grado:"Bachillerato",concentracion:"Seguridad Pública",division:"Artes Liberales"},
+  {nombre:"Jonathan Eusebio Isabel",empresa:"Pavia Hato Rey",posicion:"Enfermero Graduado",tipo_pos:"Full Time",grado:"Bachillerato",concentracion:"Enfermería",division:"Ciencias de la Salud"},
+  {nombre:"Luis Figueroa Rivera",empresa:"Dept. Educación",posicion:"Maestro",tipo_pos:"Full Time",grado:"Maestría",concentracion:"Enseñanza",division:"Artes Liberales"},
+  {nombre:"Joycelin Martinez Torres",empresa:"Walgreens",posicion:"Servicio al Cliente en la Farmacia",tipo_pos:"Part Time",grado:"Grado Asociado",concentracion:"Técnico de Farmacia",division:"Ciencias de la Salud"},
+  {nombre:"Rafael Pellot Mora",empresa:"Ariel Universal",posicion:"Guardia de Seguridad",tipo_pos:"Full Time",grado:"Bachillerato",concentracion:"Seguridad Pública",division:"Artes Liberales"},
+  {nombre:"Alejandra Torres Canellas",empresa:"RSI Escuela Privada",posicion:"Maestra",tipo_pos:"Part Time",grado:"Doctorado",concentracion:"Enseñanza",division:"Artes Liberales"},
+  {nombre:"Luz Santiago Matos",empresa:"Centro Médico",posicion:"Administración",tipo_pos:"Full Time",grado:"Maestría",concentracion:"Cuidado Crítico del Adulto",division:"Ciencias de la Salud"},
+  {nombre:"Alondra Rivera Vazquez",empresa:"Centro de Sonografía Preve Cupey",posicion:"Sonografista",tipo_pos:"Full Time",grado:"Bachillerato",concentracion:"Sonografía Médica",division:"Ciencias de la Salud"},
+  {nombre:"Mia Marrero Martinez",empresa:"Teatro",posicion:"Ujier",tipo_pos:"Part Time",grado:"Grado Asociado",concentracion:"Técnico de Farmacia",division:"Ciencias de la Salud"},
+  {nombre:"Isabel Rodriguez Huertas",empresa:"Hospital Universitario",posicion:"Enfermera",tipo_pos:"Full Time",grado:"Bachillerato",concentracion:"Enfermería",division:"Ciencias de la Salud"},
+  {nombre:"Myrtia Pagán Pérez",empresa:"Universidad Ana G. Méndez Carolina",posicion:"Coordinadora Servicios Integrados",tipo_pos:"Full Time",grado:"Maestría",concentracion:"Recursos Humanos",division:"Negocios"},
+  {nombre:"Julio Martinez Mercedes",empresa:"Tabaco Shop",posicion:"Cajero",tipo_pos:"Part Time",grado:"Bachillerato",concentracion:"Psicología",division:"Artes Liberales"},
+  {nombre:"Mariangeli Martinez Martinez",empresa:"Hotel en Condado",posicion:"Housekeeping",tipo_pos:"Full Time",grado:"Bachillerato",concentracion:"Sonografía Médica",division:"Ciencias de la Salud"},
+  {nombre:"Joeymel Soto Lugo",empresa:"Dept. de Educación",posicion:"Trabajador de Almacén",tipo_pos:"Full Time",grado:"Bachillerato",concentracion:"Seguridad Pública",division:"Artes Liberales"},
+  {nombre:"Jose Colon Bracero",empresa:"Departamento Veterano",posicion:"Enfermero",tipo_pos:"Full Time",grado:"Maestría",concentracion:"Enf. con Manejo de Caso",division:"Ciencias de la Salud"},
+  {nombre:"Eliseo Pizarro",empresa:"Hosp. Auxilio Mutuo",posicion:"Enfermero",tipo_pos:"Full Time",grado:"Bachillerato",concentracion:"Enfermería",division:"Ciencias de la Salud"},
+  {nombre:"Yubetsi Figueroa Garay",empresa:"Hospital San Lucas",posicion:"Oficial de Registro",tipo_pos:"Full Time",grado:"Bachillerato",concentracion:"Gerencia",division:"Negocios"},
+  {nombre:"Frances Acosta Pizarro",empresa:"Hospital Veterano",posicion:"Enfermera",tipo_pos:"Full Time",grado:"Maestría",concentracion:"Enf. con Manejo de Caso",division:"Ciencias de la Salud"},
+  {nombre:"Hector Leon Cordero",empresa:"Hospital",posicion:"Enfermero Graduado",tipo_pos:"Full Time",grado:"Bachillerato",concentracion:"Enfermería",division:"Ciencias de la Salud"},
+  {nombre:"Jorge Cordero Ramos",empresa:"Vital Transporte",posicion:"Chofer de Ambulancia",tipo_pos:"Part Time",grado:"Bachillerato",concentracion:"Seguridad Pública",division:"Artes Liberales"},
+  {nombre:"Kaori Correa Nieves",empresa:"Salón de Belleza",posicion:"Técnica de Uñas",tipo_pos:"Full Time",grado:"Grado Asociado",concentracion:"Sonografía Vascular",division:"Ciencias de la Salud"},
+  {nombre:"Elaine Encarnacion Molina",empresa:"Doctor Center",posicion:"Enfermera",tipo_pos:"Full Time",grado:"Bachillerato",concentracion:"Enfermería",division:"Ciencias de la Salud"},
+  {nombre:"Yaneisha Arana Berrios",empresa:"Hospital Auxilio Mutuo",posicion:"Técnica EKG",tipo_pos:"Full Time",grado:"Bachillerato",concentracion:"Sonografía Médica",division:"Ciencias de la Salud"},
+  {nombre:"Vanelis Lausell Baez",empresa:"Hospital",posicion:"Enfermera",tipo_pos:"Full Time",grado:"Bachillerato",concentracion:"Enfermería",division:"Ciencias de la Salud"},
+  {nombre:"Paul Fericelli Castillo",empresa:"Universidad Interamericana",posicion:"Profesor",tipo_pos:"Full Time",grado:"Doctorado",concentracion:"Enseñanza",division:"Artes Liberales"},
+  {nombre:"Millyet Rivera Cortes",empresa:"Dept. Educación",posicion:"Maestra Deportiva",tipo_pos:"Full Time",grado:"Maestría",concentracion:"Enseñanza",division:"Artes Liberales"},
+  {nombre:"Ana Torres Rodríguez",empresa:"Hospital Público",posicion:"Enfermería",tipo_pos:"Full Time",grado:"Maestría",concentracion:"Enf. con Manejo de Caso",division:"Ciencias de la Salud"},
+  {nombre:"Diolinete Gerena Colon",empresa:"Uni. Politécnica",posicion:"Profesora",tipo_pos:"Part Time",grado:"Doctorado",concentracion:"Enseñanza",division:"Artes Liberales"},
+  {nombre:"Mariangely Sanchez Ramirez",empresa:"UAGM",posicion:"Estudio y Trabajo — Becas e Internados",tipo_pos:"Part Time",grado:"Bachillerato",concentracion:"Educación",division:"Artes Liberales"},
 ];
 
 const pillClass = {'Ciencias de la Salud':'pill-salud','Artes Liberales':'pill-artes','Negocios':'pill-negocios'};
+const gradoPill = {'Bachillerato':'pill-bach','Maestría':'pill-maes','Grado Asociado':'pill-asoc','Doctorado':'pill-doc'};
 
-// Build table
-const tbody = document.getElementById('tableBody');
-tableRows.forEach(r => {
-  const pct = (r.n/r.divTotal*100).toFixed(1);
-  tbody.innerHTML += `<tr>
-    <td><span class="div-pill ${pillClass[r.div]}">${r.div}</span></td>
-    <td>${r.conc}</td>
-    <td class="num-cell">${r.n}</td>
-    <td class="pct-bar-cell"><div class="pct-bar-wrap">
-      <div class="pct-bar-bg"><div class="pct-bar-fill" style="width:${Math.round(r.n/r.divTotal*100)}%"></div></div>
-      <span class="pct-text">${pct}%</span>
-    </div></td>
-  </tr>`;
-});
+function buildTable(rows) {
+  const tbody = document.getElementById('tableBody');
+  tbody.innerHTML = '';
+  rows.forEach((r, i) => {
+    tbody.innerHTML += `<tr>
+      <td style="color:var(--muted);font-size:0.78rem;">${i+1}</td>
+      <td style="font-weight:500;">${r.nombre}</td>
+      <td class="posicion-cell">${r.posicion}</td>
+      <td class="empresa-cell">${r.empresa}</td>
+      <td><span class="grado-pill ${gradoPill[r.grado]||''}">${r.grado}</span></td>
+      <td style="font-size:0.83rem;color:var(--muted);">${r.concentracion}</td>
+      <td><span class="div-pill ${pillClass[r.division]}">${r.division}</span></td>
+      <td><span class="tipo-pill ${r.tipo_pos==='Full Time'?'pill-ft':'pill-pt'}">${r.tipo_pos}</span></td>
+    </tr>`;
+  });
+  document.getElementById('rowCount').textContent = `${rows.length} registros`;
+}
+
+function filterTable() {
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  const div = document.getElementById('filterDiv').value;
+  const grado = document.getElementById('filterGrado').value;
+  const filtered = allRows.filter(r => {
+    const matchQ = !q || r.nombre.toLowerCase().includes(q) || r.empresa.toLowerCase().includes(q) || r.posicion.toLowerCase().includes(q);
+    const matchDiv = !div || r.division === div;
+    const matchGrado = !grado || r.grado === grado;
+    return matchQ && matchDiv && matchGrado;
+  });
+  buildTable(filtered);
+}
+
+buildTable(allRows);
 
 // ── Charts ──────────────────────────────────────
 const dmSans = { family:'DM Sans', size:12 };
