@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Registro de Asistencia — Symplicity Connect · UAGM Cupey, Gurabo y Carolina</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --dark-900:#201F22;
+    --dark-800:#2E2D30;
+    --red-600:#DC1F33;
+    --red-700:#B8172A;
+    --gray-700:#717075;
+    --paper:#F5F5F1;
+    --white:#FFFFFF;
+    --ink-900:#131C24;
+    --ink-600:#4B5A66;
+    --gray-300:#D8DCD6;
+    --gray-100:#ECEDE9;
+    --radius:14px;
+    --shadow: 0 1px 2px rgba(11,35,56,.06), 0 12px 32px rgba(11,35,56,.12);
+  }
+  *,*::before,*::after{ box-sizing:border-box; }
+  html{ scroll-behavior:smooth; }
+  @media (prefers-reduced-motion: reduce){
+    html{ scroll-behavior:auto; }
+    *{ animation-duration:0.001ms !important; transition-duration:0.001ms !important; }
+  }
+  body{ margin:0; font-family:'Inter',system-ui,sans-serif; color:var(--ink-900); background:var(--paper); line-height:1.6; }
+  h1,h2,h3{ font-family:'Space Grotesk',sans-serif; margin:0; letter-spacing:-0.01em; }
+  p{ margin:0; }
+  a{ color:inherit; }
+  svg{ display:block; }
+  .eyebrow{ font-family:'IBM Plex Mono',monospace; font-size:.72rem; letter-spacing:.12em; text-transform:uppercase; font-weight:500; }
+  button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible{
+    outline:3px solid var(--red-600); outline-offset:2px;
+  }
+  .wrap{ max-width:1080px; margin:0 auto; padding:0 24px; }
+
+  /* HEADER */
+  .site-header{ background:var(--white); border-bottom:1px solid var(--gray-300); padding:18px 0; }
+  .site-header .wrap{ display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; }
+  .brand{ display:flex; flex-direction:column; line-height:1.25; }
+  .brand strong{ font-family:'Space Grotesk',sans-serif; font-size:1.05rem; }
+  .brand span{ font-size:.82rem; color:var(--ink-600); }
+  .badge{ background:var(--gray-100); color:var(--gray-700); padding:6px 14px; border-radius:999px;
+    font-family:'IBM Plex Mono',monospace; font-size:.72rem; letter-spacing:.08em; text-transform:uppercase; font-weight:500; white-space:nowrap; }
+
+  /* HERO */
+  .hero{
+    background:
+      radial-gradient(circle at 82% 12%, rgba(220,31,51,.20), transparent 42%),
+      radial-gradient(circle at 10% 90%, rgba(184,23,42,.28), transparent 45%),
+      var(--dark-900);
+    color:var(--white); padding:76px 0 0; text-align:center;
+  }
+  .hero .wrap{ max-width:720px; }
+  .hero .eyebrow{ color:var(--red-600); margin-bottom:16px; display:block; }
+  .hero h1{ font-size:clamp(2.1rem, 4.2vw, 3.2rem); font-weight:700; color:var(--white); margin-bottom:18px; }
+  .hero p{ font-size:clamp(1rem,1.3vw,1.1rem); color:#C7C6C8; max-width:52ch; margin:0 auto 30px; }
+  .hero-actions{ display:flex; flex-direction:column; align-items:center; gap:12px; padding-bottom:64px; }
+  .btn-primary{ display:inline-flex; align-items:center; gap:10px; background:var(--red-600); color:var(--white);
+    font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:1rem; padding:14px 28px; border-radius:10px; border:none;
+    cursor:pointer; text-decoration:none; transition:background .15s ease, transform .15s ease; }
+  .btn-primary:hover{ background:var(--red-700); transform:translateY(-1px); }
+  .hero-note{ display:inline-flex; align-items:center; gap:8px; background:rgba(220,31,51,.14); color:var(--red-600);
+    border:1px solid rgba(220,31,51,.4); padding:9px 18px; border-radius:999px; font-size:.85rem; font-weight:600; }
+
+  /* EVENT BAR */
+  .event-bar{
+    max-width:980px; margin:-56px auto 0; position:relative; z-index:2;
+    display:grid; grid-template-columns:repeat(3,1fr); gap:20px;
+  }
+  .event-card{
+    border-radius:18px; box-shadow:var(--shadow); padding:26px 24px; text-align:left;
+    border:1px solid var(--gray-300); background:var(--white);
+  }
+  .event-card.fecha{ background:linear-gradient(160deg,#FCE9EB,#FFFFFF 65%); border-color:#F3C7CC; }
+  .event-card.hora{ background:linear-gradient(160deg,#F1F0F0,#FFFFFF 65%); border-color:#D9D8DA; }
+  .event-card.lugar{ background:linear-gradient(160deg,#EAE9EA,#FFFFFF 65%); border-color:#CFCED0; }
+
+  .cal-tile{ width:62px; border-radius:12px; overflow:hidden; box-shadow:0 6px 14px rgba(220,31,51,.35); margin-bottom:16px; }
+  .cal-tile span{ display:block; text-align:center; }
+  .cal-tile .cal-month{ background:var(--red-600); color:var(--white); font-family:'IBM Plex Mono',monospace;
+    font-size:.68rem; font-weight:600; letter-spacing:.1em; padding:4px 0; }
+  .cal-tile .cal-day{ background:var(--white); color:var(--dark-900); font-family:'Space Grotesk',sans-serif;
+    font-weight:700; font-size:1.55rem; padding:5px 0; }
+
+  .event-card .event-icon{ width:46px; height:46px; border-radius:12px; display:flex; align-items:center; justify-content:center;
+    color:var(--white); margin-bottom:16px; }
+  .event-card.hora .event-icon{ background:var(--gray-700); }
+  .event-card.lugar .event-icon{ background:var(--dark-800); }
+
+  .event-card .eyebrow{ display:block; margin-bottom:6px; }
+  .event-card.fecha .eyebrow{ color:var(--red-700); }
+  .event-card.hora .eyebrow{ color:var(--gray-700); }
+  .event-card.lugar .eyebrow{ color:var(--dark-800); }
+  .event-card strong{ font-family:'Space Grotesk',sans-serif; font-size:1.08rem; display:block; margin-bottom:4px; color:var(--ink-900); }
+  .event-card .sub{ font-size:.84rem; color:var(--ink-600); display:block; }
+  .maps-link-btn{ display:inline-flex; align-items:center; gap:6px; margin-top:12px; background:var(--dark-900); color:var(--white);
+    font-size:.8rem; font-weight:600; padding:8px 14px; border-radius:999px; text-decoration:none; transition:background .15s ease; }
+  .maps-link-btn:hover{ background:var(--dark-800); }
+
+  @media (max-width:760px){
+    .event-bar{ grid-template-columns:1fr; margin-left:20px; margin-right:20px; }
+  }
+
+  /* ABOUT / FEATURES */
+  .about{ padding:88px 0 80px; }
+  .section-head{ max-width:600px; margin:0 auto 44px; }
+  .section-head .eyebrow{ color:var(--gray-700); margin-bottom:12px; display:block; }
+  .section-head h2{ font-size:clamp(1.6rem,2.6vw,2.1rem); margin-bottom:12px; }
+  .section-head p{ color:var(--ink-600); }
+  .feature-grid{ display:grid; grid-template-columns:repeat(auto-fit, minmax(230px,1fr)); gap:20px; }
+  .feature-card{ background:var(--white); border:1px solid var(--gray-300); border-radius:var(--radius); padding:26px 22px; box-shadow:var(--shadow); }
+  .feature-icon{ width:42px; height:42px; border-radius:10px; background:var(--gray-100); color:var(--gray-700);
+    display:flex; align-items:center; justify-content:center; margin-bottom:16px; }
+  .feature-card h3{ font-size:1.05rem; margin-bottom:8px; }
+  .feature-card p{ color:var(--ink-600); font-size:.92rem; }
+
+  /* FORM */
+  .form-section{ background:var(--white); padding:80px 0 96px; border-top:1px solid var(--gray-300); }
+  .form-card{ background:var(--paper); border:1px solid var(--gray-300); border-radius:20px; box-shadow:var(--shadow);
+    padding:clamp(24px,4vw,48px); max-width:660px; margin:0 auto; }
+  .form-card > h2{ font-size:clamp(1.5rem,2.4vw,1.9rem); margin-bottom:8px; }
+  .form-card > .subtitle{ color:var(--ink-600); margin-bottom:8px; display:block; }
+  .capacity-note{ display:inline-flex; align-items:center; gap:7px; background:#FBE7E9; color:var(--red-700);
+    font-size:.82rem; font-weight:600; padding:6px 12px; border-radius:999px; margin-bottom:30px; }
+
+  .field{ margin-bottom:18px; display:flex; flex-direction:column; gap:7px; }
+  .field-grid{ display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+  .field.full{ grid-column:1 / -1; }
+  .conditional-field{ display:none; margin-top:4px; }
+  .conditional-field.show{ display:flex; }
+  label{ font-size:.88rem; font-weight:600; }
+  label .opt{ font-weight:400; color:var(--ink-600); }
+  .req{ color:var(--red-700); }
+  input[type=text], input[type=email], input[type=tel], select, textarea{
+    font-family:inherit; font-size:.95rem; color:var(--ink-900); border:1px solid var(--gray-300); border-radius:9px;
+    padding:11px 13px; background:var(--white); width:100%; }
+  textarea{ resize:vertical; min-height:80px; }
+  input:focus, select:focus, textarea:focus{ border-color:var(--gray-700); }
+  .consent{ background:var(--gray-100); border-radius:12px; padding:16px 18px; display:flex; gap:12px; align-items:flex-start; margin:8px 0 28px; }
+  .consent input{ margin-top:3px; accent-color:var(--gray-700); width:17px; height:17px; }
+  .check-grid{ display:grid; grid-template-columns:1fr 1fr; gap:11px 18px; margin-top:8px; }
+  .check-row{ display:flex; align-items:center; gap:9px; font-size:.92rem; font-weight:400; }
+  .check-row input[type=checkbox]{ accent-color:var(--gray-700); width:17px; height:17px; }
+  @media (max-width:640px){ .check-grid{ grid-template-columns:1fr; } }
+  .consent label{ font-weight:400; font-size:.88rem; color:var(--ink-600); }
+  .btn-submit{ width:100%; background:var(--dark-900); color:var(--white); font-family:'Space Grotesk',sans-serif; font-weight:600;
+    font-size:1rem; padding:16px; border-radius:10px; border:none; cursor:pointer; transition:background .15s ease; }
+  .btn-submit:hover{ background:var(--dark-800); }
+  .btn-submit:disabled{ opacity:.6; cursor:not-allowed; }
+  .form-error{ display:none; color:#B23A2E; background:#FBEAE8; border:1px solid #F1C7C1; border-radius:10px;
+    padding:10px 14px; font-size:.85rem; text-align:center; margin-bottom:16px; }
+  .form-error.show{ display:block; }
+
+  .thanks{ display:none; text-align:center; padding:24px 8px 8px; }
+  .thanks.show{ display:block; }
+  .thanks .check{ width:56px; height:56px; border-radius:50%; background:var(--gray-100); color:var(--gray-700);
+    display:flex; align-items:center; justify-content:center; margin:0 auto 20px; }
+  .thanks h3{ font-size:1.3rem; margin-bottom:10px; }
+  .thanks p{ color:var(--ink-600); max-width:44ch; margin:0 auto; }
+
+  @media (max-width:640px){ .field-grid{ grid-template-columns:1fr; } }
+
+  /* FOOTER */
+  .site-footer{ background:var(--dark-900); color:#B5B4B7; padding:40px 0; }
+  .site-footer .wrap{ display:flex; justify-content:space-between; gap:20px; flex-wrap:wrap; align-items:flex-start; }
+  .site-footer strong{ color:var(--white); font-family:'Space Grotesk',sans-serif; display:block; margin-bottom:6px; }
+  .site-footer p{ font-size:.88rem; }
+  .fine{ font-size:.78rem; color:#8B8A8D; margin-top:26px; }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="wrap">
+    <div class="brand">
+      <strong>UAGM · Recintos de Cupey, Gurabo y Carolina</strong>
+      <span>Oficina de Carreras y Colocaciones</span>
+    </div>
+    <span class="badge">Registro de asistencia</span>
+  </div>
+</header>
+
+<main>
+  <section class="hero">
+    <div class="wrap">
+      <span class="eyebrow">Jornada de Integración Patronal</span>
+      <h1>Symplicity Connect</h1>
+      <p>Una mañana para conocer Symplicity, la plataforma que conecta tu empresa con el talento de UAGM Cupey, Gurabo y Carolina, y dejar tu perfil listo para publicar oportunidades.</p>
+      <div class="hero-actions">
+        <a href="#formulario" class="btn-primary">
+          Confirmar mi asistencia
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </a>
+        <span class="hero-note">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 9v4M12 17h.01"/><circle cx="12" cy="12" r="9"/></svg>
+          Espacios limitados — confirma antes del 5 de agosto 2026
+        </span>
+      </div>
+    </div>
+
+    <div class="event-bar">
+      <div class="event-card fecha">
+        <div class="cal-tile">
+          <span class="cal-month">AGO</span>
+          <span class="cal-day">14</span>
+        </div>
+        <span class="eyebrow">Fecha</span>
+        <strong>Viernes, 14 de agosto</strong>
+        <span class="sub">2026</span>
+      </div>
+      <div class="event-card hora">
+        <div class="event-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>
+        </div>
+        <span class="eyebrow">Hora</span>
+        <strong>De 9:00 AM a 1:00 PM</strong>
+        <span class="sub">Se estará recibiendo a los invitados desde las 8:30 AM. Habrá meriendas y refrigerios.</span>
+      </div>
+      <div class="event-card lugar">
+        <div class="event-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-6.1-7-11.5A7 7 0 0 1 19 9.5C19 14.9 12 21 12 21Z"/><circle cx="12" cy="9.5" r="2.4"/></svg>
+        </div>
+        <span class="eyebrow">Lugar</span>
+        <strong>Museo y Centro de Estudios Humanísticos Dra. Josefina Camacho de la Nuez</strong>
+        <span class="sub">Carretera 189, Km 3.3, Gurabo, PR</span>
+        <a class="maps-link-btn" href="https://www.google.com/maps/search/?api=1&query=Museo+y+Centro+de+Estudios+Humanisticos+Josefina+Camacho+de+la+Nuez+Carretera+189+Km+3.3+Gurabo+PR" target="_blank" rel="noopener">
+          Ver en Google Maps
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M7 17 17 7M8 7h9v9"/></svg>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <section class="about">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="eyebrow">Sobre la actividad</span>
+        <h2>Qué te vas a llevar de esta jornada</h2>
+        <p>Una sesión práctica, pensada para dejar tu empresa lista para reclutar a través de Symplicity.</p>
+      </div>
+      <div class="feature-grid">
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="12" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+          </div>
+          <h3>Conoce la plataforma</h3>
+          <p>Un recorrido guiado por Symplicity: cómo publicar vacantes y acceder al talento de UAGM Cupey, Gurabo y Carolina.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 13.5 9.5 18 19 7"/></svg>
+          </div>
+          <h3>Deja tu perfil listo</h3>
+          <p>Trae la información de tu empresa y el equipo te estará apoyando para configurar tu cuenta en el momento.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3.2"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"/><circle cx="18" cy="8" r="2.6"/><path d="M15.8 14.3c2.9.4 4.7 2.6 4.7 5.7"/></svg>
+          </div>
+          <h3>Conecta con otros patronos</h3>
+          <p>Comparte espacio con otras empresas de la región que también están integrándose a la plataforma.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="form-section" id="formulario">
+    <div class="wrap">
+      <div class="form-card">
+
+        <div id="formView">
+          <h2>Confirma tu asistencia</h2>
+          <span class="subtitle">Completa tus datos para reservar tu lugar en la actividad.</span>
+          <span class="capacity-note">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 9v4M12 17h.01"/><circle cx="12" cy="12" r="9"/></svg>
+            Espacios limitados · Confirma antes del 5 de agosto 2026
+          </span>
+
+          <form id="asistenciaForm" novalidate>
+            <div class="field-grid">
+              <div class="field">
+                <label for="empresa">Nombre de la empresa u organización <span class="req">*</span></label>
+                <input type="text" id="empresa" name="empresa" required>
+              </div>
+              <div class="field">
+                <label for="nombre">Nombre del participante <span class="req">*</span></label>
+                <input type="text" id="nombre" name="nombre" required>
+              </div>
+              <div class="field">
+                <label for="puesto">Puesto o cargo <span class="req">*</span></label>
+                <input type="text" id="puesto" name="puesto" required>
+              </div>
+              <div class="field">
+                <label for="correo">Correo electrónico <span class="req">*</span></label>
+                <input type="email" id="correo" name="correo" required>
+              </div>
+              <div class="field">
+                <label for="telefono">Teléfono <span class="req">*</span></label>
+                <input type="tel" id="telefono" name="telefono" placeholder="787-000-0000" maxlength="12" required>
+              </div>
+              <div class="field">
+                <label for="localidad">Localidad <span class="req">*</span></label>
+                <select id="localidad" name="localidad" required>
+                  <option value="" selected disabled>Selecciona una opción</option>
+                  <optgroup label="Área">
+                    <option>Área Metro</option>
+                    <option>Área Norte</option>
+                    <option>Área Sur</option>
+                    <option>Área Este</option>
+                    <option>Área Oeste</option>
+                    <option>Área Centro</option>
+                  </optgroup>
+                  <optgroup label="Municipios">
+                  <option>Adjuntas</option>
+                  <option>Aguada</option>
+                  <option>Aguadilla</option>
+                  <option>Aguas Buenas</option>
+                  <option>Aibonito</option>
+                  <option>Añasco</option>
+                  <option>Arecibo</option>
+                  <option>Arroyo</option>
+                  <option>Barceloneta</option>
+                  <option>Barranquitas</option>
+                  <option>Bayamón</option>
+                  <option>Cabo Rojo</option>
+                  <option>Caguas</option>
+                  <option>Camuy</option>
+                  <option>Canóvanas</option>
+                  <option>Carolina</option>
+                  <option>Cataño</option>
+                  <option>Cayey</option>
+                  <option>Ceiba</option>
+                  <option>Ciales</option>
+                  <option>Cidra</option>
+                  <option>Coamo</option>
+                  <option>Comerío</option>
+                  <option>Corozal</option>
+                  <option>Culebra</option>
+                  <option>Dorado</option>
+                  <option>Fajardo</option>
+                  <option>Florida</option>
+                  <option>Guánica</option>
+                  <option>Guayama</option>
+                  <option>Guayanilla</option>
+                  <option>Guaynabo</option>
+                  <option>Gurabo</option>
+                  <option>Hatillo</option>
+                  <option>Hormigueros</option>
+                  <option>Humacao</option>
+                  <option>Isabela</option>
+                  <option>Jayuya</option>
+                  <option>Juana Díaz</option>
+                  <option>Juncos</option>
+                  <option>Lajas</option>
+                  <option>Lares</option>
+                  <option>Las Marías</option>
+                  <option>Las Piedras</option>
+                  <option>Loíza</option>
+                  <option>Luquillo</option>
+                  <option>Manatí</option>
+                  <option>Maricao</option>
+                  <option>Maunabo</option>
+                  <option>Mayagüez</option>
+                  <option>Moca</option>
+                  <option>Morovis</option>
+                  <option>Naguabo</option>
+                  <option>Naranjito</option>
+                  <option>Orocovis</option>
+                  <option>Patillas</option>
+                  <option>Peñuelas</option>
+                  <option>Ponce</option>
+                  <option>Quebradillas</option>
+                  <option>Rincón</option>
+                  <option>Río Grande</option>
+                  <option>Sabana Grande</option>
+                  <option>Salinas</option>
+                  <option>San Germán</option>
+                  <option>San Juan</option>
+                  <option>San Lorenzo</option>
+                  <option>San Sebastián</option>
+                  <option>Santa Isabel</option>
+                  <option>Toa Alta</option>
+                  <option>Toa Baja</option>
+                  <option>Trujillo Alto</option>
+                  <option>Utuado</option>
+                  <option>Vega Alta</option>
+                  <option>Vega Baja</option>
+                  <option>Vieques</option>
+                  <option>Villalba</option>
+                  <option>Yabucoa</option>
+                  <option>Yauco</option>
+                  </optgroup>
+                </select>
+              </div>
+            </div>
+
+            <div class="field">
+              <label>Recinto o Centro Universitario de tu interés para realizar actividades <span class="opt">(selecciona uno o varios)</span></label>
+              <div class="check-grid">
+                <label class="check-row"><input type="checkbox" name="recintos" value="Recinto de Carolina"> Recinto de Carolina</label>
+                <label class="check-row"><input type="checkbox" name="recintos" value="Recinto de Gurabo"> Recinto de Gurabo</label>
+                <label class="check-row"><input type="checkbox" name="recintos" value="Recinto de Cupey"> Recinto de Cupey</label>
+                <label class="check-row"><input type="checkbox" name="recintos" value="Centro Universitario de Bayamón"> Centro Universitario de Bayamón</label>
+                <label class="check-row"><input type="checkbox" name="recintos" value="Centro Universitario de Aguadilla"> Centro Universitario de Aguadilla</label>
+                <label class="check-row"><input type="checkbox" name="recintos" value="Centro Universitario de Santa Isabel"> Centro Universitario de Santa Isabel</label>
+                <label class="check-row"><input type="checkbox" name="recintos" value="Centro Universitario de Ponce"> Centro Universitario de Ponce</label>
+                <label class="check-row"><input type="checkbox" name="recintos" value="Centro Universitario de Barceloneta"> Centro Universitario de Barceloneta</label>
+                <label class="check-row"><input type="checkbox" name="recintos" value="Centro Universitario de Cabo Rojo"> Centro Universitario de Cabo Rojo</label>
+                <label class="check-row"><input type="checkbox" name="recintos" value="Centro Universitario de Cayey"> Centro Universitario de Cayey</label>
+                <label class="check-row"><input type="checkbox" name="recintos" value="Centro Universitario de Yabucoa"> Centro Universitario de Yabucoa</label>
+              </div>
+            </div>
+
+            <div class="field">
+              <label for="dieta">Dieta especial o alergias</label>
+              <select id="dieta" name="dieta">
+                <option value="No" selected>No</option>
+                <option value="Sí">Sí</option>
+              </select>
+              <div class="field conditional-field" id="dietaCualWrap">
+                <label for="dietaCual">¿Cuál?</label>
+                <input type="text" id="dietaCual" name="dieta_cual">
+              </div>
+            </div>
+
+            <div class="field">
+              <label for="interes">Interesado en ofrecer o reclutar candidatos para <span class="req">*</span></label>
+              <select id="interes" name="interes" required>
+                <option value="" selected disabled>Selecciona una opción</option>
+                <option value="Oportunidades de empleo">Oportunidades de empleo</option>
+                <option value="Oportunidades de internados">Oportunidades de internados</option>
+                <option value="Ambos">Ambos</option>
+              </select>
+            </div>
+
+            <div class="consent">
+              <input type="checkbox" id="confirmacion" name="confirmacion" required>
+              <label for="confirmacion">Confirmo mi asistencia a Symplicity Connect el viernes, 14 de agosto 2026, de 9:00 AM a 1:00 PM en el Museo y Centro de Estudios Humanísticos Dra. Josefina Camacho de la Nuez. <span class="req">*</span></label>
+            </div>
+
+            <p class="form-error" id="formError">No pudimos enviar tu registro. Verifica tu conexión e intenta de nuevo, o escríbenos directamente.</p>
+            <button type="submit" class="btn-submit">Confirmar mi asistencia</button>
+          </form>
+        </div>
+
+        <div class="thanks" id="thanksView">
+          <div class="check">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+          </div>
+          <h3>¡Tu lugar está reservado!</h3>
+          <p>Te esperamos el viernes, 14 de agosto 2026, de 9:00 AM a 1:00 PM en el Museo y Centro de Estudios Humanísticos Dra. Josefina Camacho de la Nuez. Recibirás un recordatorio antes de la actividad.</p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <div>
+      <strong>Oficina de Carreras y Colocaciones</strong>
+      <p>Universidad Ana G. Méndez · Recintos de Cupey, Gurabo y Carolina</p>
+    </div>
+    <div>
+      <strong style="font-size:.85rem;">¿Preguntas sobre la actividad?</strong>
+      <p>[correo de la oficina]</p>
+      <p>[teléfono de la oficina]</p>
+    </div>
+  </div>
+  <div class="wrap fine">© 2026 UAGM Cupey, Gurabo y Carolina · Symplicity Connect</div>
+</footer>
+
+<script src="https://www.gstatic.com/firebasejs/12.15.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore-compat.js"></script>
+<script>
+  const telefonoInput = document.getElementById('telefono');
+  telefonoInput.addEventListener('input', function(e){
+    let digits = e.target.value.replace(/\D/g, '').slice(0, 10);
+    let formatted = digits;
+    if (digits.length > 6) {
+      formatted = digits.slice(0,3) + '-' + digits.slice(3,6) + '-' + digits.slice(6);
+    } else if (digits.length > 3) {
+      formatted = digits.slice(0,3) + '-' + digits.slice(3);
+    }
+    e.target.value = formatted;
+  });
+
+  const dietaSelect = document.getElementById('dieta');
+  const dietaCualWrap = document.getElementById('dietaCualWrap');
+  function toggleDieta(){
+    dietaCualWrap.classList.toggle('show', dietaSelect.value === 'Sí');
+  }
+  dietaSelect.addEventListener('change', toggleDieta);
+  toggleDieta();
+
+  // ⚠️ Reemplaza esto con la configuración de TU proyecto de Firebase
+  // (Firebase Console → ⚙️ Configuración del proyecto → tus apps → SDK setup and configuration)
+  const firebaseConfig = {
+  apiKey: "AIzaSyBFgSuKNJMUoVcKgHjsqOsInArSPBsb32A",
+  authDomain: "uagm-portal-de-empleo-17aed.firebaseapp.com",
+  projectId: "uagm-portal-de-empleo-17aed",
+  storageBucket: "uagm-portal-de-empleo-17aed.firebasestorage.app",
+  messagingSenderId: "582147767835",
+  appId: "1:582147767835:web:546ab8f2557b6da6ccc2be"
+};
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+
+  const form = document.getElementById('asistenciaForm');
+  const submitBtn = form.querySelector('.btn-submit');
+  const errorMsg = document.getElementById('formError');
+
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
+    if(!form.checkValidity()){
+      form.reportValidity();
+      return;
+    }
+
+    const data = {
+      empresa: document.getElementById('empresa').value,
+      nombre: document.getElementById('nombre').value,
+      puesto: document.getElementById('puesto').value,
+      interes: document.getElementById('interes').value,
+      correo: document.getElementById('correo').value,
+      telefono: document.getElementById('telefono').value,
+      localidad: document.getElementById('localidad').value,
+      recintos: Array.from(document.querySelectorAll('input[name="recintos"]:checked')).map(function(cb){ return cb.value; }),
+      dieta: document.getElementById('dieta').value,
+      dieta_cual: document.getElementById('dietaCual').value,
+      confirmacion: document.getElementById('confirmacion').checked ? 'Sí' : 'No',
+      creado: firebase.firestore.FieldValue.serverTimestamp()
+    };
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Enviando...';
+    errorMsg.classList.remove('show');
+
+    db.collection('symplicity_connect_2026').add(data)
+      .then(function(){
+        document.getElementById('formView').style.display = 'none';
+        document.getElementById('thanksView').classList.add('show');
+        document.getElementById('thanksView').scrollIntoView({behavior:'smooth', block:'center'});
+      })
+      .catch(function(err){
+        console.error(err);
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Confirmar mi asistencia';
+        errorMsg.classList.add('show');
+      });
+  });
+</script>
+
+</body>
+</html>
