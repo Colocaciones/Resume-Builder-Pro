@@ -65,7 +65,7 @@
 
   .table-wrap{ background:var(--white); border:1px solid var(--gray-300); border-radius:14px; box-shadow:var(--shadow);
     overflow-x:auto; }
-  table{ border-collapse:collapse; width:100%; min-width:1000px; }
+  table{ border-collapse:collapse; width:100%; min-width:1080px; }
   thead th{ text-align:left; font-family:'IBM Plex Mono',monospace; font-size:.68rem; letter-spacing:.06em; text-transform:uppercase;
     color:var(--ink-600); background:var(--gray-100); padding:12px 14px; white-space:nowrap; position:sticky; top:0; }
   tbody td{ padding:12px 14px; font-size:.87rem; border-top:1px solid var(--gray-100); vertical-align:top; }
@@ -74,6 +74,9 @@
   td.recintos{ max-width:220px; }
   .tag{ display:inline-block; background:var(--gray-100); color:var(--dark-900); font-size:.76rem; padding:2px 8px;
     border-radius:999px; margin:1px 3px 1px 0; white-space:nowrap; }
+  .btn-delete{ background:none; border:1px solid var(--gray-300); color:var(--red-700); width:32px; height:32px;
+    border-radius:8px; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; }
+  .btn-delete:hover{ background:#FBE7E9; border-color:var(--red-600); }
 
   .state-msg{ text-align:center; padding:60px 20px; color:var(--ink-600); }
   .state-msg.hidden{ display:none; }
@@ -130,6 +133,7 @@
           <th>Dieta / Alergias</th>
           <th>Confirmó</th>
           <th>Fecha de registro</th>
+          <th>Acciones</th>
         </tr>
       </thead>
       <tbody id="tableBody"></tbody>
@@ -145,13 +149,13 @@
   // ⚠️ Usa AQUÍ el mismo firebaseConfig de tu portal de empleos (el mismo
   // proyecto que ya usas), para leer la colección "symplicity_connect_2026".
   const firebaseConfig = {
-  apiKey: "AIzaSyBFgSuKNJMUoVcKgHjsqOsInArSPBsb32A",
-  authDomain: "uagm-portal-de-empleo-17aed.firebaseapp.com",
-  projectId: "uagm-portal-de-empleo-17aed",
-  storageBucket: "uagm-portal-de-empleo-17aed.firebasestorage.app",
-  messagingSenderId: "582147767835",
-  appId: "1:582147767835:web:546ab8f2557b6da6ccc2be"
-};
+    apiKey: "TU_API_KEY",
+    authDomain: "TU_PROYECTO.firebaseapp.com",
+    projectId: "TU_PROYECTO",
+    storageBucket: "TU_PROYECTO.appspot.com",
+    messagingSenderId: "TU_SENDER_ID",
+    appId: "TU_APP_ID"
+  };
   firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore();
 
@@ -217,7 +221,8 @@
         '<td></td>' +
         '<td></td>' +
         '<td></td>' +
-        '<td></td>';
+        '<td></td>' +
+        '<td><button class="btn-delete" title="Eliminar registro"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m-8 0 1 13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1l1-13"/></svg></button></td>';
 
       const cells = tr.querySelectorAll('td');
       cells[0].textContent = r.empresa || '—';
@@ -231,6 +236,15 @@
       cells[9].textContent = r.confirmacion || '—';
       cells[10].textContent = formatFecha(r.creado);
 
+      tr.querySelector('.btn-delete').addEventListener('click', function(){
+        const confirmMsg = '¿Eliminar el registro de "' + (r.empresa || 'esta empresa') + '"? Esta acción no se puede deshacer.';
+        if (window.confirm(confirmMsg)){
+          db.collection('symplicity_connect_2026').doc(r._id).delete().catch(function(err){
+            alert('No se pudo eliminar: ' + err.message);
+          });
+        }
+      });
+
       tbody.appendChild(tr);
     });
   }
@@ -238,7 +252,7 @@
   function loadData(){
     document.getElementById('loadingMsg').classList.remove('hidden');
     db.collection('symplicity_connect_2026').orderBy('creado', 'desc').onSnapshot(function(snapshot){
-      allRows = snapshot.docs.map(function(doc){ return doc.data(); });
+      allRows = snapshot.docs.map(function(doc){ return Object.assign({ _id: doc.id }, doc.data()); });
       document.getElementById('loadingMsg').classList.add('hidden');
       document.getElementById('countBadge').textContent = allRows.length + (allRows.length === 1 ? ' registro' : ' registros');
       applyFilter();
