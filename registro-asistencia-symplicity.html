@@ -538,12 +538,17 @@
   const confirmacionLabel = document.getElementById('confirmacionLabel');
 
   function checkCapacity(){
-    return db.collection('symplicity_connect_2026').count().get().then(function(snap){
-      return snap.data().count >= CUPO_MAXIMO;
-    }).catch(function(err){
-      console.error('No se pudo revisar el cupo, se procede como si hubiera espacio:', err);
-      return false;
-    });
+    try {
+      return db.collection('symplicity_connect_2026').get().then(function(snapshot){
+        return snapshot.size >= CUPO_MAXIMO;
+      }).catch(function(err){
+        console.error('No se pudo revisar el cupo (error async), se procede como si hubiera espacio:', err);
+        return false;
+      });
+    } catch (err) {
+      console.error('No se pudo revisar el cupo (error sync), se procede como si hubiera espacio:', err);
+      return Promise.resolve(false);
+    }
   }
 
   function showWaitlistUI(){
@@ -555,9 +560,9 @@
     submitBtn.textContent = 'Unirme a la lista de espera';
   }
 
-  // Revisa el cupo al cargar la página, para mostrar el aviso correcto desde el inicio
-  checkCapacity().then(function(full){ if (full) showWaitlistUI(); });
-
+  // El envío del formulario queda registrado PRIMERO, antes de cualquier
+  // verificación de cupo, para que el registro nunca dependa de que esa
+  // verificación funcione.
   form.addEventListener('submit', function(e){
     e.preventDefault();
     if(!form.checkValidity()){
@@ -605,6 +610,10 @@
       errorMsg.classList.add('show');
     });
   });
+
+  // Revisa el cupo al cargar la página, para mostrar el aviso correcto desde el inicio.
+  // Esto va DESPUÉS del addEventListener de arriba a propósito.
+  checkCapacity().then(function(full){ if (full) showWaitlistUI(); });
 </script>
 
 </body>
