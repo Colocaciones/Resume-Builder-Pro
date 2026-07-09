@@ -560,6 +560,22 @@
     submitBtn.textContent = 'Unirme a la lista de espera';
   }
 
+  function checkDuplicado(correo){
+    try {
+      return db.collection('symplicity_connect_2026').where('correo', '==', correo).limit(1).get()
+        .then(function(snapshot){ return !snapshot.empty; })
+        .catch(function(err){
+          console.error('No se pudo revisar duplicados (error async), se procede:', err);
+          return false;
+        });
+    } catch (err) {
+      console.error('No se pudo revisar duplicados (error sync), se procede:', err);
+      return Promise.resolve(false);
+    }
+  }
+
+  const defaultErrorText = errorMsg.textContent;
+
   // El envío del formulario queda registrado PRIMERO, antes de cualquier
   // verificación de cupo, para que el registro nunca dependa de que esa
   // verificación funcione.
@@ -570,38 +586,51 @@
       return;
     }
 
+    const correoValue = document.getElementById('correo').value.trim();
+
     submitBtn.disabled = true;
     submitBtn.textContent = 'Enviando...';
+    errorMsg.textContent = defaultErrorText;
     errorMsg.classList.remove('show');
 
-    // Vuelve a revisar el cupo justo antes de enviar, por si cambió mientras la persona llenaba el formulario
-    checkCapacity().then(function(isFull){
-      if (isFull) showWaitlistUI();
+    checkDuplicado(correoValue).then(function(yaExiste){
+      if (yaExiste){
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Confirmar mi asistencia';
+        errorMsg.textContent = 'Ya existe un registro con este correo electrónico. Si necesitas hacer un cambio, escríbenos directamente.';
+        errorMsg.classList.add('show');
+        return;
+      }
 
-      const data = {
-        empresa: document.getElementById('empresa').value,
-        nombre: document.getElementById('nombre').value,
-        puesto: document.getElementById('puesto').value,
-        interes: document.getElementById('interes').value,
-        correo: document.getElementById('correo').value,
-        telefono: document.getElementById('telefono').value,
-        localidad: document.getElementById('localidad').value,
-        recintos: Array.from(document.querySelectorAll('input[name="recintos"]:checked')).map(function(cb){ return cb.value; }),
-        dieta: document.getElementById('dieta').value,
-        dieta_cual: document.getElementById('dietaCual').value,
-        confirmacion: document.getElementById('confirmacion').checked ? 'Sí' : 'No',
-        lista_espera: isFull,
-        creado: firebase.firestore.FieldValue.serverTimestamp()
-      };
+      // Vuelve a revisar el cupo justo antes de enviar, por si cambió mientras la persona llenaba el formulario
+      return checkCapacity().then(function(isFull){
+        if (isFull) showWaitlistUI();
 
-      return db.collection('symplicity_connect_2026').add(data).then(function(){
-        if (isFull){
-          document.getElementById('thanksTitle').textContent = 'Quedaste en la lista de espera';
-          document.getElementById('thanksText').textContent = 'Hemos alcanzado el cupo máximo para Symplicity Connect. Guardamos tu registro en la lista de espera y te contactaremos si se libera un espacio antes del viernes, 14 de agosto 2026.';
-        }
-        document.getElementById('formView').style.display = 'none';
-        document.getElementById('thanksView').classList.add('show');
-        document.getElementById('thanksView').scrollIntoView({behavior:'smooth', block:'center'});
+        const data = {
+          empresa: document.getElementById('empresa').value,
+          nombre: document.getElementById('nombre').value,
+          puesto: document.getElementById('puesto').value,
+          interes: document.getElementById('interes').value,
+          correo: correoValue,
+          telefono: document.getElementById('telefono').value,
+          localidad: document.getElementById('localidad').value,
+          recintos: Array.from(document.querySelectorAll('input[name="recintos"]:checked')).map(function(cb){ return cb.value; }),
+          dieta: document.getElementById('dieta').value,
+          dieta_cual: document.getElementById('dietaCual').value,
+          confirmacion: document.getElementById('confirmacion').checked ? 'Sí' : 'No',
+          lista_espera: isFull,
+          creado: firebase.firestore.FieldValue.serverTimestamp()
+        };
+
+        return db.collection('symplicity_connect_2026').add(data).then(function(){
+          if (isFull){
+            document.getElementById('thanksTitle').textContent = 'Quedaste en la lista de espera';
+            document.getElementById('thanksText').textContent = 'Hemos alcanzado el cupo máximo para Symplicity Connect. Guardamos tu registro en la lista de espera y te contactaremos si se libera un espacio antes del viernes, 14 de agosto 2026.';
+          }
+          document.getElementById('formView').style.display = 'none';
+          document.getElementById('thanksView').classList.add('show');
+          document.getElementById('thanksView').scrollIntoView({behavior:'smooth', block:'center'});
+        });
       });
     }).catch(function(err){
       console.error(err);
