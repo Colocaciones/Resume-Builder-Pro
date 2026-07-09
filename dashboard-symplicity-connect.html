@@ -165,7 +165,7 @@
   firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore();
 
-  const PASSWORD = "uagm2026";
+  const PASSWORD = "Simplicity 2026";
   let allRows = [];
 
   // --- Contraseña ---
@@ -214,7 +214,11 @@
         return '<span class="tag">' + rc.replace('Centro Universitario de ', 'CU ').replace('Recinto de ', 'R. ') + '</span>';
       }).join('');
 
-      const dietaTexto = r.dieta === 'Sí' ? ('Sí' + (r.dieta_cual ? ' — ' + r.dieta_cual : '')) : 'No';
+      const dietaDetalle = [
+        r.dieta_especial ? ('Dieta: ' + r.dieta_especial) : null,
+        r.dieta_alergia ? ('Alergia: ' + r.dieta_alergia) : null
+      ].filter(Boolean).join(' · ');
+      const dietaTexto = r.dieta === 'Sí' ? ('Sí' + (dietaDetalle ? ' — ' + dietaDetalle : '')) : 'No';
       const acomodoTexto = r.acomodo === 'Sí' ? ('Sí' + (r.acomodo_cual ? ' — ' + r.acomodo_cual : '')) : 'No';
       const estadoHtml = r.lista_espera
         ? '<span class="status-badge espera">Lista de espera</span>'
@@ -295,7 +299,13 @@
       return [
         r.empresa || '', (r.lista_espera ? 'Lista de espera' : 'Confirmado'), r.nombre || '', r.puesto || '', r.correo || '', r.telefono || '',
         r.extension || '', r.localidad || '', (r.recintos || []).join(' | '), r.interes || '',
-        (r.dieta === 'Sí' ? ('Sí' + (r.dieta_cual ? ' - ' + r.dieta_cual : '')) : 'No'),
+        (function(){
+          var detalle = [
+            r.dieta_especial ? ('Dieta: ' + r.dieta_especial) : null,
+            r.dieta_alergia ? ('Alergia: ' + r.dieta_alergia) : null
+          ].filter(Boolean).join(' · ');
+          return r.dieta === 'Sí' ? ('Sí' + (detalle ? ' - ' + detalle : '')) : 'No';
+        })(),
         (r.acomodo === 'Sí' ? ('Sí' + (r.acomodo_cual ? ' - ' + r.acomodo_cual : '')) : 'No'),
         r.confirmacion || '', formatFecha(r.creado)
       ];
