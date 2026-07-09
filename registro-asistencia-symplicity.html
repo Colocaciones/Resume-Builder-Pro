@@ -540,6 +540,9 @@
   function checkCapacity(){
     return db.collection('symplicity_connect_2026').count().get().then(function(snap){
       return snap.data().count >= CUPO_MAXIMO;
+    }).catch(function(err){
+      console.error('No se pudo revisar el cupo, se procede como si hubiera espacio:', err);
+      return false;
     });
   }
 
@@ -586,22 +589,20 @@
         creado: firebase.firestore.FieldValue.serverTimestamp()
       };
 
-      db.collection('symplicity_connect_2026').add(data)
-        .then(function(){
-          if (isFull){
-            document.getElementById('thanksTitle').textContent = 'Quedaste en la lista de espera';
-            document.getElementById('thanksText').textContent = 'Hemos alcanzado el cupo de 150 personas para Symplicity Connect. Guardamos tu registro en la lista de espera y te contactaremos si se libera un espacio antes del viernes, 14 de agosto 2026.';
-          }
-          document.getElementById('formView').style.display = 'none';
-          document.getElementById('thanksView').classList.add('show');
-          document.getElementById('thanksView').scrollIntoView({behavior:'smooth', block:'center'});
-        })
-        .catch(function(err){
-          console.error(err);
-          submitBtn.disabled = false;
-          submitBtn.textContent = isFull ? 'Unirme a la lista de espera' : 'Confirmar mi asistencia';
-          errorMsg.classList.add('show');
-        });
+      return db.collection('symplicity_connect_2026').add(data).then(function(){
+        if (isFull){
+          document.getElementById('thanksTitle').textContent = 'Quedaste en la lista de espera';
+          document.getElementById('thanksText').textContent = 'Hemos alcanzado el cupo máximo para Symplicity Connect. Guardamos tu registro en la lista de espera y te contactaremos si se libera un espacio antes del viernes, 14 de agosto 2026.';
+        }
+        document.getElementById('formView').style.display = 'none';
+        document.getElementById('thanksView').classList.add('show');
+        document.getElementById('thanksView').scrollIntoView({behavior:'smooth', block:'center'});
+      });
+    }).catch(function(err){
+      console.error(err);
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Confirmar mi asistencia';
+      errorMsg.classList.add('show');
     });
   });
 </script>
