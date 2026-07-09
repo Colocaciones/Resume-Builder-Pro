@@ -65,7 +65,7 @@
 
   .table-wrap{ background:var(--white); border:1px solid var(--gray-300); border-radius:14px; box-shadow:var(--shadow);
     overflow-x:auto; }
-  table{ border-collapse:collapse; width:100%; min-width:1180px; }
+  table{ border-collapse:collapse; width:100%; min-width:1300px; }
   thead th{ text-align:left; font-family:'IBM Plex Mono',monospace; font-size:.68rem; letter-spacing:.06em; text-transform:uppercase;
     color:var(--ink-600); background:var(--gray-100); padding:12px 14px; white-space:nowrap; position:sticky; top:0; }
   tbody td{ padding:12px 14px; font-size:.87rem; border-top:1px solid var(--gray-100); vertical-align:top; }
@@ -135,6 +135,7 @@
           <th>Recintos de interés</th>
           <th>Interés</th>
           <th>Dieta / Alergias</th>
+          <th>Acomodo razonable</th>
           <th>Confirmó</th>
           <th>Fecha de registro</th>
           <th>Acciones</th>
@@ -213,6 +214,7 @@
       }).join('');
 
       const dietaTexto = r.dieta === 'Sí' ? ('Sí' + (r.dieta_cual ? ' — ' + r.dieta_cual : '')) : 'No';
+      const acomodoTexto = r.acomodo === 'Sí' ? ('Sí' + (r.acomodo_cual ? ' — ' + r.acomodo_cual : '')) : 'No';
       const estadoHtml = r.lista_espera
         ? '<span class="status-badge espera">Lista de espera</span>'
         : '<span class="status-badge confirmado">Confirmado</span>';
@@ -230,6 +232,7 @@
         '<td></td>' +
         '<td></td>' +
         '<td></td>' +
+        '<td></td>' +
         '<td><button class="btn-delete" title="Eliminar registro"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m-8 0 1 13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1l1-13"/></svg></button></td>';
 
       const cells = tr.querySelectorAll('td');
@@ -241,8 +244,9 @@
       cells[6].textContent = r.localidad || '—';
       cells[8].textContent = r.interes || '—';
       cells[9].textContent = dietaTexto;
-      cells[10].textContent = r.confirmacion || '—';
-      cells[11].textContent = formatFecha(r.creado);
+      cells[10].textContent = acomodoTexto;
+      cells[11].textContent = r.confirmacion || '—';
+      cells[12].textContent = formatFecha(r.creado);
 
       tr.querySelector('.btn-delete').addEventListener('click', function(){
         const confirmMsg = '¿Eliminar el registro de "' + (r.empresa || 'esta empresa') + '"? Esta acción no se puede deshacer.';
@@ -283,12 +287,13 @@
 
   // --- Exportar CSV ---
   document.getElementById('exportBtn').addEventListener('click', function(){
-    const headers = ['Empresa','Estado','Participante','Puesto','Correo','Teléfono','Localidad','Recintos de interés','Interés','Dieta/Alergias','Confirmó','Fecha de registro'];
+    const headers = ['Empresa','Estado','Participante','Puesto','Correo','Teléfono','Localidad','Recintos de interés','Interés','Dieta/Alergias','Acomodo razonable','Confirmó','Fecha de registro'];
     const rows = allRows.map(function(r){
       return [
         r.empresa || '', (r.lista_espera ? 'Lista de espera' : 'Confirmado'), r.nombre || '', r.puesto || '', r.correo || '', r.telefono || '',
         r.localidad || '', (r.recintos || []).join(' | '), r.interes || '',
         (r.dieta === 'Sí' ? ('Sí' + (r.dieta_cual ? ' - ' + r.dieta_cual : '')) : 'No'),
+        (r.acomodo === 'Sí' ? ('Sí' + (r.acomodo_cual ? ' - ' + r.acomodo_cual : '')) : 'No'),
         r.confirmacion || '', formatFecha(r.creado)
       ];
     });

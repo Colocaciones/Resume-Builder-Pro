@@ -140,6 +140,7 @@
   .field{ margin-bottom:18px; display:flex; flex-direction:column; gap:7px; }
   .field-grid{ display:grid; grid-template-columns:1fr 1fr; gap:18px; }
   .field.full{ grid-column:1 / -1; }
+  .input-sm{ width:110px !important; }
   .conditional-field{ display:none; margin-top:4px; }
   .conditional-field.show{ display:flex; }
   label{ font-size:.88rem; font-weight:600; }
@@ -151,6 +152,12 @@
   textarea{ resize:vertical; min-height:80px; }
   input:focus, select:focus, textarea:focus{ border-color:var(--gray-700); }
   .consent{ background:var(--gray-100); border-radius:12px; padding:16px 18px; display:flex; gap:12px; align-items:flex-start; margin:8px 0 28px; }
+  .legal-box{ background:var(--white); border:1px solid var(--gray-300); border-radius:12px; padding:18px 20px;
+    margin:0 0 16px; font-size:.8rem; color:var(--ink-600); line-height:1.6; max-height:260px; overflow-y:auto; }
+  .legal-box ul{ margin:0; padding-left:18px; }
+  .legal-box li{ margin-bottom:12px; }
+  .legal-box li:last-child{ margin-bottom:0; }
+  .legal-box em{ display:block; font-style:italic; color:var(--gray-700); margin-top:2px; }
   .consent input{ margin-top:3px; accent-color:var(--gray-700); width:17px; height:17px; }
   .check-grid{ display:grid; grid-template-columns:1fr 1fr; gap:11px 18px; margin-top:8px; }
   .check-row{ display:flex; align-items:center; gap:9px; font-size:.92rem; font-weight:400; }
@@ -202,7 +209,7 @@
     <div class="wrap">
       <span class="eyebrow">Jornada de Integración Patronal</span>
       <h1>Symplicity Connect</h1>
-      <p>Una mañana para conocer Symplicity, la plataforma que conecta tu empresa con el talento de UAGM Cupey, Gurabo y Carolina, y dejar tu perfil listo para publicar oportunidades.</p>
+      <p>Una mañana para conocer Symplicity, la plataforma que conecta su empresa con el talento de UAGM Cupey, Gurabo y Carolina, y dejar su perfil listo para publicar oportunidades.</p>
       <div class="hero-actions">
         <a href="#formulario" class="btn-primary">
           Confirmar mi asistencia
@@ -210,7 +217,7 @@
         </a>
         <span class="hero-note">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 9v4M12 17h.01"/><circle cx="12" cy="12" r="9"/></svg>
-          Espacios limitados — confirma antes del 5 de agosto 2026
+          Espacios limitados — confirme antes del 5 de agosto 2026
         </span>
       </div>
     </div>
@@ -252,8 +259,8 @@
     <div class="wrap">
       <div class="section-head">
         <span class="eyebrow">Sobre la actividad</span>
-        <h2>Qué te vas a llevar de esta jornada</h2>
-        <p>Una sesión práctica, pensada para dejar tu empresa lista para reclutar a través de Symplicity.</p>
+        <h2>Qué se va a llevar de esta jornada</h2>
+        <p>Una sesión práctica, pensada para dejar su empresa lista para reclutar a través de Symplicity.</p>
       </div>
       <div class="feature-grid">
         <div class="feature-card">
@@ -267,8 +274,8 @@
           <div class="feature-icon">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 13.5 9.5 18 19 7"/></svg>
           </div>
-          <h3>Deja tu perfil listo</h3>
-          <p>Trae la información de tu empresa y el equipo te estará apoyando para configurar tu cuenta en el momento.</p>
+          <h3>Deje su perfil listo</h3>
+          <p>Traiga la información de su empresa y el equipo le estará apoyando para configurar su cuenta en el momento.</p>
         </div>
         <div class="feature-card">
           <div class="feature-icon">
@@ -286,15 +293,15 @@
       <div class="form-card">
 
         <div id="formView">
-          <h2>Confirma tu asistencia</h2>
-          <span class="subtitle">Completa tus datos para reservar tu lugar en la actividad.</span>
+          <h2>Confirme su asistencia</h2>
+          <span class="subtitle">Complete sus datos para reservar su lugar en la actividad.</span>
           <span class="capacity-note" id="capacityNote">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 9v4M12 17h.01"/><circle cx="12" cy="12" r="9"/></svg>
-            Espacios limitados · Confirma antes del 5 de agosto 2026
+            Espacios limitados · Confirme antes del 5 de agosto 2026
           </span>
           <div class="waitlist-notice" id="waitlistNotice">
             <strong>Hemos alcanzado el cupo máximo de 150 personas.</strong>
-            <span>Aún puedes registrarte — te añadiremos a la lista de espera y te contactaremos si se libera un espacio.</span>
+            <span>Aún puede registrarse — le añadiremos a la lista de espera y le contactaremos si se libera un espacio.</span>
           </div>
 
           <form id="asistenciaForm" novalidate>
@@ -320,6 +327,10 @@
                 <input type="tel" id="telefono" name="telefono" placeholder="787-000-0000" maxlength="12" required>
               </div>
               <div class="field">
+                <label for="extension">Extensión <span class="opt">(opcional)</span></label>
+                <input type="text" id="extension" name="extension" placeholder="Ext." maxlength="5" inputmode="numeric" pattern="[0-9]*" class="input-sm">
+              </div>
+              <div class="field full">
                 <label for="localidad">Localidad <span class="req">*</span></label>
                 <select id="localidad" name="localidad" required>
                   <option value="" selected disabled>Selecciona una opción</option>
@@ -416,7 +427,7 @@
             </div>
 
             <div class="field">
-              <label>Recinto o Centro Universitario de tu interés para realizar actividades <span class="opt">(selecciona uno o varios)</span></label>
+              <label>Recinto o Centro Universitario de su interés para realizar actividades <span class="opt">(selecciona uno o varios)</span></label>
               <div class="check-grid">
                 <label class="check-row"><input type="checkbox" name="recintos" value="Recinto de Carolina"> Recinto de Carolina</label>
                 <label class="check-row"><input type="checkbox" name="recintos" value="Recinto de Gurabo"> Recinto de Gurabo</label>
@@ -445,6 +456,18 @@
             </div>
 
             <div class="field">
+              <label for="acomodo">¿Necesita algún acomodo razonable?</label>
+              <select id="acomodo" name="acomodo">
+                <option value="No" selected>No</option>
+                <option value="Sí">Sí</option>
+              </select>
+              <div class="field conditional-field" id="acomodoCualWrap">
+                <label for="acomodoCual">¿Cuál?</label>
+                <input type="text" id="acomodoCual" name="acomodo_cual">
+              </div>
+            </div>
+
+            <div class="field">
               <label for="interes">Interesado en ofrecer o reclutar candidatos para <span class="req">*</span></label>
               <select id="interes" name="interes" required>
                 <option value="" selected disabled>Selecciona una opción</option>
@@ -459,7 +482,23 @@
               <label for="confirmacion" id="confirmacionLabel">Confirmo mi asistencia a Symplicity Connect el viernes, 14 de agosto 2026, de 9:00 AM a 1:00 PM en el Museo y Centro de Estudios Humanísticos Dra. Josefina Camacho de la Nuez. <span class="req">*</span></label>
             </div>
 
-            <p class="form-error" id="formError">No pudimos enviar tu registro. Verifica tu conexión e intenta de nuevo, o escríbenos directamente.</p>
+            <div class="legal-box">
+              <ul>
+                <li>Reconozco y autorizo que fotos y videos pueden ser utilizados para efectos de promociones y actividades de UAGM cediendo los derechos a la Universidad Ana G. Méndez. <em>I acknowledge and authorize that photos and videos may be used for promotional purposes and activities of UAGM, transferring the rights to Ana G. Méndez University.</em></li>
+                <li>El (los) siguientes suscribientes autorizan a la Universidad Ana G. Méndez, a que utilice la reproducción de su imagen. <em>The undersigned authorize Ana G. Méndez University to use the reproduction of their image.</em></li>
+                <li>El suscribiente cede su derecho a inspeccionar o aprobar los materiales audiovisuales producidos, y acuerda que el derecho de propiedad sobre estas fotografías o cualquier reproducción de las mismas, continuará siendo de la Universidad Ana G. Méndez, conservando ésta los derechos exclusivos de reproducción y distribución. <em>The undersigned waive the right to inspect or approve audiovisual materials produced and agree that ownership rights of such photographs or reproductions shall remain with Ana G. Méndez University, which retains exclusive rights of reproduction and distribution.</em></li>
+                <li>El suscribiente renuncia a cualquier acción por daños, libelo, calumnia o invasión al derecho a la privacidad o cualquier otra reclamación basada en la producción, uso, reproducción, alteración o exhibición del material antes indicado. <em>The undersigned waive any claims for damages, libel, slander, invasion of privacy, or any other claim based on the production, use, reproduction, alteration, or exhibition of the aforementioned materials.</em></li>
+                <li>No se discrimina por raza, color, sexo, nacimiento, edad, orientación sexual, identidad de género, origen o condición social, por ideas políticas y religiosas, condición de veterano, ni por impedimento físico o mental, entre otros. <em>There shall be no discrimination based on race, color, sex, birth, age, sexual orientation, gender identity, social origin or condition, political or religious beliefs, veteran status, or physical or mental disability, among others.</em></li>
+                <li>Se reserva el derecho de admisión. <em>The right of admission is reserved.</em></li>
+              </ul>
+            </div>
+
+            <div class="consent">
+              <input type="checkbox" id="relevoImagen" name="relevoImagen" required>
+              <label for="relevoImagen">Leí y estoy de acuerdo con los términos y condiciones anteriormente expuestos. / I have read and agree to the terms and conditions stated above. <span class="req">*</span></label>
+            </div>
+
+            <p class="form-error" id="formError">No pudimos enviar su registro. Verifique su conexión e intente de nuevo, o escríbanos directamente.</p>
             <button type="submit" class="btn-submit">Confirmar mi asistencia</button>
           </form>
         </div>
@@ -468,8 +507,8 @@
           <div class="check">
             <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           </div>
-          <h3 id="thanksTitle">¡Tu lugar está reservado!</h3>
-          <p id="thanksText">Te esperamos el viernes, 14 de agosto 2026, de 9:00 AM a 1:00 PM en el Museo y Centro de Estudios Humanísticos Dra. Josefina Camacho de la Nuez. Recibirás un recordatorio antes de la actividad.</p>
+          <h3 id="thanksTitle">¡Su lugar está reservado!</h3>
+          <p id="thanksText">Le esperamos el viernes, 14 de agosto 2026, de 9:00 AM a 1:00 PM en el Museo y Centro de Estudios Humanísticos Dra. Josefina Camacho de la Nuez. Recibirá un recordatorio antes de la actividad.</p>
         </div>
 
       </div>
@@ -515,6 +554,14 @@
   dietaSelect.addEventListener('change', toggleDieta);
   toggleDieta();
 
+  const acomodoSelect = document.getElementById('acomodo');
+  const acomodoCualWrap = document.getElementById('acomodoCualWrap');
+  function toggleAcomodo(){
+    acomodoCualWrap.classList.toggle('show', acomodoSelect.value === 'Sí');
+  }
+  acomodoSelect.addEventListener('change', toggleAcomodo);
+  toggleAcomodo();
+
   // ⚠️ Reemplaza esto con la configuración de TU proyecto de Firebase
   // (Firebase Console → ⚙️ Configuración del proyecto → tus apps → SDK setup and configuration)
   const firebaseConfig = {
@@ -554,7 +601,7 @@
   function showWaitlistUI(){
     capacityNote.innerHTML =
       '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 9v4M12 17h.01"/><circle cx="12" cy="12" r="9"/></svg>' +
-      'Cupo lleno · Regístrate en la lista de espera';
+      'Cupo lleno · Regístrese en la lista de espera';
     waitlistNotice.classList.add('show');
     confirmacionLabel.innerHTML = 'Solicito unirme a la lista de espera de Symplicity Connect (viernes, 14 de agosto 2026, de 9:00 AM a 1:00 PM, Museo y Centro de Estudios Humanísticos Dra. Josefina Camacho de la Nuez). Entiendo que me contactarán si se libera un espacio. <span class="req">*</span>';
     submitBtn.textContent = 'Unirme a la lista de espera';
@@ -597,7 +644,7 @@
       if (yaExiste){
         submitBtn.disabled = false;
         submitBtn.textContent = 'Confirmar mi asistencia';
-        errorMsg.textContent = 'Ya existe un registro con este correo electrónico. Si necesitas hacer un cambio, escríbenos directamente.';
+        errorMsg.textContent = 'Ya existe un registro con este correo electrónico. Si necesita hacer un cambio, escríbanos directamente.';
         errorMsg.classList.add('show');
         return;
       }
@@ -613,19 +660,23 @@
           interes: document.getElementById('interes').value,
           correo: correoValue,
           telefono: document.getElementById('telefono').value,
+          extension: document.getElementById('extension').value,
           localidad: document.getElementById('localidad').value,
           recintos: Array.from(document.querySelectorAll('input[name="recintos"]:checked')).map(function(cb){ return cb.value; }),
           dieta: document.getElementById('dieta').value,
           dieta_cual: document.getElementById('dietaCual').value,
+          acomodo: document.getElementById('acomodo').value,
+          acomodo_cual: document.getElementById('acomodoCual').value,
           confirmacion: document.getElementById('confirmacion').checked ? 'Sí' : 'No',
+        relevo_imagen: document.getElementById('relevoImagen').checked ? 'Sí' : 'No',
           lista_espera: isFull,
           creado: firebase.firestore.FieldValue.serverTimestamp()
         };
 
         return db.collection('symplicity_connect_2026').add(data).then(function(){
           if (isFull){
-            document.getElementById('thanksTitle').textContent = 'Quedaste en la lista de espera';
-            document.getElementById('thanksText').textContent = 'Hemos alcanzado el cupo máximo para Symplicity Connect. Guardamos tu registro en la lista de espera y te contactaremos si se libera un espacio antes del viernes, 14 de agosto 2026.';
+            document.getElementById('thanksTitle').textContent = 'Quedó en la lista de espera';
+            document.getElementById('thanksText').textContent = 'Hemos alcanzado el cupo máximo para Symplicity Connect. Guardamos su registro en la lista de espera y le contactaremos si se libera un espacio antes del viernes, 14 de agosto 2026.';
           }
           document.getElementById('formView').style.display = 'none';
           document.getElementById('thanksView').classList.add('show');
