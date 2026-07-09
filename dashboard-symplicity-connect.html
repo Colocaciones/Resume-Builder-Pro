@@ -65,7 +65,7 @@
 
   .table-wrap{ background:var(--white); border:1px solid var(--gray-300); border-radius:14px; box-shadow:var(--shadow);
     overflow-x:auto; }
-  table{ border-collapse:collapse; width:100%; min-width:1080px; }
+  table{ border-collapse:collapse; width:100%; min-width:1180px; }
   thead th{ text-align:left; font-family:'IBM Plex Mono',monospace; font-size:.68rem; letter-spacing:.06em; text-transform:uppercase;
     color:var(--ink-600); background:var(--gray-100); padding:12px 14px; white-space:nowrap; position:sticky; top:0; }
   tbody td{ padding:12px 14px; font-size:.87rem; border-top:1px solid var(--gray-100); vertical-align:top; }
@@ -74,6 +74,9 @@
   td.recintos{ max-width:220px; }
   .tag{ display:inline-block; background:var(--gray-100); color:var(--dark-900); font-size:.76rem; padding:2px 8px;
     border-radius:999px; margin:1px 3px 1px 0; white-space:nowrap; }
+  .status-badge{ display:inline-block; font-size:.78rem; font-weight:600; padding:4px 10px; border-radius:999px; white-space:nowrap; }
+  .status-badge.confirmado{ background:#E4F1EE; color:#1F6B5E; }
+  .status-badge.espera{ background:#FBE7E9; color:var(--red-700); }
   .btn-delete{ background:none; border:1px solid var(--gray-300); color:var(--red-700); width:32px; height:32px;
     border-radius:8px; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; }
   .btn-delete:hover{ background:#FBE7E9; border-color:var(--red-600); }
@@ -123,6 +126,7 @@
       <thead>
         <tr>
           <th>Empresa</th>
+          <th>Estado</th>
           <th>Participante</th>
           <th>Puesto</th>
           <th>Correo</th>
@@ -209,9 +213,13 @@
       }).join('');
 
       const dietaTexto = r.dieta === 'Sí' ? ('Sí' + (r.dieta_cual ? ' — ' + r.dieta_cual : '')) : 'No';
+      const estadoHtml = r.lista_espera
+        ? '<span class="status-badge espera">Lista de espera</span>'
+        : '<span class="status-badge confirmado">Confirmado</span>';
 
       tr.innerHTML =
         '<td class="empresa"></td>' +
+        '<td>' + estadoHtml + '</td>' +
         '<td></td>' +
         '<td></td>' +
         '<td></td>' +
@@ -226,15 +234,15 @@
 
       const cells = tr.querySelectorAll('td');
       cells[0].textContent = r.empresa || '—';
-      cells[1].textContent = r.nombre || '—';
-      cells[2].textContent = r.puesto || '—';
-      cells[3].textContent = r.correo || '—';
-      cells[4].textContent = r.telefono || '—';
-      cells[5].textContent = r.localidad || '—';
-      cells[7].textContent = r.interes || '—';
-      cells[8].textContent = dietaTexto;
-      cells[9].textContent = r.confirmacion || '—';
-      cells[10].textContent = formatFecha(r.creado);
+      cells[2].textContent = r.nombre || '—';
+      cells[3].textContent = r.puesto || '—';
+      cells[4].textContent = r.correo || '—';
+      cells[5].textContent = r.telefono || '—';
+      cells[6].textContent = r.localidad || '—';
+      cells[8].textContent = r.interes || '—';
+      cells[9].textContent = dietaTexto;
+      cells[10].textContent = r.confirmacion || '—';
+      cells[11].textContent = formatFecha(r.creado);
 
       tr.querySelector('.btn-delete').addEventListener('click', function(){
         const confirmMsg = '¿Eliminar el registro de "' + (r.empresa || 'esta empresa') + '"? Esta acción no se puede deshacer.';
@@ -275,10 +283,10 @@
 
   // --- Exportar CSV ---
   document.getElementById('exportBtn').addEventListener('click', function(){
-    const headers = ['Empresa','Participante','Puesto','Correo','Teléfono','Localidad','Recintos de interés','Interés','Dieta/Alergias','Confirmó','Fecha de registro'];
+    const headers = ['Empresa','Estado','Participante','Puesto','Correo','Teléfono','Localidad','Recintos de interés','Interés','Dieta/Alergias','Confirmó','Fecha de registro'];
     const rows = allRows.map(function(r){
       return [
-        r.empresa || '', r.nombre || '', r.puesto || '', r.correo || '', r.telefono || '',
+        r.empresa || '', (r.lista_espera ? 'Lista de espera' : 'Confirmado'), r.nombre || '', r.puesto || '', r.correo || '', r.telefono || '',
         r.localidad || '', (r.recintos || []).join(' | '), r.interes || '',
         (r.dieta === 'Sí' ? ('Sí' + (r.dieta_cual ? ' - ' + r.dieta_cual : '')) : 'No'),
         r.confirmacion || '', formatFecha(r.creado)
