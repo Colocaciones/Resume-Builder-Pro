@@ -131,6 +131,7 @@
           <th>Puesto</th>
           <th>Correo</th>
           <th>Teléfono</th>
+          <th>Ext.</th>
           <th>Localidad</th>
           <th>Recintos de interés</th>
           <th>Interés</th>
@@ -227,6 +228,7 @@
         '<td></td>' +
         '<td></td>' +
         '<td></td>' +
+        '<td></td>' +
         '<td class="recintos">' + recintosHtml + '</td>' +
         '<td></td>' +
         '<td></td>' +
@@ -241,12 +243,13 @@
       cells[3].textContent = r.puesto || '—';
       cells[4].textContent = r.correo || '—';
       cells[5].textContent = r.telefono || '—';
-      cells[6].textContent = r.localidad || '—';
-      cells[8].textContent = r.interes || '—';
-      cells[9].textContent = dietaTexto;
-      cells[10].textContent = acomodoTexto;
-      cells[11].textContent = r.confirmacion || '—';
-      cells[12].textContent = formatFecha(r.creado);
+      cells[6].textContent = r.extension || '—';
+      cells[7].textContent = r.localidad || '—';
+      cells[9].textContent = r.interes || '—';
+      cells[10].textContent = dietaTexto;
+      cells[11].textContent = acomodoTexto;
+      cells[12].textContent = r.confirmacion || '—';
+      cells[13].textContent = formatFecha(r.creado);
 
       tr.querySelector('.btn-delete').addEventListener('click', function(){
         const confirmMsg = '¿Eliminar el registro de "' + (r.empresa || 'esta empresa') + '"? Esta acción no se puede deshacer.';
@@ -287,11 +290,11 @@
 
   // --- Exportar CSV ---
   document.getElementById('exportBtn').addEventListener('click', function(){
-    const headers = ['Empresa','Estado','Participante','Puesto','Correo','Teléfono','Localidad','Recintos de interés','Interés','Dieta/Alergias','Acomodo razonable','Confirmó','Fecha de registro'];
+    const headers = ['Empresa','Estado','Participante','Puesto','Correo','Teléfono','Ext.','Localidad','Recintos de interés','Interés','Dieta/Alergias','Acomodo razonable','Confirmó','Fecha de registro'];
     const rows = allRows.map(function(r){
       return [
         r.empresa || '', (r.lista_espera ? 'Lista de espera' : 'Confirmado'), r.nombre || '', r.puesto || '', r.correo || '', r.telefono || '',
-        r.localidad || '', (r.recintos || []).join(' | '), r.interes || '',
+        r.extension || '', r.localidad || '', (r.recintos || []).join(' | '), r.interes || '',
         (r.dieta === 'Sí' ? ('Sí' + (r.dieta_cual ? ' - ' + r.dieta_cual : '')) : 'No'),
         (r.acomodo === 'Sí' ? ('Sí' + (r.acomodo_cual ? ' - ' + r.acomodo_cual : '')) : 'No'),
         r.confirmacion || '', formatFecha(r.creado)
