@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Symplicity Connect — Registros</title>
+<title>UAGM Conecta — Registros</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
@@ -58,7 +58,39 @@
   .btn-export{ background:var(--red-600); color:var(--white); font-family:'Space Grotesk',sans-serif; font-weight:600;
     font-size:.88rem; padding:10px 18px; border-radius:9px; border:none; cursor:pointer; }
   .btn-export:hover{ background:var(--red-700); }
-  .search-box{ margin-bottom:18px; }
+  .chart-card{ background:var(--white); border:1px solid var(--gray-300); border-radius:14px; box-shadow:var(--shadow);
+    padding:22px 24px; margin-bottom:20px; }
+  .chart-title{ font-size:1rem; margin-bottom:16px; font-family:'Space Grotesk',sans-serif; }
+  .chart-bars{ display:flex; flex-direction:column; gap:10px; }
+  .chart-row{ display:grid; grid-template-columns:200px 1fr 34px; align-items:center; gap:12px; font-size:.83rem; }
+  .chart-label{ color:var(--ink-600); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .chart-track{ background:var(--gray-100); border-radius:6px; height:16px; overflow:hidden; }
+  .chart-fill{ background:var(--red-600); height:100%; border-radius:6px; transition:width .3s ease; }
+  .chart-count{ text-align:right; font-weight:600; color:var(--dark-900); font-family:'Space Grotesk',sans-serif; }
+  .chart-empty{ color:var(--ink-600); font-size:.85rem; }
+
+  .stats-row{ display:grid; grid-template-columns:280px 1fr; gap:20px; margin-bottom:20px; align-items:stretch; }
+  .stats-row .chart-card{ margin-bottom:0; }
+  .stat-grid{ display:grid; grid-template-columns:1fr; gap:10px; }
+  .stat-tile{ background:var(--gray-100); border-radius:12px; padding:14px 16px; display:flex; align-items:baseline; justify-content:space-between; gap:10px;
+    cursor:pointer; border:2px solid transparent; transition:background .15s ease, border-color .15s ease; }
+  .stat-tile:hover{ background:#EFEEEE; }
+  .stat-tile.active{ background:#FBE7E9; border-color:var(--red-600); }
+  .chart-row{ cursor:pointer; border-radius:8px; padding:4px 6px; margin:-4px -6px; transition:background .15s ease; }
+  .chart-row:hover{ background:var(--gray-100); }
+  .chart-row.active .chart-label{ color:var(--red-700); font-weight:600; }
+  .chart-row.active .chart-fill{ background:var(--red-700); }
+  .search-box{ margin-bottom:18px; display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+  .active-filter{ display:none; align-items:center; gap:6px; background:#FBE7E9; color:var(--red-700); font-size:.82rem;
+    font-weight:600; padding:6px 12px; border-radius:999px; cursor:pointer; }
+  .active-filter.show{ display:inline-flex; }
+  .stat-tile .stat-label{ font-size:.85rem; color:var(--ink-600); }
+  .stat-tile .stat-nums{ display:flex; align-items:baseline; gap:6px; }
+  .stat-tile .stat-value{ font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:1.4rem; color:var(--dark-900); }
+  .stat-tile .stat-pct{ font-size:.75rem; color:var(--red-700); font-weight:600; }
+  @media (max-width:900px){ .stats-row{ grid-template-columns:1fr; } }
+  @media (max-width:640px){ .chart-row{ grid-template-columns:120px 1fr 30px; } }
+
   .search-box input{ width:100%; max-width:320px; font-size:.92rem; padding:10px 14px; border:1px solid var(--gray-300);
     border-radius:9px; background:var(--white); }
   .search-box input:focus{ outline:none; border-color:var(--red-600); }
@@ -96,7 +128,7 @@
     <div class="gate-icon">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="11" width="16" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
     </div>
-    <h2>Symplicity Connect</h2>
+    <h2>UAGM Conecta</h2>
     <p>Ingresa la contraseña para ver la lista de patronos registrados.</p>
     <input type="password" id="passwordInput" placeholder="Contraseña" autocomplete="off">
     <button class="gate-btn" id="gateBtn">Entrar</button>
@@ -108,8 +140,8 @@
   <div class="dash-header">
     <div>
       <span class="eyebrow">Registro de asistencia</span>
-      <h1>Symplicity Connect — 14 de agosto 2026</h1>
-      <p class="dash-sub">Patronos confirmados para la jornada en el Museo Josefina Camacho de la Nuez.</p>
+      <h1>UAGM Conecta — 14 de agosto de 2026</h1>
+      <p class="dash-sub">Patronos confirmados para el evento en el Museo Josefina Camacho de la Nuez.</p>
     </div>
     <div class="dash-actions">
       <span class="count-badge" id="countBadge">— registros</span>
@@ -117,8 +149,21 @@
     </div>
   </div>
 
+  <div class="stats-row">
+    <div class="chart-card stat-card">
+      <h3 class="chart-title">Interés en Oportunidades</h3>
+      <div class="stat-grid" id="interesStats"></div>
+    </div>
+
+    <div class="chart-card chart-wide">
+      <h3 class="chart-title">Interés por Recinto o Centro Universitario</h3>
+      <div class="chart-bars" id="chartBars"></div>
+    </div>
+  </div>
+
   <div class="search-box">
     <input type="text" id="searchInput" placeholder="Buscar por empresa, participante o correo...">
+    <span class="active-filter" id="activeFilterPill"></span>
   </div>
 
   <div class="table-wrap">
@@ -268,12 +313,104 @@
     });
   }
 
+  const TODOS_LOS_RECINTOS = [
+    'Recinto de Carolina', 'Recinto de Gurabo', 'Recinto de Cupey',
+    'Centro Universitario de Bayamón', 'Centro Universitario de Aguadilla',
+    'Centro Universitario de Santa Isabel', 'Centro Universitario de Ponce',
+    'Centro Universitario de Barceloneta', 'Centro Universitario de Cabo Rojo',
+    'Centro Universitario de Cayey', 'Centro Universitario de Yabucoa'
+  ];
+
+  function renderChart(){
+    const counts = {};
+    TODOS_LOS_RECINTOS.forEach(function(rc){ counts[rc] = 0; });
+    allRows.forEach(function(r){
+      (r.recintos || []).forEach(function(rc){
+        counts[rc] = (counts[rc] || 0) + 1;
+      });
+    });
+
+    const entries = Object.entries(counts).sort(function(a,b){ return b[1] - a[1]; });
+    const maxCount = entries.length ? entries[0][1] : 0;
+    const chartBars = document.getElementById('chartBars');
+
+    if (allRows.length === 0){
+      chartBars.innerHTML = '<p class="chart-empty">Todavía no hay registros para mostrar tendencias.</p>';
+      return;
+    }
+
+    chartBars.innerHTML = entries.map(function(e){
+      const pct = maxCount ? Math.round((e[1] / maxCount) * 100) : 0;
+      const isActive = activeFilter && activeFilter.type === 'recinto' && activeFilter.value === e[0];
+      return '<div class="chart-row' + (isActive ? ' active' : '') + '" data-type="recinto" data-value="' + e[0].replace(/"/g,'&quot;') + '">' +
+        '<span class="chart-label">' + e[0] + '</span>' +
+        '<div class="chart-track"><div class="chart-fill" style="width:' + pct + '%"></div></div>' +
+        '<span class="chart-count">' + e[1] + '</span>' +
+      '</div>';
+    }).join('');
+  }
+
+  function renderInteresStats(){
+    const opciones = [
+      { valor: 'Oportunidades de empleo', etiqueta: 'Empleo' },
+      { valor: 'Oportunidades de internados', etiqueta: 'Internados' },
+      { valor: 'Ambos', etiqueta: 'Ambos' }
+    ];
+    const total = allRows.length;
+    const wrap = document.getElementById('interesStats');
+
+    if (total === 0){
+      wrap.innerHTML = '<p class="chart-empty">Todavía no hay registros para mostrar tendencias.</p>';
+      return;
+    }
+
+    wrap.innerHTML = opciones.map(function(o){
+      const count = allRows.filter(function(r){ return r.interes === o.valor; }).length;
+      const pct = total ? Math.round((count / total) * 100) : 0;
+      const isActive = activeFilter && activeFilter.type === 'interes' && activeFilter.value === o.valor;
+      return '<div class="stat-tile' + (isActive ? ' active' : '') + '" data-type="interes" data-value="' + o.valor.replace(/"/g,'&quot;') + '">' +
+        '<span class="stat-label">' + o.etiqueta + '</span>' +
+        '<span class="stat-nums"><span class="stat-value">' + count + '</span><span class="stat-pct">' + pct + '%</span></span>' +
+      '</div>';
+    }).join('');
+  }
+
+  let activeFilter = null;
+
+  function setActiveFilter(type, value){
+    if (activeFilter && activeFilter.type === type && activeFilter.value === value){
+      activeFilter = null;
+    } else {
+      activeFilter = { type: type, value: value };
+    }
+    renderChart();
+    renderInteresStats();
+    applyFilter();
+  }
+
+  document.getElementById('chartBars').addEventListener('click', function(e){
+    const row = e.target.closest('.chart-row');
+    if (row) setActiveFilter('recinto', row.getAttribute('data-value'));
+  });
+  document.getElementById('interesStats').addEventListener('click', function(e){
+    const tile = e.target.closest('.stat-tile');
+    if (tile) setActiveFilter('interes', tile.getAttribute('data-value'));
+  });
+  document.getElementById('activeFilterPill').addEventListener('click', function(){
+    activeFilter = null;
+    renderChart();
+    renderInteresStats();
+    applyFilter();
+  });
+
   function loadData(){
     document.getElementById('loadingMsg').classList.remove('hidden');
     db.collection('symplicity_connect_2026').orderBy('creado', 'desc').onSnapshot(function(snapshot){
       allRows = snapshot.docs.map(function(doc){ return Object.assign({ _id: doc.id }, doc.data()); });
       document.getElementById('loadingMsg').classList.add('hidden');
       document.getElementById('countBadge').textContent = allRows.length + (allRows.length === 1 ? ' registro' : ' registros');
+      renderChart();
+      renderInteresStats();
       applyFilter();
     }, function(err){
       document.getElementById('loadingMsg').textContent = 'No se pudieron cargar los datos: ' + err.message;
@@ -282,13 +419,34 @@
 
   function applyFilter(){
     const q = document.getElementById('searchInput').value.trim().toLowerCase();
-    if (!q){ renderRows(allRows); return; }
-    const filtered = allRows.filter(function(r){
-      return (r.empresa || '').toLowerCase().includes(q) ||
-             (r.nombre || '').toLowerCase().includes(q) ||
-             (r.correo || '').toLowerCase().includes(q);
-    });
-    renderRows(filtered);
+    const pill = document.getElementById('activeFilterPill');
+
+    if (activeFilter){
+      const etiqueta = activeFilter.type === 'interes'
+        ? { 'Oportunidades de empleo':'Empleo', 'Oportunidades de internados':'Internados', 'Ambos':'Ambos' }[activeFilter.value]
+        : activeFilter.value;
+      pill.textContent = 'Filtro: ' + etiqueta + '  ✕';
+      pill.classList.add('show');
+    } else {
+      pill.classList.remove('show');
+    }
+
+    let rows = allRows;
+    if (activeFilter && activeFilter.type === 'interes'){
+      rows = rows.filter(function(r){ return r.interes === activeFilter.value; });
+    } else if (activeFilter && activeFilter.type === 'recinto'){
+      rows = rows.filter(function(r){ return (r.recintos || []).indexOf(activeFilter.value) !== -1; });
+    }
+
+    if (q){
+      rows = rows.filter(function(r){
+        return (r.empresa || '').toLowerCase().includes(q) ||
+               (r.nombre || '').toLowerCase().includes(q) ||
+               (r.correo || '').toLowerCase().includes(q);
+      });
+    }
+
+    renderRows(rows);
   }
   document.getElementById('searchInput').addEventListener('input', applyFilter);
 
