@@ -1594,14 +1594,18 @@ async function createAutoApplication(participantData, offerId) {
         console.error('❌ Error creando aplicación:', error);
     }
 
-    // Mostrar mensaje final de confirmación
+   // Mostrar mensaje final de confirmación
     setTimeout(() => {
+        const tieneEnlacePatrono = offer.applicationUrl && offer.applicationUrl.trim() !== '';
+
         document.querySelector('.welcome-section').innerHTML = `
             <div style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; padding: 40px; border-radius: 15px; text-align: center;">
                 <i class="fas fa-check-circle" style="font-size: 64px; margin-bottom: 20px;"></i>
-                <h2 style="color: white; margin-bottom: 15px;">¡Solicitud Completada Exitosamente!</h2>
-                <p style="font-size: 18px; margin-bottom: 10px;">Tu aplicación para <strong>${offer.position}</strong> en <strong>${offer.companyName}</strong> ha sido enviada.</p>
-                <p style="font-size: 16px; opacity: 0.95; margin-bottom: 20px;">Nuestro equipo revisará tu perfil y se pondrá en contacto contigo pronto.</p>
+                <h2 style="color: white; margin-bottom: 15px;">¡Registro Completado!</h2>
+                <p style="font-size: 18px; margin-bottom: 10px;">Tu información para <strong>${offer.position}</strong> en <strong>${offer.companyName}</strong> ha sido guardada.</p>
+                <p style="font-size: 16px; opacity: 0.95; margin-bottom: 20px;">
+                    ${tieneEnlacePatrono ? 'Te estamos redirigiendo a la página del patrono para completar tu solicitud...' : 'Nuestro equipo revisará tu perfil y se pondrá en contacto contigo pronto.'}
+                </p>
                 <div style="background: rgba(255,255,255,0.2); padding: 15px; border-radius: 10px; margin-top: 20px;">
                     <p style="font-size: 14px; margin: 0;">📧 Recibirás un correo de confirmación a: <strong>${participantData.email}</strong></p>
                 </div>
@@ -1610,6 +1614,13 @@ async function createAutoApplication(participantData, offerId) {
         
         // Ocultar el formulario de registro
         document.getElementById('registerContent').style.display = 'none';
+
+        // Redirigir al enlace del patrono si está disponible
+        if (tieneEnlacePatrono) {
+            setTimeout(() => {
+                window.location.href = offer.applicationUrl;
+            }, 2500);
+        }
         
     }, 2000);
 }
@@ -1688,7 +1699,7 @@ async function createAutoApplication(participantData, offerId) {
                                 </div>
                             <div class="offer-detail">
                                     <i class="fas fa-clock"></i>
-                                    <span>${getTypeLabel(offer.positionType)}</span>
+                                    <span>${getPositionTypeLabel(offer)}</span>
                                 </div>
                                 <div class="offer-detail">
                                     <i class="fas fa-calendar-alt"></i>
@@ -1736,10 +1747,10 @@ function filterOffers() {
         );
     }
     
-    // Filtro por tipo de posición
+    // Filtro por tipo de posición (jornada o tipo de empleo)
     if (typeFilter) {
         filteredOffers = filteredOffers.filter(offer => 
-            offer.positionType && offer.positionType === typeFilter
+            offer.workSchedule === typeFilter || offer.employmentType === typeFilter
         );
     }
     
@@ -1808,7 +1819,7 @@ function displayFilteredOffers(filteredOffers) {
                         </div>
                         <div class="offer-detail">
                             <i class="fas fa-clock"></i>
-                            <span>${getTypeLabel(offer.positionType)}</span>
+                            <span>${getPositionTypeLabel(offer)}</span>
                         </div>
                         <div class="offer-detail">
                             <i class="fas fa-calendar-alt"></i>
@@ -1853,6 +1864,18 @@ function displayFilteredOffers(filteredOffers) {
             return labels[type] || type;
         }
 
+// Combina jornada (part-time/full-time) y tipo de empleo (regular/temporero)
+        function getPositionTypeLabel(offer) {
+            const scheduleLabels = { 'part-time': 'Part-Time', 'full-time': 'Full-Time' };
+            const typeLabels = { 'regular': 'Regular', 'temporary': 'Temporero' };
+            
+            const schedule = scheduleLabels[offer.workSchedule] || '';
+            const type = typeLabels[offer.employmentType] || '';
+            
+            if (schedule && type) return `${schedule} · ${type}`;
+            return schedule || type || 'No especificado';
+        }
+
         // Ver detalles de oferta
         function viewOfferDetails(offerId) {
             const offer = offers.find(o => o.id === offerId);
@@ -1881,7 +1904,7 @@ function displayFilteredOffers(filteredOffers) {
     <div style="margin-bottom: 20px;">
         <h4 style="color: #c8102e; margin-bottom: 15px;">Detalles del Puesto</h4>
         <p><strong>Posición:</strong> ${offer.position}</p>
-        <p><strong>Tipo:</strong> ${getTypeLabel(offer.positionType)}</p>
+        <p><strong>Tipo:</strong> ${getPositionTypeLabel(offer)}</p>
         <p><strong>Fecha Límite:</strong> ${new Date(offer.deadline).toLocaleDateString()}</p>
     </div>
                 </div>
@@ -1919,20 +1942,23 @@ function displayFilteredOffers(filteredOffers) {
 async function applyToOffer() {
     if (!currentOffer || !currentUser) return;
 
+    const offerToApply = currentOffer; // Guardar referencia ANTES de cerrar el modal (closeOfferModal borra currentOffer)
+
     // Crear aplicación con estado PENDING (nuevo)
     const application = {
         id: Date.now().toString(),
-        offerId: currentOffer.id,
+        offerId: offerToApply.id,
         participantId: currentUser.id,
         participantData: currentUser, // Datos completos del participante
-        offerData: currentOffer, // Datos completos de la oferta
+        offerData: offerToApply, // Datos completos de la oferta
         participantName: `${currentUser.firstName} ${currentUser.lastName}`,
         participantEmail: currentUser.email,
         participantPhone: currentUser.phone,
-        offerTitle: currentOffer.position,
-        companyName: currentOffer.companyName,
+        offerTitle: offerToApply.position,
+        companyName: offerToApply.companyName,
         appliedAt: new Date().toISOString(),
         status: 'pending', // ← CAMBIO CLAVE: Inicia como pendiente
+        source: 'direct_apply',
         adminReview: {
             reviewed: false,
             reviewedBy: null,
@@ -1948,7 +1974,6 @@ async function applyToOffer() {
             const result = await FirebaseHelper.saveDoc('applications', application);
             if (result.success) {
                 console.log('Aplicación guardada en Firebase:', result.id);
-                showNotification('¡Aplicación enviada para revisión!', 'success');
             } else {
                 throw new Error('Error de Firebase');
             }
@@ -1957,7 +1982,6 @@ async function applyToOffer() {
         }
     } catch (error) {
         console.error('Error con Firebase, usando localStorage:', error);
-        showNotification('Aplicación enviada (guardada localmente)', 'warning');
     }
 
     // Guardar también en localStorage como respaldo
@@ -1966,11 +1990,19 @@ async function applyToOffer() {
     localStorage.setItem('applications', JSON.stringify(applications));
 
     closeOfferModal();
-    
-    // Mensaje actualizado
-    showNotification('Solicitud enviada para revisión por nuestro equipo', 'info');
-}
 
+    // Si la oferta tiene enlace del patrono, redirigir automáticamente
+    const tieneEnlacePatrono = offerToApply.applicationUrl && offerToApply.applicationUrl.trim() !== '';
+
+    if (tieneEnlacePatrono) {
+        showNotification('¡Registrado! Te estamos redirigiendo a la página del patrono...', 'success');
+        setTimeout(() => {
+            window.location.href = offerToApply.applicationUrl;
+        }, 2000);
+    } else {
+        showNotification('Solicitud enviada para revisión por nuestro equipo', 'info');
+    }
+}
         // Sistema de notificaciones
         function showNotification(message, type = 'info') {
             const existingNotification = document.querySelector('.notification');
