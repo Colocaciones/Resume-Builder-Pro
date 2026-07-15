@@ -2177,7 +2177,7 @@ case 'followups':
                         <td>${offer.position}</td>
                         <td>${offer.location}</td>
                         <td>${offer.salary}</td>
-                        <td><span class="status-badge">${getTypeLabel(offer.positionType)}</span></td>
+                        <td><span class="status-badge">${getPositionTypeLabel(offer)}</span></td>
 <td>${getSectorLabel(offer.academicDivision)}</td>
 <td>${new Date(offer.deadline).toLocaleDateString('es-PR', { timeZone: 'America/Puerto_Rico' })}</td>
                         <td><span class="status-badge ${statusClass}">${statusText}</span></td>
@@ -2392,6 +2392,18 @@ ${application.status === 'rejected' ? `
             return labels[type] || type;
         }
 
+// Combina jornada (part-time/full-time) y tipo de empleo (regular/temporero)
+        function getPositionTypeLabel(offer) {
+            const scheduleLabels = { 'part-time': 'Part-Time', 'full-time': 'Full-Time' };
+            const typeLabels = { 'regular': 'Regular', 'temporary': 'Temporero' };
+            
+            const schedule = scheduleLabels[offer.workSchedule] || '';
+            const type = typeLabels[offer.employmentType] || '';
+            
+            if (schedule && type) return `${schedule} · ${type}`;
+            return schedule || type || 'No especificado';
+        }
+
 // Obtener etiqueta de servicio solicitado
 function getServiceLabel(service) {
     if (!service) return 'No especificado';
@@ -2465,7 +2477,7 @@ function getSectorLabel(sector) {
                     <div>
                         <h4 style="color: #c8102e; margin-bottom: 15px;">Detalles del Puesto</h4>
                         <p><strong>Posición:</strong> ${offer.position}</p>
-                        <p><strong>Tipo:</strong> ${getTypeLabel(offer.positionType)}</p>
+                        <p><strong>Tipo:</strong> ${getPositionTypeLabel(offer)}</p>
 <p><strong>Sector Industrial:</strong> ${getSectorLabel(offer.academicDivision)}</p>
 <p><strong>Salario:</strong> ${offer.salary}</p>
                         <p><strong>Ubicación:</strong> ${offer.location}</p>
@@ -2956,6 +2968,10 @@ localStorage.setItem('lastCheckedParticipants', lastCheckedParticipants.toString
                     <input type="text" id="edit-salary" value="${offer.salary}" required>
                 </div>
             </div>
+	<div class="form-group">
+                <label>Enlace de Aplicación del Patrono (opcional):</label>
+                <input type="url" id="edit-applicationUrl" value="${offer.applicationUrl || ''}" placeholder="https://empresa.com/aplicar">
+            </div>
             
 <div class="form-group">
     <label>Sector Industrial:</label>
@@ -2978,18 +2994,26 @@ localStorage.setItem('lastCheckedParticipants', lastCheckedParticipants.toString
            </div>
             <div class="form-row">
                 <div class="form-group">
-                    <label>Tipo de Posición:</label>
-                    <select id="edit-positionType" required>
-                        <option value="part-time" ${offer.positionType === 'part-time' ? 'selected' : ''}>Part-Time</option>
-                        <option value="full-time" ${offer.positionType === 'full-time' ? 'selected' : ''}>Full-Time</option>
-                        <option value="regular" ${offer.positionType === 'regular' ? 'selected' : ''}>Regular</option>
-                        <option value="temporary" ${offer.positionType === 'temporary' ? 'selected' : ''}>Temporero</option>
+                    <label>Jornada de Trabajo:</label>
+                    <select id="edit-workSchedule" required>
+                        <option value="part-time" ${offer.workSchedule === 'part-time' ? 'selected' : ''}>Part-Time</option>
+                        <option value="full-time" ${offer.workSchedule === 'full-time' ? 'selected' : ''}>Full-Time</option>
                     </select>
                 </div>
+                <div class="form-group">
+                    <label>Tipo de Empleo:</label>
+                    <select id="edit-employmentType" required>
+                        <option value="regular" ${offer.employmentType === 'regular' ? 'selected' : ''}>Regular</option>
+                        <option value="temporary" ${offer.employmentType === 'temporary' ? 'selected' : ''}>Temporero</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-row">
                 <div class="form-group">
                     <label>Fecha Límite:</label>
                     <input type="date" id="edit-deadline" value="${offer.deadline}" required>
                 </div>
+                <div class="form-group"></div>
             </div>
             
             <div class="form-group">
@@ -3036,8 +3060,10 @@ async function saveOfferChanges(offerId) {
         position: document.getElementById('edit-position').value,
         location: document.getElementById('edit-location').value,
         salary: document.getElementById('edit-salary').value,
-academicDivision: document.getElementById('edit-academicDivision').value,
-        positionType: document.getElementById('edit-positionType').value,
+        applicationUrl: document.getElementById('edit-applicationUrl').value,
+	academicDivision: document.getElementById('edit-academicDivision').value,
+        workSchedule: document.getElementById('edit-workSchedule').value,
+        employmentType: document.getElementById('edit-employmentType').value,
         deadline: document.getElementById('edit-deadline').value,
         jobDescription: document.getElementById('edit-jobDescription').value,
         requirements: document.getElementById('edit-requirements').value,
@@ -3335,7 +3361,7 @@ function filterOffers() {
                         <td>${offer.position}</td>
                         <td>${offer.location}</td>
                         <td>${offer.salary}</td>
-                        <td><span class="status-badge">${getTypeLabel(offer.positionType)}</span></td>
+                        <td><span class="status-badge">${getPositionTypeLabel(offer)}</span></td>
                         <td>${offer.deadline ? new Date(offer.deadline + 'T00:00:00').toLocaleDateString() : 'Sin fecha límite'}</td>
                         <td><span class="status-badge ${statusClass}">${statusText}</span></td>
 <td>
@@ -3618,7 +3644,7 @@ function filterApplications() {
                 'Email': offer.email,
                 'Recibida Por': offer.receivedThrough,
                 'Posición': offer.position,
-                'Tipo Posición': getTypeLabel(offer.positionType),
+                'Tipo Posición': getPositionTypeLabel(offer),
 'Sector Industrial': getSectorLabel(offer.academicDivision),
                 'Salario': offer.salary,
                 'Ubicación': offer.location,
@@ -3979,7 +4005,7 @@ function generateOffersReport() {
         'Teléfono Empresa': offer.phone,
         'Recibida Por': offer.receivedThrough || 'N/A',
         'Posición Ofertada': offer.position,
-        'Tipo Posición': getTypeLabel(offer.positionType),
+        'Tipo Posición': getPositionTypeLabel(offer),
 'Sector Industrial': getSectorLabel(offer.academicDivision),
         'Ubicación': offer.location,
         'Salario': offer.salary,
@@ -5282,7 +5308,7 @@ function loadPendingApplicationsTable() {
                             <p><i class="fas fa-phone"></i> ${offer.phone}</p>
                             <p><i class="fas fa-map-marker-alt"></i> ${offer.location}</p>
                             <p><i class="fas fa-dollar-sign"></i> ${offer.salary}</p>
-                            <p><i class="fas fa-clock"></i> ${getTypeLabel(offer.positionType)}</p>
+                            <p><i class="fas fa-clock"></i> ${getPositionTypeLabel(offer)}</p>
                             <p><i class="fas fa-calendar-alt"></i> Vence: ${new Date(offer.deadline).toLocaleDateString()}</p>
                         </div>
                         
@@ -5811,7 +5837,7 @@ function viewOfferRequirements(offerId) {
                    <p><strong>Posición:</strong> ${offer.position}</p>
                    <p><strong>Ubicación:</strong> ${offer.location}</p>
                    <p><strong>Salario:</strong> ${offer.salary}</p>
-                   <p><strong>Tipo:</strong> ${getTypeLabel(offer.positionType)}</p>
+                   <p><strong>Tipo:</strong> ${getPositionTypeLabel(offer)}</p>
 <p><strong>Sector Industrial:</strong> ${getSectorLabel(offer.academicDivision)}</p>
                </div>
                
@@ -5967,7 +5993,7 @@ function displayFilteredPendingApplications(filteredApps) {
                            <p><i class="fas fa-phone"></i> ${offer.phone}</p>
                            <p><i class="fas fa-map-marker-alt"></i> ${offer.location}</p>
                            <p><i class="fas fa-dollar-sign"></i> ${offer.salary}</p>
-                           <p><i class="fas fa-clock"></i> ${getTypeLabel(offer.positionType)}</p>
+                           <p><i class="fas fa-clock"></i> ${getPositionTypeLabel(offer)}</p>
                            <p><i class="fas fa-calendar-alt"></i> Vence: ${new Date(offer.deadline).toLocaleDateString()}</p>
                        </div>
                        
@@ -7239,7 +7265,7 @@ function generateReferralPDF(applicationId) {
         yPos += lineHeight;
         
         addText('Tipo Posición:', margin, yPos, 10, 'bold');
-        addText(getTypeLabel(offer.positionType), 80, yPos);
+        addText(getPositionTypeLabel(offer), 80, yPos);
         yPos += lineHeight;
         
         addText('Salario:', margin, yPos, 10, 'bold');
@@ -7686,8 +7712,7 @@ yPos += lineHeight;
     doc.setTextColor(0, 0, 0);
     
     addText('Tipo de Posición:', margin, yPos, 10, 'bold');
-    const positionLabels = {'part-time': 'Part-Time', 'full-time': 'Full-Time', 'regular': 'Empleo Regular', 'temporary': 'Empleo Temporero'};
-    addText(positionLabels[offer.positionType] || 'No especificado', 100, yPos);
+    addText(getPositionTypeLabel(offer), 100, yPos);
     yPos += lineHeight;
     
     addText('Salario a Ofrecer:', margin, yPos, 10, 'bold');
