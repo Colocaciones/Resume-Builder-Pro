@@ -2193,6 +2193,11 @@ case 'followups':
 				<button class="btn btn-warning btn-small" onclick="generatePromoURL('${offer.id}')" title="Generar URL promocional">
     				    <i class="fas fa-bullhorn"></i>
 				</button>
+                                ${status === 'expired' ? `
+                                <button class="btn btn-success btn-small" onclick="reactivateOffer('${offer.id}')" title="Reactivar oferta">
+                                    <i class="fas fa-redo"></i>
+                                </button>
+                                ` : ''}
                                 <button class="btn btn-danger btn-small" onclick="deleteOffer('${offer.id}')" title="Eliminar">
                                     <i class="fas fa-trash"></i>
                                 </button>
@@ -3108,6 +3113,66 @@ async function saveOfferChanges(offerId) {
     }
 }
 
+// Reactivar oferta vencida extendiendo su fecha límite
+async function reactivateOffer(offerId) {
+    const offer = offers.find(o => o.id === offerId);
+    if (!offer) return;
+
+    const dias = prompt(`¿Por cuántos días quieres reactivar "${offer.position}" en ${offer.companyName}?`, '30');
+    if (dias === null) return;
+
+    const diasNumero = parseInt(dias);
+    if (isNaN(diasNumero) || diasNumero <= 0) {
+        showNotification('Por favor ingresa un número de días válido', 'error');
+        return;
+    }
+
+    const nuevaFecha = new Date();
+    nuevaFecha.setDate(nuevaFecha.getDate() + diasNumero);
+    const nuevaFechaStr = nuevaFecha.toISOString().split('T')[0];
+
+    if (!confirm(`La oferta se reactivará hasta el ${nuevaFecha.toLocaleDateString('es-PR')}. ¿Confirmas?`)) {
+        return;
+    }
+
+    const updatedData = {
+        deadline: nuevaFechaStr,
+        updatedAt: new Date().toISOString()
+    };
+
+    try {
+        if (isFirebaseInitialized) {
+            const snapshot = await db.collection('jobOffers')
+                .where('id', '==', offerId)
+                .get();
+
+            if (!snapshot.empty) {
+                const batch = db.batch();
+                snapshot.docs.forEach(doc => {
+                    batch.update(doc.ref, updatedData);
+                });
+                await batch.commit();
+                console.log('Oferta reactivada en Firebase:', offerId);
+            }
+        }
+
+        const offerIndex = offers.findIndex(o => o.id === offerId);
+        if (offerIndex !== -1) {
+            offers[offerIndex] = { ...offers[offerIndex], ...updatedData };
+        }
+
+        localStorage.setItem('jobOffers', JSON.stringify(offers));
+
+        updateStats();
+        loadOffersTable();
+        showNotification(`Oferta reactivada hasta el ${nuevaFecha.toLocaleDateString('es-PR')}`, 'success');
+
+    } catch (error) {
+        console.error('Error reactivando oferta:', error);
+        showNotification('Error reactivando la oferta. Intenta de nuevo.', 'error');
+    }
+}
+
 // ===== SISTEMA DE PROMOCIÓN DE OFERTAS =====
 function generatePromoURL(offerId) {
     const offer = offers.find(o => o.id === offerId);
@@ -3376,6 +3441,11 @@ function filterOffers() {
 	<button class="btn btn-warning btn-small" onclick="generatePromoURL('${offer.id}')" title="Generar URL promocional">
     	    <i class="fas fa-bullhorn"></i>
 	</button>
+        ${status === 'expired' ? `
+        <button class="btn btn-success btn-small" onclick="reactivateOffer('${offer.id}')" title="Reactivar oferta">
+            <i class="fas fa-redo"></i>
+        </button>
+        ` : ''}
         <button class="btn btn-danger btn-small" onclick="deleteOffer('${offer.id}')" title="Eliminar">
             <i class="fas fa-trash"></i>
         </button>
