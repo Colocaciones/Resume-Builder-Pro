@@ -3440,201 +3440,26 @@ awardCount = 0;
 // Funciones de exportación
 async function exportToPDF() {
     try {
-        // Verificar si las librerías están cargadas
-        if (typeof window.jspdf === 'undefined' || typeof html2canvas === 'undefined') {
-            alert('Las librerías de PDF no están cargadas. Por favor recarga la página.');
-            return;
-        }
-
-        const { jsPDF } = window.jspdf;
-        const element = document.getElementById('resume-preview');
-        
-        // Configuraciones mejoradas para html2canvas
-        const canvas = await html2canvas(element, {
-            scale: 3,
-            useCORS: true,
-            logging: false,
-            backgroundColor: '#ffffff',
-            height: element.scrollHeight,
-            windowWidth: element.scrollWidth,
-            allowTaint: true,
-            removeContainer: true,
-            imageTimeout: 0,
-           onclone: function(clonedDoc) {
-    const clonedElement = clonedDoc.getElementById('resume-preview');
-    if (clonedElement) {
-        clonedElement.style.width = '800px';
-        clonedElement.style.padding = '40px';
-        clonedElement.style.boxSizing = 'border-box';
-        clonedElement.style.fontSize = '14px';
-        clonedElement.style.lineHeight = '1.4';
-        
-        // Fix para Stockholm Pro grid layout
-        if (clonedElement.classList.contains('template-stockholm-pro')) {
-            clonedElement.style.display = 'grid';
-            clonedElement.style.gridTemplateColumns = '220px 1fr';
-            clonedElement.style.gap = '0';
-            
-            // Asegurar que left-column y right-column se vean bien
-            const leftCol = clonedElement.querySelector('.left-column');
-            const rightCol = clonedElement.querySelector('.right-column');
-            
-            if (leftCol) {
-    leftCol.style.gridColumn = '1';
-    leftCol.style.gridRow = '3';
-    leftCol.style.background = '#F9FAFB';
-    leftCol.style.padding = '0 25px 50px 25px';
-    leftCol.style.borderRight = '1px solid #E5E7EB';
-}
-
-if (rightCol) {
-    rightCol.style.gridColumn = '2';
-    rightCol.style.gridRow = '3';
-    rightCol.style.padding = '0 50px 50px 40px';
-    rightCol.style.background = 'white';
-}
-            
-            // Fix para resume-summary
-const summary = clonedElement.querySelector('.resume-summary');
-if (summary) {
-    summary.style.gridColumn = '1 / -1';
-    summary.style.padding = '0 50px 35px 50px';
-    summary.style.textAlign = 'center';
-    
-    const summaryH3 = summary.querySelector('h3');
-    if (summaryH3) {
-        summaryH3.style.display = 'inline-block';
-        summaryH3.style.textAlign = 'center';
-    }
-    
-    const summaryP = summary.querySelector('p');
-    if (summaryP) {
-        summaryP.style.textAlign = 'center';
-        summaryP.style.maxWidth = '700px';
-        summaryP.style.margin = '0 auto';
-    }
-}
-            
-            // Fix para resume-header
-            const header = clonedElement.querySelector('.resume-header');
-            if (header) {
-                header.style.gridColumn = '1 / -1';
-                header.style.padding = '50px 50px 30px 50px';
-            }
-        }
-        
-        // Prevenir que elementos se corten - MEJORADO
-const sections = clonedElement.querySelectorAll('.resume-section, .experience-item, .education-item');
-sections.forEach(section => {
-    section.style.breakInside = 'avoid';
-    section.style.pageBreakInside = 'avoid';
-    section.style.breakBefore = 'auto';
-    section.style.breakAfter = 'auto';
-});
-
-// Prevenir cortes en párrafos y títulos
-const paragraphs = clonedElement.querySelectorAll('p, .job-title, .degree-title, .company-info, .institution-info');
-paragraphs.forEach(p => {
-    p.style.breakInside = 'avoid';
-    p.style.pageBreakInside = 'avoid';
-    p.style.wordBreak = 'keep-all';
-    p.style.hyphens = 'none';
-});
-
-// Asegurar que los títulos no queden solos al final de página
-const headings = clonedElement.querySelectorAll('h3, h4, .job-title, .degree-title');
-headings.forEach(h => {
-    h.style.breakAfter = 'avoid';
-    h.style.pageBreakAfter = 'avoid';
-});
-
-// Mantener experiencias/educación juntas
-const items = clonedElement.querySelectorAll('.experience-item, .education-item');
-items.forEach(item => {
-    item.style.breakInside = 'avoid';
-    item.style.pageBreakInside = 'avoid';
-    item.style.marginBottom = '20px';
-    item.style.paddingBottom = '15px';
-});
-    }
-}
-        });
-        
-        const imgData = canvas.toDataURL('image/png', 1.0);
-        
-        // Configuración del PDF
-        const pdf = new jsPDF({
-            orientation: 'portrait',
-            unit: 'mm',
-            format: 'a4',
-            compress: true
-        });
-        
-        const pdfWidth = 210; // A4 width in mm
-        const pdfHeight = 297; // A4 height in mm
-        const margin = 10; // Margen de 10mm
-        const contentWidth = pdfWidth - (margin * 2);
-        const contentHeight = pdfHeight - (margin * 2);
-        
-        // Calcular dimensiones de la imagen
-        const imgWidth = contentWidth;
-        const imgHeight = (canvas.height * imgWidth) / canvas.width;
-        
-        // Si la imagen cabe en una página
-        if (imgHeight <= contentHeight) {
-            pdf.addImage(imgData, 'PNG', margin, margin, imgWidth, imgHeight);
-        } else {
-            // Si necesita múltiples páginas, dividir inteligentemente
-const totalPages = Math.ceil(imgHeight / contentHeight);
-
-// Añadir más margen de seguridad para evitar cortes
-const safeContentHeight = contentHeight - 20; // 20mm de buffer
-
-for (let page = 0; page < totalPages; page++) {
-    if (page > 0) {
-        pdf.addPage();
-    }
-    
-    // Calcular posición con margen de seguridad
-    const startY = page * safeContentHeight;
-    const remainingHeight = imgHeight - startY;
-    const currentPageHeight = Math.min(safeContentHeight, remainingHeight);
-    
-    // Crear un canvas temporal para esta página con overlap
-    const pageCanvas = document.createElement('canvas');
-    const pageCtx = pageCanvas.getContext('2d');
-    
-    // Añadir un pequeño overlap entre páginas (10mm)
-    const overlap = page > 0 ? 10 : 0;
-    const adjustedStartY = Math.max(0, startY - overlap);
-    
-    pageCanvas.width = canvas.width;
-    pageCanvas.height = ((currentPageHeight + overlap) * canvas.width) / imgWidth;
-    
-    // Fondo blanco para evitar transparencias
-    pageCtx.fillStyle = '#ffffff';
-    pageCtx.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
-    
-    // Copiar la porción correspondiente de la imagen original
-    pageCtx.drawImage(
-        canvas,
-        0, (adjustedStartY * canvas.width) / imgWidth,
-        canvas.width, pageCanvas.height,
-        0, 0,
-        canvas.width, pageCanvas.height
-    );
-    
-    const pageImgData = pageCanvas.toDataURL('image/png', 1.0);
-    pdf.addImage(pageImgData, 'PNG', margin, margin, imgWidth, currentPageHeight);
-}
-        }
-        
-        // Guardar el PDF
+        const previewHtml = document.getElementById('resume-preview').outerHTML;
         const fileName = document.getElementById('name').value || 'resume';
-        pdf.save(`${fileName}_resume.pdf`);
 
-// MOSTRAR MENSAJE INFORMATIVO
-showCareerOfficeInfo();
+        const response = await fetch('https://generateresumepdf-p3xqgawzhq-uc.a.run.app', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ previewHtml, fileName })
+        });
+
+        if (!response.ok) throw new Error('Error del servidor al generar el PDF');
+
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${fileName}_resume.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
 
     } catch (error) {
         console.error('Error generando PDF:', error);
