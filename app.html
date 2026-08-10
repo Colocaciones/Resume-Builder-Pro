@@ -3443,8 +3443,8 @@ function updateCertificationsPreview() {
         if (name || org) {
             html += `
     <div class="education-item">
-        <div class="degree-title">${degree}${concentration ? ' - ' + concentration : ''}</div>
-        <div class="institution-info">${institution} | ${year}</div>
+        <div class="degree-title">${name}</div>
+        <div class="institution-info">${org}${date ? ' | ' + date : ''}</div>
         ${description ? `<div>${description}</div>` : ''}
     </div>
 `;
