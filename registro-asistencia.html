@@ -241,14 +241,14 @@ Participa y descubre cómo conectar con estudiantes y egresados para impulsar el
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3.5" y="5" width="17" height="15.5" rx="2.2"/><path d="M8 3v4M16 3v4M3.5 10h17"/></svg>
         </div>
         <span class="eyebrow">Fecha</span>
-        <strong>viernes, 28 de agosto de 2026</strong>
+        <strong>viernes, 11 de septiembre de 2026</strong>
       </div>
       <div class="event-card hora">
         <div class="event-icon">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>
         </div>
         <span class="eyebrow">Hora</span>
-        <strong>8:30 AM a 1:00 PM</strong>
+        <strong>8:00 AM a 1:00 PM</strong>
         <ul class="mini-agenda">
           
         </ul>
@@ -522,7 +522,7 @@ Participa y descubre cómo conectar con estudiantes y egresados para impulsar el
             <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
           </div>
           <h3 id="thanksTitle">¡Su lugar está reservado!</h3>
-          <p id="thanksText">Le esperamos el viernes, 28 de agosto de 2026, a las 8:30 AM en el Museo y Centro de Estudios Humanísticos Dra. Josefina Camacho de la Nuez, Recinto Gurabo. Recibirá un recordatorio antes de la actividad.</p>
+          <p id="thanksText">Le esperamos el viernes, 11 de septiembre de 2026, a las 8:00 AM en el Museo y Centro de Estudios Humanísticos Dra. Josefina Camacho de la Nuez, Recinto Gurabo. Recibirá un recordatorio antes de la actividad.</p>
         </div>
 
       </div>
@@ -616,7 +616,7 @@ Participa y descubre cómo conectar con estudiantes y egresados para impulsar el
       '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 9v4M12 17h.01"/><circle cx="12" cy="12" r="9"/></svg>' +
       'Cupo lleno · Regístrese en la lista de espera';
     waitlistNotice.classList.add('show');
-    confirmacionLabel.innerHTML = 'Solicito unirme a la lista de espera de UAGM Conecta (viernes, 14 de agosto de 2026, a las 8:30 AM, Museo y Centro de Estudios Humanísticos Dra. Josefina Camacho de la Nuez), y declaro que leí y estoy de acuerdo con los términos y condiciones anteriormente expuestos. Entiendo que me contactarán si se libera un espacio. <span class="req">*</span>';
+    confirmacionLabel.innerHTML = 'Solicito unirme a la lista de espera de UAGM Conecta (viernes, 11 de septiembre de 2026, a las 8:00 AM, Museo y Centro de Estudios Humanísticos Dra. Josefina Camacho de la Nuez), y declaro que leí y estoy de acuerdo con los términos y condiciones anteriormente expuestos. Entiendo que me contactarán si se libera un espacio. <span class="req">*</span>';
     submitBtn.textContent = 'Unirme a la lista de espera';
   }
 
@@ -690,7 +690,7 @@ Participa y descubre cómo conectar con estudiantes y egresados para impulsar el
         return db.collection('symplicity_connect_2026').add(data).then(function(){
           if (isFull){
             document.getElementById('thanksTitle').textContent = 'Quedó en la lista de espera';
-            document.getElementById('thanksText').textContent = 'Hemos alcanzado el cupo máximo para UAGM Conecta. Guardamos su registro en la lista de espera y le contactaremos si se libera un espacio antes del viernes, 14 de agosto de 2026.';
+            document.getElementById('thanksText').textContent = 'Hemos alcanzado el cupo máximo para UAGM Conecta. Guardamos su registro en la lista de espera y le contactaremos si se libera un espacio antes del viernes, 11 de septiembre de 2026.';
           }
           document.getElementById('formView').style.display = 'none';
           document.getElementById('thanksView').classList.add('show');
