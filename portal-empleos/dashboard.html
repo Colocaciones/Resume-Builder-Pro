@@ -931,8 +931,11 @@
     <option value="deadline-asc">Vencen Primero</option>
     <option value="deadline-desc">Vencen Último</option>
 </select>
-                        <button class="btn btn-primary" onclick="exportOffersData()">
+                      <button class="btn btn-primary" onclick="exportOffersData()">
                             <i class="fas fa-file-excel"></i> Exportar
+                        </button>
+                        <button class="btn btn-success" onclick="generateEmailBatch()">
+                            <i class="fas fa-envelope"></i> Generar Bloque para Correo
                         </button>
                     </div>
 
@@ -2142,10 +2145,11 @@ case 'followups':
                 return;
             }
 
-            let html = `
+                        let html = `
                 <table class="data-table">
                     <thead>
                         <tr>
+                            <th><input type="checkbox" id="selectAllOffers" onclick="toggleAllOfferCheckboxes(this)"></th>
                             <th>Fecha</th>
                             <th>Empresa</th>
                             <th>Posición</th>
@@ -2170,6 +2174,7 @@ case 'followups':
 
                 html += `
                     <tr>
+                       <td><input type="checkbox" class="offer-checkbox" value="${offer.id}"></td>
                        <td>${offer.today ? new Date(offer.today + 'T00:00:00').toLocaleDateString() : 'Sin fecha'}</td>
                         <td><strong>${offer.companyName}</strong><br><small>${offer.contactPerson}</small></td>
                         <td>${offer.position}</td>
@@ -3271,8 +3276,113 @@ function closePromoModal() {
     const modal = document.getElementById('promoURLModal');
     if (modal) modal.remove();
 }
-        // Eliminar oferta
-        async function deleteOffer(offerId) {
+
+// ===== GENERADOR DE BLOQUE DE CORREO EN LOTE =====
+function toggleAllOfferCheckboxes(source) {
+    document.querySelectorAll('.offer-checkbox').forEach(cb => cb.checked = source.checked);
+}
+
+function generateEmailBatch() {
+    const selectedIds = Array.from(document.querySelectorAll('.offer-checkbox:checked')).map(cb => cb.value);
+
+    if (selectedIds.length === 0) {
+        showNotification('Selecciona al menos una oferta para generar el correo', 'warning');
+        return;
+    }
+
+    const selectedOffers = offers.filter(o => selectedIds.includes(o.id));
+
+    const companies = [...new Set(selectedOffers.map(o => o.companyName))];
+    if (companies.length > 1) {
+        showNotification('Las ofertas seleccionadas son de varias empresas distintas. Revisa el saludo antes de enviar.', 'warning');
+    }
+    const companyText = companies.join(', ');
+
+    const positionsList = selectedOffers.map(o => o.position);
+    let positionsText = positionsList[0];
+    if (positionsList.length === 2) {
+        positionsText = `${positionsList[0]} y ${positionsList[1]}`;
+    } else if (positionsList.length > 2) {
+        positionsText = positionsList.slice(0, -1).join(', ') + ' y ' + positionsList[positionsList.length - 1];
+    }
+
+    const greeting = `¡¡¡Saludos!!!
+La Oficina de Carreras y Colocaciones de la Universidad Ana G. Méndez recinto de Cupey y sus Centros Universitarios de Bayamón y Aguadilla está comprometida en su desarrollo profesional. Por lo tanto, compartimos estas oportunidades de empleo de ${companyText}, para las posiciones de ${positionsText}.
+De estar interesado, puede acceder al enlace correspondiente:`;
+
+    const offerBlocks = selectedOffers.map(offer => {
+        const baseURL = window.location.origin + window.location.pathname.replace('dashboard.html', 'portal-para-participantes.html');
+        const promoURL = `${baseURL}?promo=${offer.id}`;
+
+        const requirementLines = (offer.requirements || '')
+            .split('\n')
+            .map(line => line.trim())
+            .filter(line => line.length > 0)
+            .map(line => `* ${line}`)
+            .join('\n');
+
+        return `${offer.position}: ${promoURL}
+Requisitos:
+
+${requirementLines}
+* LOCALIDAD: ${offer.location}`;
+    }).join('\n\n \n\n');
+
+    const closing = `Es requerido que suban su resumé a través del formulario que estarán llenando.
+Importante: No se aceptarán documentos tipo foto (PNG o JPEG). Solamente documentos en formato Word o PDF
+Quedamos a su disposición.
+ 
+Cordialmente,`;
+
+    const fullEmail = `${greeting}
+
+${offerBlocks}
+
+${closing}`;
+
+    showEmailBatchModal(fullEmail, selectedOffers.length);
+}
+
+function showEmailBatchModal(emailText, count) {
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.style.display = 'flex';
+    modal.id = 'emailBatchModal';
+
+    modal.innerHTML = `
+        <div class="modal-content" style="max-width: 700px;">
+            <div class="modal-header">
+                <h3>📧 Bloque de Correo Generado (${count} ofertas)</h3>
+                <span class="close" onclick="closeEmailBatchModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <textarea id="emailBatchText" style="width: 100%; height: 400px; font-size: 13px; font-family: Arial;">${emailText}</textarea>
+                <button class="btn btn-success" onclick="copyEmailBatch()" style="margin-top: 10px;">
+                    📋 Copiar Correo
+                </button>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeEmailBatchModal()">Cerrar</button>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+}
+
+function copyEmailBatch() {
+    const text = document.getElementById('emailBatchText').value;
+    navigator.clipboard.writeText(text).then(() => {
+        showNotification('Correo copiado al portapapeles', 'success');
+    });
+}
+
+function closeEmailBatchModal() {
+    const modal = document.getElementById('emailBatchModal');
+    if (modal) modal.remove();
+}
+        // Eliminar oferta        
+async function deleteOffer(offerId) {
     const offer = offers.find(o => o.id === offerId);
     if (!offer) return;
     
@@ -3392,10 +3502,11 @@ function filterOffers() {
                 return;
             }
 
-            let html = `
+          let html = `
                 <table class="data-table">
                     <thead>
                         <tr>
+                            <th><input type="checkbox" id="selectAllOffers" onclick="toggleAllOfferCheckboxes(this)"></th>
                             <th>Fecha</th>
                             <th>Empresa</th>
                             <th>Posición</th>
@@ -3419,6 +3530,7 @@ function filterOffers() {
 
                 html += `
                     <tr>
+                        <td><input type="checkbox" class="offer-checkbox" value="${offer.id}"></td>
                         <td>${offer.today ? new Date(offer.today + 'T00:00:00').toLocaleDateString() : 'Sin fecha'}</td>
                         <td><strong>${offer.companyName}</strong><br><small>${offer.contactPerson}</small></td>
                         <td>${offer.position}</td>
