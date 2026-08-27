@@ -974,8 +974,11 @@
                             <option value="new">Nuevos</option>
                             <option value="returning">Seguimiento</option>
                         </select>
-                        <button class="btn btn-primary" onclick="exportParticipantsData()">
+                                                <button class="btn btn-primary" onclick="exportParticipantsData()">
                             <i class="fas fa-file-excel"></i> Exportar
+                        </button>
+                        <button class="btn btn-danger" onclick="bulkDeleteParticipants()">
+                            <i class="fas fa-trash"></i> Eliminar Seleccionados
                         </button>
                     </div>
 
@@ -1135,8 +1138,14 @@
             <option value="week">Esta Semana</option>
             <option value="month">Este Mes</option>
         </select>
-        <button class="btn btn-primary" onclick="exportPendingData()">
+                <button class="btn btn-primary" onclick="exportPendingData()">
             <i class="fas fa-file-excel"></i> Exportar
+        </button>
+        <button class="btn btn-secondary" onclick="selectAllPendingCheckboxes()">
+            <i class="fas fa-check-square"></i> Seleccionar Todos
+        </button>
+        <button class="btn btn-danger" onclick="bulkDeletePendingApplications()">
+            <i class="fas fa-trash"></i> Eliminar Seleccionados
         </button>
     </div>
 
@@ -2232,10 +2241,11 @@ case 'followups':
                 return;
             }
 
-            let html = `
+                        let html = `
                 <table class="data-table">
                     <thead>
                         <tr>
+                            <th><input type="checkbox" id="selectAllParticipants" onclick="toggleAllParticipantCheckboxes(this)"></th>
                             <th>Fecha Registro</th>
                             <th>Nombre</th>
                             <th>Email</th>
@@ -2262,8 +2272,9 @@ case 'followups':
                     'returning': 'Seguimiento'
                 };
 
-                html += `
+                                html += `
                     <tr>
+                        <td><input type="checkbox" class="participant-checkbox" value="${participant.id}"></td>
                         <td>${new Date(participant.registeredAt).toLocaleDateString()}</td>
                         <td><strong>${participant.firstName} ${participant.lastName}</strong><br><small>ID: ${participant.studentId}</small></td>
                         <td>${participant.email}</td>
@@ -2945,8 +2956,51 @@ localStorage.setItem('lastCheckedParticipants', lastCheckedParticipants.toString
         }
     }
 }
-        // Editar oferta (redirigir al gestor de ofertas)
-        function editOffer(offerId) {
+
+function toggleAllParticipantCheckboxes(source) {
+    document.querySelectorAll('.participant-checkbox').forEach(cb => cb.checked = source.checked);
+}
+
+async function bulkDeleteParticipants() {
+    const selectedIds = Array.from(document.querySelectorAll('.participant-checkbox:checked')).map(cb => cb.value);
+
+    if (selectedIds.length === 0) {
+        showNotification('Selecciona al menos un participante para eliminar', 'warning');
+        return;
+    }
+
+    if (!confirm(`¿Estás seguro de que quieres eliminar ${selectedIds.length} participante(s) seleccionado(s)? Esta acción no se puede deshacer.`)) {
+        return;
+    }
+
+    try {
+        if (isFirebaseInitialized) {
+            const batch = db.batch();
+            for (const id of selectedIds) {
+                const snapshot = await db.collection('participants').where('id', '==', id).get();
+                snapshot.docs.forEach(doc => batch.delete(doc.ref));
+            }
+            await batch.commit();
+            console.log('Participantes eliminados de Firebase:', selectedIds.length);
+        }
+
+        participants = participants.filter(p => !selectedIds.includes(p.id));
+        localStorage.setItem('participants', JSON.stringify(participants));
+
+        updateStats();
+        filterParticipants();
+        showNotification(`${selectedIds.length} participante(s) eliminado(s) exitosamente`, 'success');
+
+        lastCheckedParticipants = Math.max(0, participants.length);
+        localStorage.setItem('lastCheckedParticipants', lastCheckedParticipants.toString());
+
+    } catch (error) {
+        console.error('Error eliminando participantes:', error);
+        showNotification('Error eliminando los participantes. Intenta de nuevo.', 'error');
+    }
+}
+        // Editar oferta (redirigir al gestor de ofertas)        
+function editOffer(offerId) {
     const offer = offers.find(o => o.id === offerId);
     if (!offer) return;
 
@@ -3623,10 +3677,11 @@ function filterParticipants() {
                 return;
             }
 
-            let html = `
+                        let html = `
                 <table class="data-table">
                     <thead>
                         <tr>
+                            <th><input type="checkbox" id="selectAllParticipants" onclick="toggleAllParticipantCheckboxes(this)"></th>
                             <th>Fecha Registro</th>
                             <th>Nombre</th>
                             <th>Email</th>
@@ -3653,8 +3708,9 @@ function filterParticipants() {
                     'returning': 'Seguimiento'
                 };
 
-                html += `
+             html += `
                     <tr>
+                        <td><input type="checkbox" class="participant-checkbox" value="${participant.id}"></td>
                         <td>${new Date(participant.registeredAt).toLocaleDateString()}</td>
                         <td><strong>${participant.firstName} ${participant.lastName}</strong><br><small>ID: ${participant.studentId}</small></td>
                         <td>${participant.email}</td>
@@ -5453,8 +5509,11 @@ function loadPendingApplicationsTable() {
         
         if (!participant || !offer) return;
 
-        html += `
+                html += `
             <div class="application-review-card" style="border: 2px solid #e2e8f0; border-radius: 15px; padding: 20px; margin-bottom: 20px; background: white;">
+                <label style="display: flex; align-items: center; gap: 8px; margin-bottom: 15px; cursor: pointer; font-size: 13px; color: #6c757d;">
+                    <input type="checkbox" class="pending-checkbox" value="${app.id}"> Seleccionar para eliminar
+                </label>
                 <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px;">
                     
                     <!-- CANDIDATO -->
@@ -6138,8 +6197,11 @@ function displayFilteredPendingApplications(filteredApps) {
        
        if (!participant || !offer) return;
 
-       html += `
+              html += `
            <div class="application-review-card" style="border: 2px solid #e2e8f0; border-radius: 15px; padding: 20px; margin-bottom: 20px; background: white;">
+               <label style="display: flex; align-items: center; gap: 8px; margin-bottom: 15px; cursor: pointer; font-size: 13px; color: #6c757d;">
+                   <input type="checkbox" class="pending-checkbox" value="${app.id}"> Seleccionar para eliminar
+               </label>
                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px;">
                    
                    <!-- CANDIDATO -->
@@ -6269,10 +6331,53 @@ function exportPendingData() {
    const wb = XLSX.utils.book_new();
    XLSX.utils.book_append_sheet(wb, ws, "Solicitudes Pendientes");
    
-   const filename = `Solicitudes_Pendientes_${new Date().toISOString().split('T')[0]}.xlsx`;
+      const filename = `Solicitudes_Pendientes_${new Date().toISOString().split('T')[0]}.xlsx`;
    XLSX.writeFile(wb, filename);
    
    showNotification('Solicitudes pendientes exportadas exitosamente', 'success');
+}
+
+function selectAllPendingCheckboxes() {
+    document.querySelectorAll('.pending-checkbox').forEach(cb => cb.checked = true);
+}
+
+async function bulkDeletePendingApplications() {
+    const selectedIds = Array.from(document.querySelectorAll('.pending-checkbox:checked')).map(cb => cb.value);
+
+    if (selectedIds.length === 0) {
+        showNotification('Selecciona al menos una solicitud para eliminar', 'warning');
+        return;
+    }
+
+    if (!confirm(`¿Estás seguro de que quieres eliminar ${selectedIds.length} solicitud(es) seleccionada(s)? Esta acción no se puede deshacer.`)) {
+        return;
+    }
+
+    try {
+        if (isFirebaseInitialized) {
+            const batch = db.batch();
+            for (const id of selectedIds) {
+                const snapshot = await db.collection('applications').where('id', '==', id).get();
+                snapshot.docs.forEach(doc => batch.delete(doc.ref));
+            }
+            await batch.commit();
+            console.log('Solicitudes eliminadas de Firebase:', selectedIds.length);
+        }
+
+        applications = applications.filter(app => !selectedIds.includes(app.id));
+        localStorage.setItem('applications', JSON.stringify(applications));
+
+        updateStats();
+        loadPendingApplicationsTable();
+        showNotification(`${selectedIds.length} solicitud(es) eliminada(s) exitosamente`, 'success');
+
+        lastCheckedApplications = Math.max(0, applications.length);
+        localStorage.setItem('lastCheckedApplications', lastCheckedApplications.toString());
+
+    } catch (error) {
+        console.error('Error eliminando solicitudes:', error);
+        showNotification('Error eliminando las solicitudes. Intenta de nuevo.', 'error');
+    }
 }
 
 // Función auxiliar para obtener etiqueta del campus
