@@ -752,8 +752,8 @@
                 <p>Ya puedes explorar las ofertas de empleo disponibles.</p>
             </div>
 
-            <div class="tabs">
-                <button class="tab active" onclick="switchTab('register')">
+                        <div class="tabs">
+                <button class="tab active" onclick="switchTab('register')" id="registerTab">
                     <i class="fas fa-user-plus"></i> Registro
                 </button>
                 <button class="tab" onclick="switchTab('offers')" id="offersTab">
@@ -1219,10 +1219,11 @@ function initializeFirebase() {
     setupPhoneFormatting(); // ← NUEVA LÍNEA
     checkForPromotion();
 
-    // Si ya se registró hace un momento en esta misma pestaña, no mostrar el formulario otra vez
+        // Si ya se registró hace un momento en esta misma pestaña, no mostrar el formulario otra vez
     const sessionUser = sessionStorage.getItem('currentUser');
     if (sessionUser && !promoOfferId) {
         currentUser = JSON.parse(sessionUser);
+        document.getElementById('registerTab').style.display = 'none';
         if (currentUser.requestedServices === 'interesado') {
             document.getElementById('offersTab').style.display = 'flex';
             switchTab('offers');
@@ -1553,8 +1554,9 @@ async function submitRegistration() {
     participants.push(formData);
     localStorage.setItem('participants', JSON.stringify(participants));
 
-    // Guardar en sessionStorage: evita duplicados si la persona entra/sale por error en esta misma visita
+       // Guardar en sessionStorage: evita duplicados si la persona entra/sale por error en esta misma visita
     sessionStorage.setItem('currentUser', JSON.stringify(formData));
+    document.getElementById('registerTab').style.display = 'none';
 
     currentUser = formData;
     if (promoOfferId) {
