@@ -1971,13 +1971,24 @@ function displayFilteredOffers(filteredOffers) {
                     <p style="background: #f8f9fa; padding: 15px; border-radius: 6px;">${offer.requirements}</p>
                 </div>
                 
-                ${offer.schedule ? `
+                                ${offer.schedule ? `
                 <div style="margin-bottom: 20px;">
                     <h4 style="color: #c8102e; margin-bottom: 10px;">Horarios</h4>
                     <p style="background: #f8f9fa; padding: 15px; border-radius: 6px;">${offer.schedule}</p>
                 </div>
                 ` : ''}
             `;
+
+            // Reflejar en el botón si ya se aplicó a esta oferta en esta sesión
+            const appliedOffers = JSON.parse(sessionStorage.getItem('appliedDirectOffers') || '[]');
+            const applyBtn = document.getElementById('applyBtn');
+            if (appliedOffers.includes(offer.id)) {
+                applyBtn.disabled = true;
+                applyBtn.innerHTML = '<i class="fas fa-check"></i> Ya Solicitaste esta Oferta';
+            } else {
+                applyBtn.disabled = false;
+                applyBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Aplicar a esta Oferta';
+            }
 
             document.getElementById('offerModal').style.display = 'flex';
         }
@@ -1994,7 +2005,15 @@ async function applyToOffer() {
 
     const offerToApply = currentOffer; // Guardar referencia ANTES de cerrar el modal (closeOfferModal borra currentOffer)
 
-    // Crear aplicación con estado PENDING (nuevo)
+    // Evitar aplicar dos veces a la misma oferta en esta misma visita
+    let appliedOffers = JSON.parse(sessionStorage.getItem('appliedDirectOffers') || '[]');
+    if (appliedOffers.includes(offerToApply.id)) {
+        showNotification('Ya habías solicitado esta oferta anteriormente', 'info');
+        closeOfferModal();
+        return;
+    }
+
+    // Crear aplicación con estado PENDING (nuevo)    
     const application = {
         id: Date.now().toString(),
         offerId: offerToApply.id,
@@ -2034,10 +2053,14 @@ async function applyToOffer() {
         console.error('Error con Firebase, usando localStorage:', error);
     }
 
-    // Guardar también en localStorage como respaldo
+        // Guardar también en localStorage como respaldo
     let applications = JSON.parse(localStorage.getItem('applications')) || [];
     applications.push(application);
     localStorage.setItem('applications', JSON.stringify(applications));
+
+    // Marcar esta oferta como ya solicitada en esta sesión
+    appliedOffers.push(offerToApply.id);
+    sessionStorage.setItem('appliedDirectOffers', JSON.stringify(appliedOffers));
 
     closeOfferModal();
 
