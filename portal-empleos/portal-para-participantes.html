@@ -1042,10 +1042,18 @@ function checkForPromotion() {
     
     if (promoOfferId) {
         console.log('🎯 Modo promoción activado para oferta:', promoOfferId);
+
+        // Si ya se completó la solicitud para esta oferta en esta misma visita, no repetir el proceso
+        const appliedOffers = JSON.parse(sessionStorage.getItem('appliedPromoOffers') || '[]');
+        if (appliedOffers.includes(promoOfferId)) {
+            console.log('🔁 Ya se aplicó a esta oferta en esta sesión, evitando duplicado');
+            showAlreadyAppliedMessage();
+            return;
+        }
         
         // Esperar a que las ofertas se carguen
-        setTimeout(() => {
-            const promoOffer = offers.find(offer => offer.id === promoOfferId);
+        setTimeout(() => {            
+        const promoOffer = offers.find(offer => offer.id === promoOfferId);
             
             if (promoOffer) {
                 // Actualizar el header con info de la oferta
@@ -1066,6 +1074,19 @@ function checkForPromotion() {
         }, 1500);
     }
 }
+function showAlreadyAppliedMessage() {
+    const offersTab = document.getElementById('offersTab');
+    if (offersTab) offersTab.style.display = 'none';
+
+    document.getElementById('registerContent').innerHTML = `
+        <div style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; padding: 40px; border-radius: 15px; text-align: center;">
+            <i class="fas fa-check-circle" style="font-size: 64px; margin-bottom: 20px;"></i>
+            <h2 style="color: white; margin-bottom: 15px;">¡Ya completaste tu solicitud!</h2>
+            <p style="font-size: 18px; margin: 0;">Ya registramos tu información para esta oferta. Nuestro equipo la está evaluando.</p>
+        </div>
+    `;
+}
+
 function updateHeaderForPromotion(offer) {
     // Buscar o crear la sección de bienvenida
     let welcomeSection = document.querySelector('.welcome-section');
@@ -1197,6 +1218,17 @@ function initializeFirebase() {
     setupConditionalFields();
     setupPhoneFormatting(); // ← NUEVA LÍNEA
     checkForPromotion();
+
+    // Si ya se registró hace un momento en esta misma pestaña, no mostrar el formulario otra vez
+    const sessionUser = sessionStorage.getItem('currentUser');
+    if (sessionUser && !promoOfferId) {
+        currentUser = JSON.parse(sessionUser);
+        if (currentUser.requestedServices === 'interesado') {
+            document.getElementById('offersTab').style.display = 'flex';
+            switchTab('offers');
+        }
+    }
+
     console.log('Portal Participantes cargado correctamente');
 });
 
@@ -1348,13 +1380,19 @@ function toggleManpowerField() {
     }
 }
 
-        // Manejar registro
+                // Manejar registro
         document.getElementById('registrationForm').addEventListener('submit', function(e) {
             e.preventDefault();
             
             if (!validateRegistrationForm()) {
                 return;
             }
+
+            // Evitar doble clic / doble envío accidental
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            if (submitBtn.disabled) return;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
 
             submitRegistration();
         });
@@ -1509,11 +1547,14 @@ async function submitRegistration() {
         showNotification('Guardado localmente (Firebase falló)', 'warning');
     }
 
-    // Guardar también en localStorage como respaldo
+        // Guardar también en localStorage como respaldo
     localStorage.setItem('currentUser', JSON.stringify(formData));
     let participants = JSON.parse(localStorage.getItem('participants')) || [];
     participants.push(formData);
     localStorage.setItem('participants', JSON.stringify(participants));
+
+    // Guardar en sessionStorage: evita duplicados si la persona entra/sale por error en esta misma visita
+    sessionStorage.setItem('currentUser', JSON.stringify(formData));
 
     currentUser = formData;
     if (promoOfferId) {
@@ -1576,7 +1617,7 @@ async function createAutoApplication(participantData, offerId) {
         }
     };
     
-    try {
+        try {
         if (isFirebaseInitialized) {
             const result = await FirebaseHelper.saveDoc('applications', autoApplication);
             if (result.success) {
@@ -1587,6 +1628,13 @@ async function createAutoApplication(participantData, offerId) {
         let applications = JSON.parse(localStorage.getItem('applications')) || [];
         applications.push(autoApplication);
         localStorage.setItem('applications', JSON.stringify(applications));
+
+        // Marcar esta oferta como ya aplicada en esta sesión, para evitar duplicados si vuelve a entrar por el mismo enlace
+        let appliedOffers = JSON.parse(sessionStorage.getItem('appliedPromoOffers') || '[]');
+        if (!appliedOffers.includes(offerId)) {
+            appliedOffers.push(offerId);
+            sessionStorage.setItem('appliedPromoOffers', JSON.stringify(appliedOffers));
+        }
         
         console.log('✅ Aplicación guardada localmente');
         
