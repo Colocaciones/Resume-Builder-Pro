@@ -3908,31 +3908,53 @@ function filterApplications() {
             showNotification('Ofertas exportadas exitosamente', 'success');
         }
 
-        // Exportar datos de participantes
+                // Exportar datos de participantes (mismo orden de columnas que la pestaña de Intervenciones)
         function exportParticipantsData() {
             if (participants.length === 0) {
                 showNotification('No hay participantes para exportar', 'warning');
                 return;
             }
 
+            const divisionLabels = {
+                'negocios': 'Negocios, Turismo y Emprendimiento',
+                'salud': 'Ciencias de la Salud',
+                'liberales': 'Artes Liberales',
+                'tecnologia': 'Ciencias y Tecnología',
+                'tecnicos': 'Programas Técnicos'
+            };
+
+            const degreeLabels = {
+                '11mo': '11mo ó menos',
+                'cuarto': 'Cuarto Año',
+                'certificado': 'Certificado',
+                'asociado': 'Grado Asociado',
+                'bachillerato': 'Bachillerato',
+                'maestria': 'Maestría',
+                'doctorado': 'Doctorado'
+            };
+
+            const participationLabels = {
+                'new': 'Nuevo',
+                'returning': 'Seguimiento'
+            };
+
             const data = participants.map(participant => ({
-                'Fecha Registro': new Date(participant.registeredAt).toLocaleDateString(),
-                'Tipo Participante': participant.participantType === 'new' ? 'Nuevo' : 'Seguimiento',
+                'ID': participant.studentId || 'No Aplica',
                 'Nombre': participant.firstName,
                 'Apellidos': participant.lastName,
+                'Tipo Persona': getStudentTypeLabel(participant.studentType),
+                'Diurno/Nocturno': participant.schedule === 'diurno' ? 'Diurno' : (participant.schedule === 'nocturno' ? 'Nocturno' : ''),
+                'División Académica': divisionLabels[participant.academicDivision] || participant.academicDivision || '',
+                'Concentración': participant.concentration || '',
+                'Nivel Académico': degreeLabels[participant.academicDegree] || participant.academicDegree || '',
+                'Fecha': new Date(participant.registeredAt).toLocaleDateString('es-ES'),
+                'Servicio Ofrecido': getServiceLabel(participant.requestedServices),
+                'Tipo Participación': participationLabels[participant.participantType] || '',
+                'Comentarios': '',
+                'Sexo': '',
+                'Año de Estudios Estudiante': participant.studyYear || '',
                 'Email': participant.email,
-                'Teléfono': participant.phone,
-                'Ciudad': participant.city,
-                'Tipo Estudiante': participant.studentType,
-                'Recinto': participant.campus,
-                'ID Estudiante': participant.studentId,
-                'Horario': participant.schedule,
-                'Año Estudios': participant.studyYear,
-                'Concentración': participant.concentration,
-                'Candidato Graduación': participant.graduationCandidate === 'yes' ? 'Sí' : 'No',
-                'Grado Académico': participant.academicDegree,
-                'División Académica': participant.academicDivision,
-                'Resumé': participant.resume
+                'Teléfono': participant.phone
             }));
 
             const ws = XLSX.utils.json_to_sheet(data);
