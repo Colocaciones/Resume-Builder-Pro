@@ -71,6 +71,7 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
 .btn-secondary { background: #6c757d; color: white; }
 .btn-success { background: #28a745; color: white; }
 .btn-info { background: #17a2b8; color: white; }
+.btn-danger { background: #dc3545; color: white; }
 .btn-small { padding: 8px 14px; font-size: 13px; }
 .btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
@@ -412,7 +413,7 @@ async function showAsistencia(tallerId, nombre) {
     try {
         const snapshot = await db.collection('asistencias_talleres').where('tallerId', '==', tallerId).get();
         const rows = [];
-        snapshot.forEach(doc => rows.push(doc.data()));
+        snapshot.forEach(doc => rows.push({ docId: doc.id, ...doc.data() }));
         rows.sort((a, b) => new Date(a.registeredAt) - new Date(b.registeredAt));
 
         document.getElementById('asistenciaCount').textContent = `${rows.length} estudiante${rows.length !== 1 ? 's' : ''} registrado${rows.length !== 1 ? 's' : ''}`;
@@ -423,7 +424,7 @@ async function showAsistencia(tallerId, nombre) {
         }
 
         let html = `<table class="data-table"><thead><tr>
-            <th>ID</th><th>Nombre</th><th>Concentración</th><th>Email</th><th>Teléfono</th><th>Hora</th>
+            <th>ID</th><th>Nombre</th><th>Concentración</th><th>Email</th><th>Teléfono</th><th>Hora</th><th></th>
         </tr></thead><tbody>`;
         rows.forEach(r => {
             html += `<tr>
@@ -433,6 +434,7 @@ async function showAsistencia(tallerId, nombre) {
                 <td>${r.email || ''}</td>
                 <td>${r.phone || ''}</td>
                 <td>${new Date(r.registeredAt).toLocaleTimeString('es-ES')}</td>
+                <td><button class="btn btn-danger btn-small" onclick="deleteAsistencia('${r.docId}', '${(r.firstName + ' ' + r.lastName).replace(/'/g, "\\'")}')" title="Eliminar registro"><i class="fas fa-trash"></i></button></td>
             </tr>`;
         });
         html += '</tbody></table>';
@@ -441,6 +443,21 @@ async function showAsistencia(tallerId, nombre) {
     } catch (error) {
         console.error(error);
         document.getElementById('asistenciaTableContainer').innerHTML = '<p style="text-align:center; padding:20px; color:#dc3545;">Error cargando la asistencia.</p>';
+    }
+}
+
+async function deleteAsistencia(docId, nombre) {
+    if (!confirm(`¿Eliminar el registro de asistencia de "${nombre}"? Esta acción no se puede deshacer.`)) {
+        return;
+    }
+    try {
+        await db.collection('asistencias_talleres').doc(docId).delete();
+        showNotification('Registro eliminado', 'success');
+        await showAsistencia(currentTallerId, document.getElementById('asistenciaModalTitle').textContent.replace('Asistencia: ', ''));
+        await loadTalleres();
+    } catch (error) {
+        console.error(error);
+        showNotification('Error eliminando el registro', 'error');
     }
 }
 
