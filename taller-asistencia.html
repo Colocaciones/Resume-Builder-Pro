@@ -191,7 +191,7 @@ function showConfirmForm(student) {
             <label>Marca lo que aplique</label>
             ${camposAdicionales.map((campo, i) => `
                 <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
-                    <input type="checkbox" class="campoExtraCheck" data-campo="${campo}" id="campoExtra${i}" style="width:auto;">
+                    <input type="radio" name="campoExtraRadio" class="campoExtraCheck" value="${campo}" id="campoExtra${i}" style="width:auto;">
                     <label style="margin:0; font-weight:normal;" for="campoExtra${i}">${campo}</label>
                 </div>
             `).join('')}
@@ -300,7 +300,8 @@ async function confirmarAsistencia() {
     const campus = foundStudent.campus || '';
     const tipoFirma = tallerData.tipoFirma || 'escrita';
 
-    const camposExtra = Array.from(document.querySelectorAll('.campoExtraCheck:checked')).map(cb => cb.dataset.campo);
+    const camposExtraSeleccionado = document.querySelector('.campoExtraCheck:checked');
+    const camposExtra = camposExtraSeleccionado ? [camposExtraSeleccionado.value] : [];
 
     let firmaData = {};
     if (tipoFirma === 'dibujada') {
