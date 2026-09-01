@@ -156,7 +156,7 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
         <div class="tab-content active" id="tabTalleres">
             <div class="card">
                 <h3><i class="fas fa-plus-circle"></i> Crear Taller Nuevo</h3>
-                <div class="form-row">
+                <div class="form-row" style="grid-template-columns: 2fr 1fr 1fr auto;">
                     <div class="form-group">
                         <label>Nombre del taller</label>
                         <input type="text" id="newTallerNombre" placeholder="Ej: Redacción de Resumé - Salón 204">
@@ -164,6 +164,13 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
                     <div class="form-group">
                         <label>Fecha</label>
                         <input type="date" id="newTallerFecha">
+                    </div>
+                    <div class="form-group">
+                        <label>Tipo de firma</label>
+                        <select id="newTallerFirma">
+                            <option value="escrita">Certificación escrita</option>
+                            <option value="dibujada">Firma dibujada</option>
+                        </select>
                     </div>
                     <button class="btn btn-primary" onclick="crearTaller()">
                         <i class="fas fa-plus"></i> Crear
@@ -296,6 +303,7 @@ function switchTab(tab) {
 async function crearTaller() {
     const nombre = document.getElementById('newTallerNombre').value.trim();
     const fecha = document.getElementById('newTallerFecha').value;
+    const tipoFirma = document.getElementById('newTallerFirma').value;
 
     if (!nombre || !fecha) {
         showNotification('Completa el nombre y la fecha del taller', 'warning');
@@ -304,7 +312,7 @@ async function crearTaller() {
 
     try {
         await db.collection('talleres').add({
-            nombre, fecha,
+            nombre, fecha, tipoFirma,
             createdAt: new Date().toISOString()
         });
         document.getElementById('newTallerNombre').value = '';
@@ -340,11 +348,12 @@ async function loadTalleres() {
         let html = '';
         talleres.forEach(t => {
             const count = counts[t.id] || 0;
+            const firmaLabel = t.tipoFirma === 'dibujada' ? '✍️ Firma dibujada' : '📝 Certificación escrita';
             html += `
                 <div class="taller-item">
                     <div class="taller-info">
                         <strong>${t.nombre}</strong>
-                        <div><i class="fas fa-calendar"></i> ${formatFecha(t.fecha)} &nbsp;·&nbsp; <span class="badge">${count} registrado${count !== 1 ? 's' : ''}</span></div>
+                        <div><i class="fas fa-calendar"></i> ${formatFecha(t.fecha)} &nbsp;·&nbsp; <span class="badge">${count} registrado${count !== 1 ? 's' : ''}</span> &nbsp;·&nbsp; <span style="color:#6c757d; font-size:12px;">${firmaLabel}</span></div>
                     </div>
                     <div class="taller-actions">
                         <button class="btn btn-info btn-small" onclick="showQR('${t.id}', '${t.nombre.replace(/'/g, "\\'")}')">
@@ -424,9 +433,15 @@ async function showAsistencia(tallerId, nombre) {
         }
 
         let html = `<table class="data-table"><thead><tr>
-            <th>ID</th><th>Nombre</th><th>Concentración</th><th>Email</th><th>Teléfono</th><th>Hora</th><th></th>
+            <th>ID</th><th>Nombre</th><th>Concentración</th><th>Email</th><th>Teléfono</th><th>Hora</th><th>Firma</th><th></th>
         </tr></thead><tbody>`;
         rows.forEach(r => {
+            let firmaHtml = '<span style="color:#adb5bd;">—</span>';
+            if (r.firmaTipo === 'dibujada' && r.firmaImagen) {
+                firmaHtml = `<img src="${r.firmaImagen}" style="height:30px; border:1px solid #e2e8f0; border-radius:4px; cursor:pointer;" onclick="verFirmaAmpliada('${r.firmaImagen}')">`;
+            } else if (r.firmaTipo === 'escrita' && r.firmaTexto) {
+                firmaHtml = `<span style="font-style:italic; color:#495057;">"${r.firmaTexto}"</span>`;
+            }
             html += `<tr>
                 <td>${r.studentId}</td>
                 <td>${r.firstName} ${r.lastName}</td>
@@ -434,6 +449,7 @@ async function showAsistencia(tallerId, nombre) {
                 <td>${r.email || ''}</td>
                 <td>${r.phone || ''}</td>
                 <td>${new Date(r.registeredAt).toLocaleTimeString('es-ES')}</td>
+                <td>${firmaHtml}</td>
                 <td><button class="btn btn-danger btn-small" onclick="deleteAsistencia('${r.docId}', '${(r.firstName + ' ' + r.lastName).replace(/'/g, "\\'")}')" title="Eliminar registro"><i class="fas fa-trash"></i></button></td>
             </tr>`;
         });
@@ -483,7 +499,8 @@ async function exportAsistencia() {
             'Grado': r.grado || '',
             'Email': r.email || '',
             'Teléfono': r.phone || '',
-            'Hora de Registro': new Date(r.registeredAt).toLocaleString('es-ES')
+            'Hora de Registro': new Date(r.registeredAt).toLocaleString('es-ES'),
+            'Firma': r.firmaTipo === 'dibujada' ? 'Firma dibujada (ver en el panel)' : (r.firmaTexto || '')
         }));
 
         const ws = XLSX.utils.json_to_sheet(data);
@@ -500,6 +517,14 @@ async function exportAsistencia() {
 
 function closeModal(id) {
     document.getElementById(id).style.display = 'none';
+}
+
+function verFirmaAmpliada(imgData) {
+    const modal = document.createElement('div');
+    modal.style.cssText = 'position:fixed; inset:0; background:rgba(0,0,0,0.75); display:flex; align-items:center; justify-content:center; z-index:3000; cursor:pointer;';
+    modal.innerHTML = `<div style="background:white; padding:20px; border-radius:12px;"><img src="${imgData}" style="max-width:80vw; max-height:70vh;"></div>`;
+    modal.onclick = () => modal.remove();
+    document.body.appendChild(modal);
 }
 
 // ===== ROSTER (Lista de estudiantes) =====

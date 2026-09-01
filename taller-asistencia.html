@@ -183,6 +183,27 @@ async function buscarEstudiante() {
 }
 
 function showConfirmForm(student) {
+    const tipoFirma = tallerData.tipoFirma || 'escrita';
+
+    const firmaHtml = tipoFirma === 'dibujada' ? `
+        <div class="form-group">
+            <label>Firma <span style="color:#c8102e;">*</span></label>
+            <canvas id="signaturePad" width="360" height="150" style="border:2px solid #e2e8f0; border-radius:12px; width:100%; touch-action:none; background:#fafafa;"></canvas>
+            <button type="button" class="btn btn-outline" style="margin-top:8px; padding:8px;" onclick="limpiarFirma()">
+                <i class="fas fa-eraser"></i> Limpiar Firma
+            </button>
+        </div>
+    ` : `
+        <div class="form-group">
+            <label>Escribe tu nombre completo como firma <span style="color:#c8102e;">*</span></label>
+            <input type="text" id="firmaTextoInput" placeholder="Nombre y Apellido">
+        </div>
+        <div class="form-group" style="display:flex; align-items:flex-start; gap:10px;">
+            <input type="checkbox" id="certificoCheck" style="width:auto; margin-top:3px;">
+            <label style="margin:0; font-weight:normal;" for="certificoCheck">Certifico que participé en este taller</label>
+        </div>
+    `;
+
     document.getElementById('cardBody').innerHTML = `
         <div class="confirm-box"><p><i class="fas fa-check-circle" style="color:#28a745;"></i> Encontramos tu información.</p></div>
         <div class="readonly-field"><label>Nombre</label><div>${student.firstName || ''} ${student.lastName || ''}</div></div>
@@ -190,6 +211,7 @@ function showConfirmForm(student) {
         <div class="readonly-field"><label>Email</label><div>${student.email || '—'}</div></div>
         <div class="readonly-field"><label>Concentración</label><div>${student.concentracion || '—'}</div></div>
         <div class="readonly-field"><label>Grado Académico</label><div>${student.grado || '—'}</div></div>
+        ${firmaHtml}
         <button class="btn" id="confirmBtn" onclick="confirmarAsistencia()">
             <i class="fas fa-check"></i> Confirmar Asistencia
         </button>
@@ -197,6 +219,60 @@ function showConfirmForm(student) {
             <i class="fas fa-arrow-left"></i> Volver
         </button>
     `;
+
+    if (tipoFirma === 'dibujada') {
+        initSignaturePad();
+    }
+}
+
+// ===== Firma dibujada (canvas) =====
+let sigCanvas, sigCtx, isDrawing = false, hasSigned = false;
+
+function initSignaturePad() {
+    sigCanvas = document.getElementById('signaturePad');
+    sigCtx = sigCanvas.getContext('2d');
+    sigCtx.strokeStyle = '#2d3748';
+    sigCtx.lineWidth = 2.5;
+    sigCtx.lineCap = 'round';
+    hasSigned = false;
+
+    function getPos(e) {
+        const rect = sigCanvas.getBoundingClientRect();
+        const scaleX = sigCanvas.width / rect.width;
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        return { x: (clientX - rect.left) * scaleX, y: (clientY - rect.top) * scaleX };
+    }
+
+    function start(e) {
+        e.preventDefault();
+        isDrawing = true;
+        hasSigned = true;
+        const pos = getPos(e);
+        sigCtx.beginPath();
+        sigCtx.moveTo(pos.x, pos.y);
+    }
+    function move(e) {
+        if (!isDrawing) return;
+        e.preventDefault();
+        const pos = getPos(e);
+        sigCtx.lineTo(pos.x, pos.y);
+        sigCtx.stroke();
+    }
+    function end() { isDrawing = false; }
+
+    sigCanvas.addEventListener('mousedown', start);
+    sigCanvas.addEventListener('mousemove', move);
+    sigCanvas.addEventListener('mouseup', end);
+    sigCanvas.addEventListener('mouseleave', end);
+    sigCanvas.addEventListener('touchstart', start);
+    sigCanvas.addEventListener('touchmove', move);
+    sigCanvas.addEventListener('touchend', end);
+}
+
+function limpiarFirma() {
+    sigCtx.clearRect(0, 0, sigCanvas.width, sigCanvas.height);
+    hasSigned = false;
 }
 
 async function confirmarAsistencia() {
@@ -206,6 +282,28 @@ async function confirmarAsistencia() {
     const email = foundStudent.email || '';
     const concentracion = foundStudent.concentracion || '';
     const grado = foundStudent.grado || '';
+    const tipoFirma = tallerData.tipoFirma || 'escrita';
+
+    let firmaData = {};
+    if (tipoFirma === 'dibujada') {
+        if (!hasSigned) {
+            showNotification('Por favor firma en el recuadro antes de confirmar', 'error');
+            return;
+        }
+        firmaData = { firmaTipo: 'dibujada', firmaImagen: sigCanvas.toDataURL('image/png') };
+    } else {
+        const firmaTexto = document.getElementById('firmaTextoInput').value.trim();
+        const certificado = document.getElementById('certificoCheck').checked;
+        if (!firmaTexto) {
+            showNotification('Por favor escribe tu nombre como firma', 'error');
+            return;
+        }
+        if (!certificado) {
+            showNotification('Por favor marca la casilla de certificación', 'error');
+            return;
+        }
+        firmaData = { firmaTipo: 'escrita', firmaTexto };
+    }
 
     const btn = document.getElementById('confirmBtn');
     btn.disabled = true;
@@ -228,6 +326,7 @@ async function confirmarAsistencia() {
             tallerNombre: tallerData.nombre,
             studentId: foundStudent.studentId,
             firstName, lastName, phone, email, concentracion, grado,
+            ...firmaData,
             registeredAt: new Date().toISOString()
         });
 
