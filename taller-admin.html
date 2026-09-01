@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Panel de Talleres - UAGM</title>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -228,6 +229,47 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
     </div>
 </div>
 
+<!-- Modal Editar Taller -->
+<div class="modal" id="editTallerModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Editar Taller</h3>
+            <span class="close" onclick="closeModal('editTallerModal')">&times;</span>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label>Nombre del taller</label>
+                <input type="text" id="editTallerNombre">
+            </div>
+            <div class="form-group">
+                <label>Fecha</label>
+                <input type="date" id="editTallerFecha">
+            </div>
+            <div class="form-group">
+                <label>Tipo de firma</label>
+                <select id="editTallerFirma">
+                    <option value="escrita">Certificación escrita</option>
+                    <option value="dibujada">Firma dibujada</option>
+                </select>
+                <p style="font-size:12px; color:#adb5bd; margin-top:6px;">Esto solo afecta a los registros nuevos — no cambia las firmas que ya se guardaron.</p>
+            </div>
+            <div class="form-group">
+                <label>Casillas adicionales</label>
+                <div style="display:flex; gap:10px;">
+                    <input type="text" id="editCampoInput" placeholder="Ej: Programa de Honor" onkeypress="if(event.key==='Enter'){event.preventDefault(); agregarCampoEdicion();}">
+                    <button type="button" class="btn btn-secondary btn-small" onclick="agregarCampoEdicion()" style="white-space:nowrap;">
+                        <i class="fas fa-plus"></i> Agregar
+                    </button>
+                </div>
+                <div id="editCamposList" style="display:flex; flex-wrap:wrap; gap:8px; margin-top:10px;"></div>
+            </div>
+            <button class="btn btn-primary" style="width:100%; justify-content:center;" onclick="guardarEdicionTaller()">
+                <i class="fas fa-save"></i> Guardar Cambios
+            </button>
+        </div>
+    </div>
+</div>
+
 <!-- Modal QR -->
 <div class="modal" id="qrModal">
     <div class="modal-content">
@@ -321,6 +363,76 @@ function quitarCampoAdicional(index) {
     renderCamposAdicionalesList();
 }
 
+// ===== Editar taller =====
+let currentEditTallerId = null;
+let editCamposAdicionales = [];
+
+function editTaller(tallerId) {
+    const taller = talleres.find(t => t.id === tallerId);
+    if (!taller) return;
+
+    currentEditTallerId = tallerId;
+    document.getElementById('editTallerNombre').value = taller.nombre || '';
+    document.getElementById('editTallerFecha').value = taller.fecha || '';
+    document.getElementById('editTallerFirma').value = taller.tipoFirma || 'escrita';
+    editCamposAdicionales = [...(taller.camposAdicionales || [])];
+    renderEditCamposList();
+
+    document.getElementById('editTallerModal').style.display = 'flex';
+}
+
+function renderEditCamposList() {
+    const container = document.getElementById('editCamposList');
+    container.innerHTML = editCamposAdicionales.map((campo, i) => `
+        <span style="background:#f1f3f5; padding:6px 12px; border-radius:20px; font-size:13px; display:inline-flex; align-items:center; gap:8px;">
+            ${campo}
+            <i class="fas fa-times" style="cursor:pointer; color:#dc3545;" onclick="quitarCampoEdicion(${i})"></i>
+        </span>
+    `).join('');
+}
+
+function agregarCampoEdicion() {
+    const input = document.getElementById('editCampoInput');
+    const val = input.value.trim();
+    if (!val) return;
+    if (editCamposAdicionales.includes(val)) {
+        showNotification('Ese campo ya está en la lista', 'warning');
+        return;
+    }
+    editCamposAdicionales.push(val);
+    input.value = '';
+    renderEditCamposList();
+}
+
+function quitarCampoEdicion(index) {
+    editCamposAdicionales.splice(index, 1);
+    renderEditCamposList();
+}
+
+async function guardarEdicionTaller() {
+    const nombre = document.getElementById('editTallerNombre').value.trim();
+    const fecha = document.getElementById('editTallerFecha').value;
+    const tipoFirma = document.getElementById('editTallerFirma').value;
+
+    if (!nombre || !fecha) {
+        showNotification('Completa el nombre y la fecha del taller', 'warning');
+        return;
+    }
+
+    try {
+        await db.collection('talleres').doc(currentEditTallerId).update({
+            nombre, fecha, tipoFirma,
+            camposAdicionales: [...editCamposAdicionales]
+        });
+        closeModal('editTallerModal');
+        showNotification('Taller actualizado exitosamente', 'success');
+        await loadTalleres();
+    } catch (error) {
+        console.error(error);
+        showNotification('Error actualizando el taller', 'error');
+    }
+}
+
 function checkPassword() {
     const val = document.getElementById('passwordInput').value;
     if (val === ADMIN_PASSWORD) {
@@ -412,6 +524,9 @@ async function loadTalleres() {
                         <button class="btn btn-secondary btn-small" onclick="showAsistencia('${t.id}', '${t.nombre.replace(/'/g, "\\'")}')">
                             <i class="fas fa-list"></i> Asistencia
                         </button>
+                        <button class="btn btn-secondary btn-small" onclick="editTaller('${t.id}')" title="Editar taller">
+                            <i class="fas fa-pencil-alt"></i>
+                        </button>
                         <button class="btn btn-danger btn-small" onclick="deleteTaller('${t.id}', '${t.nombre.replace(/'/g, "\\'")}', ${count})" title="Eliminar taller">
                             <i class="fas fa-trash"></i>
                         </button>
@@ -498,7 +613,7 @@ async function showAsistencia(tallerId, nombre) {
             if (r.firmaTipo === 'dibujada' && r.firmaImagen) {
                 firmaHtml = `<img src="${r.firmaImagen}" style="height:30px; border:1px solid #e2e8f0; border-radius:4px; cursor:pointer;" onclick="verFirmaAmpliada('${r.firmaImagen}')">`;
             } else if (r.firmaTipo === 'escrita' && r.firmaTexto) {
-                firmaHtml = `<span style="font-style:italic; color:#495057;">"${r.firmaTexto}"</span>`;
+                firmaHtml = `<span style="font-family:'Dancing Script', cursive; font-size:20px; color:#2d3748;">${r.firmaTexto}</span>`;
             }
             const extraCells = camposExtra.map(c => {
                 const marcado = (r.camposExtra || []).includes(c);
