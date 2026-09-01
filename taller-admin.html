@@ -8,6 +8,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -245,11 +246,16 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
             <span class="close" onclick="closeModal('asistenciaModal')">&times;</span>
         </div>
         <div class="modal-body">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; gap:10px;">
                 <span id="asistenciaCount" style="font-weight:700; color:#2d3748;"></span>
-                <button class="btn btn-success btn-small" onclick="exportAsistencia()">
-                    <i class="fas fa-file-excel"></i> Exportar
-                </button>
+                <div style="display:flex; gap:8px;">
+                    <button class="btn btn-success btn-small" onclick="exportAsistencia()">
+                        <i class="fas fa-file-excel"></i> Excel
+                    </button>
+                    <button class="btn btn-danger btn-small" onclick="generatePDFAsistencia()">
+                        <i class="fas fa-file-pdf"></i> PDF con Firmas
+                    </button>
+                </div>
             </div>
             <div id="asistenciaTableContainer"></div>
         </div>
@@ -547,6 +553,119 @@ async function deleteTaller(tallerId, nombre, count) {
     } catch (error) {
         console.error(error);
         showNotification('Error eliminando el taller', 'error');
+    }
+}
+
+async function generatePDFAsistencia() {
+    if (!currentTallerId) return;
+    const taller = talleres.find(t => t.id === currentTallerId);
+    if (!taller) return;
+
+    try {
+        const snapshot = await db.collection('asistencias_talleres').where('tallerId', '==', currentTallerId).get();
+        const rows = [];
+        snapshot.forEach(doc => rows.push(doc.data()));
+        rows.sort((a, b) => new Date(a.registeredAt) - new Date(b.registeredAt));
+
+        if (rows.length === 0) {
+            showNotification('No hay asistencia para generar el PDF', 'warning');
+            return;
+        }
+
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+
+        const pageWidth = 297;
+        const pageHeight = 210;
+        const margin = 12;
+        let yPos = margin;
+
+        function addHeader() {
+            doc.setFontSize(14);
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(200, 16, 46);
+            doc.text('UNIVERSIDAD ANA G. MÉNDEZ', margin, yPos);
+            yPos += 6;
+            doc.setFontSize(11);
+            doc.text('OFICINA DE CARRERAS Y COLOCACIONES — HOJA DE ASISTENCIA', margin, yPos);
+            yPos += 8;
+
+            doc.setTextColor(0, 0, 0);
+            doc.setFontSize(11);
+            doc.setFont('helvetica', 'bold');
+            doc.text(taller.nombre, margin, yPos);
+            yPos += 6;
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(9);
+            doc.text(`Fecha del taller: ${formatFecha(taller.fecha)}`, margin, yPos);
+            doc.text(`Total de asistentes: ${rows.length}`, pageWidth - margin - 55, yPos);
+            yPos += 8;
+
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(9);
+            doc.setDrawColor(200, 16, 46);
+            doc.setLineWidth(0.5);
+            doc.line(margin, yPos, pageWidth - margin, yPos);
+            yPos += 5;
+            doc.text('#', margin, yPos);
+            doc.text('Nombre', margin + 10, yPos);
+            doc.text('ID', margin + 75, yPos);
+            doc.text('Concentración', margin + 110, yPos);
+            doc.text('Firma', margin + 195, yPos);
+            yPos += 2;
+            doc.setLineWidth(0.2);
+            doc.setDrawColor(180, 180, 180);
+            doc.line(margin, yPos, pageWidth - margin, yPos);
+            yPos += 4;
+            doc.setFont('helvetica', 'normal');
+        }
+
+        addHeader();
+
+        const esDibujada = taller.tipoFirma === 'dibujada';
+        const rowHeight = esDibujada ? 22 : 9;
+
+        rows.forEach((r, index) => {
+            if (yPos + rowHeight > pageHeight - margin) {
+                doc.addPage();
+                yPos = margin;
+                addHeader();
+            }
+
+            doc.setFontSize(9);
+            doc.setTextColor(0, 0, 0);
+            doc.text(String(index + 1), margin, yPos + 4);
+            doc.text(`${r.firstName || ''} ${r.lastName || ''}`, margin + 10, yPos + 4);
+            doc.text(r.studentId || '', margin + 75, yPos + 4);
+            doc.text((r.concentracion || '').substring(0, 32), margin + 110, yPos + 4);
+
+            if (r.firmaTipo === 'dibujada' && r.firmaImagen) {
+                try {
+                    doc.addImage(r.firmaImagen, 'PNG', margin + 195, yPos - 2, 45, 18);
+                } catch (e) {
+                    doc.text('(error mostrando firma)', margin + 195, yPos + 4);
+                }
+            } else if (r.firmaTipo === 'escrita' && r.firmaTexto) {
+                doc.setFont('helvetica', 'italic');
+                doc.text(r.firmaTexto, margin + 195, yPos + 4);
+                doc.setFont('helvetica', 'normal');
+            } else {
+                doc.text('—', margin + 195, yPos + 4);
+            }
+
+            doc.setDrawColor(230, 230, 230);
+            doc.setLineWidth(0.1);
+            doc.line(margin, yPos + rowHeight - 2, pageWidth - margin, yPos + rowHeight - 2);
+
+            yPos += rowHeight;
+        });
+
+        const safeNombre = (taller.nombre || 'Taller').replace(/[^a-zA-Z0-9]/g, '_').slice(0, 40);
+        doc.save(`Asistencia_${safeNombre}_${new Date().toISOString().split('T')[0]}.pdf`);
+
+    } catch (error) {
+        console.error(error);
+        showNotification('Error generando el PDF', 'error');
     }
 }
 
