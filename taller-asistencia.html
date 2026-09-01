@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Registro de Asistencia - UAGM</title>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #c8102e 0%, #8b0b1f 100%);
+    min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px;
+}
+.card {
+    background: white; border-radius: 22px; width: 100%; max-width: 440px;
+    box-shadow: 0 25px 60px rgba(0,0,0,0.3); overflow: hidden;
+}
+.card-header { background: #2d3748; color: white; padding: 28px 30px; text-align: center; }
+.card-header i { font-size: 34px; margin-bottom: 10px; display: block; }
+.card-header h1 { font-size: 20px; font-weight: 800; margin-bottom: 5px; }
+.card-header p { font-size: 13px; opacity: 0.85; }
+.card-body { padding: 32px 30px; }
+
+.form-group { margin-bottom: 18px; }
+.form-group label { display: block; font-size: 13px; font-weight: 600; color: #495057; margin-bottom: 8px; }
+.form-group input, .form-group select {
+    width: 100%; padding: 14px 16px; border: 2px solid #e2e8f0; border-radius: 12px; font-size: 15px;
+}
+.form-group input:focus, .form-group select:focus { outline: none; border-color: #c8102e; }
+
+.btn {
+    width: 100%; padding: 15px; border: none; border-radius: 12px; font-weight: 700; font-size: 15px;
+    cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px;
+    background: linear-gradient(135deg, #c8102e 0%, #8b0b1f 100%); color: white;
+}
+.btn:hover { opacity: 0.92; }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-outline { background: white; color: #6c757d; border: 2px solid #e2e8f0; margin-top: 10px; }
+
+.confirm-box {
+    background: #f8f9fa; border-radius: 14px; padding: 18px; margin-bottom: 18px;
+    border-left: 4px solid #17a2b8;
+}
+.confirm-box p { font-size: 13px; color: #495057; margin-bottom: 4px; }
+
+.notice { text-align: center; padding: 40px 10px; }
+.notice i { font-size: 56px; margin-bottom: 18px; display: block; }
+.notice h2 { font-size: 20px; color: #2d3748; margin-bottom: 10px; }
+.notice p { color: #6c757d; font-size: 14px; line-height: 1.6; }
+.notice.success i { color: #28a745; }
+.notice.warning i { color: #ffc107; }
+.notice.error i { color: #dc3545; }
+
+.hint { font-size: 12px; color: #adb5bd; text-align: center; margin-top: 14px; }
+.spinner { text-align: center; padding: 40px; color: #6c757d; }
+.spinner i { font-size: 32px; margin-bottom: 12px; display: block; }
+</style>
+</head>
+<body>
+<div class="card">
+    <div class="card-header">
+        <i class="fas fa-chalkboard-teacher"></i>
+        <h1 id="tallerNombre">Cargando...</h1>
+        <p id="tallerFecha"></p>
+    </div>
+    <div class="card-body" id="cardBody">
+        <div class="spinner"><i class="fas fa-spinner fa-spin"></i> Cargando taller...</div>
+    </div>
+</div>
+
+<script>
+const firebaseConfig = {
+    apiKey: "AIzaSyBFgSuKNJMUoVcKgHjsqOsInArSPBsb32A",
+    authDomain: "uagm-portal-de-empleo-17aed.firebaseapp.com",
+    projectId: "uagm-portal-de-empleo-17aed",
+    storageBucket: "uagm-portal-de-empleo-17aed.firebasestorage.app",
+    messagingSenderId: "582147767835",
+    appId: "1:582147767835:web:546ab8f2557b6da6ccc2be"
+};
+
+let app, db;
+let tallerId = null;
+let tallerData = null;
+let foundStudent = null;
+
+document.addEventListener('DOMContentLoaded', async function() {
+    app = firebase.initializeApp(firebaseConfig);
+    db = firebase.firestore();
+
+    const params = new URLSearchParams(window.location.search);
+    tallerId = params.get('taller');
+
+    if (!tallerId) {
+        showNotice('error', 'fa-exclamation-triangle', 'Enlace inválido', 'Este enlace no corresponde a ningún taller. Verifica el código QR o pide uno nuevo.');
+        return;
+    }
+
+    try {
+        const doc = await db.collection('talleres').doc(tallerId).get();
+        if (!doc.exists) {
+            showNotice('error', 'fa-exclamation-triangle', 'Taller no encontrado', 'Este taller ya no está disponible. Consulta con la persona que dio la actividad.');
+            return;
+        }
+        tallerData = doc.data();
+        document.getElementById('tallerNombre').textContent = tallerData.nombre;
+        document.getElementById('tallerFecha').textContent = formatFecha(tallerData.fecha);
+        showIdForm();
+
+    } catch (error) {
+        console.error(error);
+        showNotice('error', 'fa-wifi', 'Error de conexión', 'No pudimos cargar el taller. Verifica tu conexión a internet e intenta de nuevo.');
+    }
+});
+
+function formatFecha(fechaStr) {
+    if (!fechaStr) return '';
+    const [y, m, d] = fechaStr.split('-');
+    return new Date(y, m - 1, d).toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' });
+}
+
+function showIdForm() {
+    document.getElementById('cardBody').innerHTML = `
+        <div class="form-group">
+            <label>Número de Estudiante</label>
+            <input type="text" id="studentIdInput" placeholder="S0123456789" onkeypress="if(event.key==='Enter') buscarEstudiante()">
+        </div>
+        <button class="btn" id="buscarBtn" onclick="buscarEstudiante()">
+            <i class="fas fa-search"></i> Buscar mi Información
+        </button>
+        <p class="hint">Escribe tu número de estudiante para completar tu registro automáticamente</p>
+    `;
+    document.getElementById('studentIdInput').focus();
+}
+
+async function buscarEstudiante() {
+    const input = document.getElementById('studentIdInput');
+    const studentId = input.value.trim();
+
+    if (!studentId) {
+        input.focus();
+        return;
+    }
+
+    const btn = document.getElementById('buscarBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Buscando...';
+
+    try {
+        // Verificar si ya se registró en este taller
+        const existing = await db.collection('asistencias_talleres')
+            .where('tallerId', '==', tallerId)
+            .where('studentId', '==', studentId)
+            .limit(1).get();
+
+        if (!existing.empty) {
+            showNotice('warning', 'fa-check-circle', 'Ya estás registrado', 'Ya registramos tu asistencia a este taller. No es necesario que lo hagas de nuevo.');
+            return;
+        }
+
+        const rosterDoc = await db.collection('roster_estudiantes').doc(studentId).get();
+
+        if (rosterDoc.exists) {
+            foundStudent = { studentId, ...rosterDoc.data() };
+            showConfirmForm(foundStudent, true);
+        } else {
+            foundStudent = { studentId };
+            showConfirmForm(foundStudent, false);
+        }
+
+    } catch (error) {
+        console.error(error);
+        showNotice('error', 'fa-wifi', 'Error de conexión', 'No pudimos verificar tu información. Intenta de nuevo.');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-search"></i> Buscar mi Información';
+    }
+}
+
+function showConfirmForm(student, wasFound) {
+    const noteHtml = wasFound
+        ? `<div class="confirm-box"><p><i class="fas fa-check-circle" style="color:#28a745;"></i> Encontramos tu información. Confírmala o corrígela si algo cambió.</p></div>`
+        : `<div class="confirm-box" style="border-left-color:#ffc107;"><p><i class="fas fa-info-circle" style="color:#ffc107;"></i> No encontramos tu información automáticamente. Complétala a continuación.</p></div>`;
+
+    document.getElementById('cardBody').innerHTML = `
+        ${noteHtml}
+        <div class="form-group">
+            <label>Nombre</label>
+            <input type="text" id="fNombre" value="${student.firstName || ''}">
+        </div>
+        <div class="form-group">
+            <label>Apellido</label>
+            <input type="text" id="fApellido" value="${student.lastName || ''}">
+        </div>
+        <div class="form-group">
+            <label>Teléfono</label>
+            <input type="text" id="fTelefono" value="${student.phone || ''}" placeholder="787-555-1234">
+        </div>
+        <div class="form-group">
+            <label>Email</label>
+            <input type="email" id="fEmail" value="${student.email || ''}">
+        </div>
+        <div class="form-group">
+            <label>Concentración</label>
+            <input type="text" id="fConcentracion" value="${student.concentracion || ''}">
+        </div>
+        <div class="form-group">
+            <label>Grado Académico</label>
+            <input type="text" id="fGrado" value="${student.grado || ''}">
+        </div>
+        <button class="btn" id="confirmBtn" onclick="confirmarAsistencia()">
+            <i class="fas fa-check"></i> Confirmar Asistencia
+        </button>
+        <button class="btn btn-outline" onclick="showIdForm()">
+            <i class="fas fa-arrow-left"></i> Volver
+        </button>
+    `;
+}
+
+async function confirmarAsistencia() {
+    const firstName = document.getElementById('fNombre').value.trim();
+    const lastName = document.getElementById('fApellido').value.trim();
+    const phone = document.getElementById('fTelefono').value.trim();
+    const email = document.getElementById('fEmail').value.trim();
+    const concentracion = document.getElementById('fConcentracion').value.trim();
+    const grado = document.getElementById('fGrado').value.trim();
+
+    if (!firstName || !lastName) {
+        showNotification('Por favor completa al menos tu nombre y apellido', 'error');
+        return;
+    }
+
+    const btn = document.getElementById('confirmBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
+
+    try {
+        // Verificación final contra duplicados justo antes de guardar
+        const existing = await db.collection('asistencias_talleres')
+            .where('tallerId', '==', tallerId)
+            .where('studentId', '==', foundStudent.studentId)
+            .limit(1).get();
+
+        if (!existing.empty) {
+            showNotice('warning', 'fa-check-circle', 'Ya estás registrado', 'Ya registramos tu asistencia a este taller.');
+            return;
+        }
+
+        await db.collection('asistencias_talleres').add({
+            tallerId,
+            tallerNombre: tallerData.nombre,
+            studentId: foundStudent.studentId,
+            firstName, lastName, phone, email, concentracion, grado,
+            registeredAt: new Date().toISOString()
+        });
+
+        showNotice('success', 'fa-check-circle', '¡Asistencia Registrada!', `Gracias, ${firstName}. Tu asistencia a "${tallerData.nombre}" quedó registrada exitosamente.`);
+
+    } catch (error) {
+        console.error(error);
+        showNotification('Error guardando tu registro. Intenta de nuevo.', 'error');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-check"></i> Confirmar Asistencia';
+    }
+}
+
+function showNotice(type, icon, title, text) {
+    document.getElementById('cardBody').innerHTML = `
+        <div class="notice ${type}">
+            <i class="fas ${icon}"></i>
+            <h2>${title}</h2>
+            <p>${text}</p>
+        </div>
+    `;
+}
+
+function showNotification(message, type = 'info') {
+    const colors = { success: '#28a745', error: '#dc3545', warning: '#ffc107', info: '#17a2b8' };
+    const existing = document.querySelector('.toast-notif');
+    if (existing) existing.remove();
+    const notif = document.createElement('div');
+    notif.className = 'toast-notif';
+    notif.style.cssText = `position:fixed; top:20px; left:50%; transform:translateX(-50%); background:${colors[type] || colors.info}; color:white; padding:14px 22px; border-radius:10px; font-weight:600; font-size:14px; z-index:2000; box-shadow:0 4px 12px rgba(0,0,0,0.2);`;
+    notif.textContent = message;
+    document.body.appendChild(notif);
+    setTimeout(() => notif.remove(), 3500);
+}
+</script>
+</body>
+</html>

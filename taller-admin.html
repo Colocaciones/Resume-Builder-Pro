@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Panel de Talleres - UAGM</title>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f8f9fa; color: #333; }
+
+/* ===== Pantalla de contraseña ===== */
+#loginScreen {
+    min-height: 100vh; display: flex; align-items: center; justify-content: center;
+    background: linear-gradient(135deg, #c8102e 0%, #8b0b1f 100%);
+}
+.login-box {
+    background: white; padding: 40px; border-radius: 20px; width: 90%; max-width: 380px;
+    text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+}
+.login-box i { font-size: 48px; color: #c8102e; margin-bottom: 15px; }
+.login-box h2 { color: #2d3748; margin-bottom: 25px; font-size: 22px; }
+.login-box input {
+    width: 100%; padding: 14px 18px; border: 2px solid #e2e8f0; border-radius: 10px;
+    font-size: 15px; margin-bottom: 15px; text-align: center;
+}
+.login-box input:focus { outline: none; border-color: #c8102e; }
+.login-error { color: #dc3545; font-size: 13px; margin-bottom: 10px; display: none; }
+
+/* ===== Layout general ===== */
+.header {
+    background: linear-gradient(135deg, #c8102e 0%, #8b0b1f 100%); color: white;
+    padding: 25px 40px; display: flex; align-items: center; gap: 15px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+}
+.header i { font-size: 32px; }
+.header h1 { font-size: 24px; font-weight: 800; }
+.header p { font-size: 13px; opacity: 0.9; }
+.container { max-width: 1100px; margin: 0 auto; padding: 30px 20px; }
+
+.tabs { display: flex; gap: 10px; margin-bottom: 30px; background: #f1f3f5; padding: 8px; border-radius: 12px; }
+.tab {
+    flex: 1; padding: 14px; border: none; background: transparent; border-radius: 8px;
+    font-weight: 600; font-size: 14px; color: #6c757d; cursor: pointer; transition: all 0.2s;
+}
+.tab.active { background: linear-gradient(135deg, #c8102e 0%, #8b0b1f 100%); color: white; }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+.card { background: white; border-radius: 16px; padding: 28px; box-shadow: 0 4px 15px rgba(0,0,0,0.06); margin-bottom: 25px; }
+.card h3 { color: #2d3748; margin-bottom: 18px; font-size: 18px; display: flex; align-items: center; gap: 10px; }
+.card h3 i { color: #c8102e; }
+
+.form-row { display: grid; grid-template-columns: 2fr 1fr auto; gap: 12px; align-items: end; }
+.form-group label { display: block; font-size: 13px; font-weight: 600; color: #495057; margin-bottom: 6px; }
+.form-group input, .form-group select {
+    width: 100%; padding: 12px 14px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 14px;
+}
+.form-group input:focus { outline: none; border-color: #c8102e; }
+
+.btn {
+    padding: 12px 22px; border: none; border-radius: 10px; font-weight: 600; font-size: 14px;
+    cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: all 0.2s;
+}
+.btn-primary { background: linear-gradient(135deg, #c8102e 0%, #8b0b1f 100%); color: white; }
+.btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+.btn-secondary { background: #6c757d; color: white; }
+.btn-success { background: #28a745; color: white; }
+.btn-info { background: #17a2b8; color: white; }
+.btn-small { padding: 8px 14px; font-size: 13px; }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.taller-item {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 16px 20px; border: 2px solid #f1f3f5; border-radius: 12px; margin-bottom: 12px;
+}
+.taller-item:hover { border-color: #e2e8f0; }
+.taller-info strong { color: #2d3748; font-size: 15px; }
+.taller-info div { color: #6c757d; font-size: 13px; margin-top: 3px; }
+.taller-actions { display: flex; gap: 8px; }
+.badge { background: #d1ecf1; color: #0c5460; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 700; }
+
+.upload-zone {
+    border: 3px dashed #c8102e; border-radius: 15px; padding: 30px; text-align: center;
+    background: rgba(200,16,46,0.03); cursor: pointer; position: relative;
+}
+.upload-zone input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.upload-zone i { font-size: 32px; color: #c8102e; margin-bottom: 10px; display: block; }
+
+.info-box { background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px 18px; border-radius: 8px; font-size: 13px; color: #856404; margin-bottom: 18px; line-height: 1.6; }
+.info-box code { background: rgba(0,0,0,0.06); padding: 2px 6px; border-radius: 4px; }
+
+.stat-line { display: flex; align-items: center; gap: 10px; color: #495057; font-size: 14px; margin-top: 10px; }
+.stat-line strong { color: #c8102e; font-size: 20px; }
+
+/* Modal */
+.modal { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: none; align-items: center; justify-content: center; z-index: 1000; }
+.modal-content { background: white; border-radius: 18px; width: 90%; max-width: 550px; max-height: 88vh; overflow-y: auto; }
+.modal-header { padding: 22px 26px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; }
+.modal-header h3 { color: #2d3748; font-size: 18px; }
+.modal-body { padding: 26px; }
+.close { cursor: pointer; font-size: 24px; color: #aaa; }
+.close:hover { color: #333; }
+#qrCanvas { display: flex; justify-content: center; margin: 15px 0; }
+.link-box { background: #f8f9fa; padding: 12px; border-radius: 8px; font-size: 12px; word-break: break-all; border: 1px solid #e2e8f0; margin-bottom: 12px; }
+
+.data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.data-table th, .data-table td { padding: 10px; text-align: left; border-bottom: 1px solid #f1f3f5; }
+.data-table th { background: #f8f9fa; font-weight: 700; color: #495057; }
+
+.notification {
+    position: fixed; top: 20px; right: 20px; padding: 15px 20px; border-radius: 10px;
+    color: white; font-weight: 600; z-index: 2000; max-width: 350px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+</style>
+</head>
+<body>
+
+<div id="loginScreen">
+    <div class="login-box">
+        <i class="fas fa-lock"></i>
+        <h2>Panel de Talleres</h2>
+        <input type="password" id="passwordInput" placeholder="Contraseña" onkeypress="if(event.key==='Enter') checkPassword()">
+        <div class="login-error" id="loginError">Contraseña incorrecta</div>
+        <button class="btn btn-primary" style="width:100%; justify-content:center;" onclick="checkPassword()">
+            <i class="fas fa-sign-in-alt"></i> Entrar
+        </button>
+    </div>
+</div>
+
+<div id="mainApp" style="display:none;">
+    <div class="header">
+        <i class="fas fa-qrcode"></i>
+        <div>
+            <h1>Panel de Talleres</h1>
+            <p>Oficina de Carreras y Colocaciones — UAGM</p>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('talleres')" id="tabBtnTalleres">
+                <i class="fas fa-chalkboard-teacher"></i> Talleres
+            </button>
+            <button class="tab" onclick="switchTab('roster')" id="tabBtnRoster">
+                <i class="fas fa-users"></i> Lista de Estudiantes
+            </button>
+        </div>
+
+        <!-- TAB: Talleres -->
+        <div class="tab-content active" id="tabTalleres">
+            <div class="card">
+                <h3><i class="fas fa-plus-circle"></i> Crear Taller Nuevo</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Nombre del taller</label>
+                        <input type="text" id="newTallerNombre" placeholder="Ej: Redacción de Resumé - Salón 204">
+                    </div>
+                    <div class="form-group">
+                        <label>Fecha</label>
+                        <input type="date" id="newTallerFecha">
+                    </div>
+                    <button class="btn btn-primary" onclick="crearTaller()">
+                        <i class="fas fa-plus"></i> Crear
+                    </button>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3><i class="fas fa-list"></i> Talleres Registrados</h3>
+                <div id="talleresList">
+                    <p style="color:#6c757d; text-align:center; padding: 20px;">Cargando...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB: Roster -->
+        <div class="tab-content" id="tabRoster">
+            <div class="card">
+                <h3><i class="fas fa-file-excel"></i> Cargar Lista de Estudiantes</h3>
+                <div class="info-box">
+                    <strong>Columnas esperadas en el Excel</strong> (el orden no importa, pero los encabezados de la primera fila deben ser similares a estos):<br>
+                    <code>ID</code> · <code>Nombre</code> · <code>Apellido</code> · <code>Teléfono</code> · <code>Email</code> · <code>Concentración</code> · <code>Grado</code><br><br>
+                    Cargar un archivo nuevo <strong>actualiza</strong> a los estudiantes que ya existan (por su ID) y agrega los que sean nuevos — no duplica a nadie.
+                </div>
+                <div class="upload-zone" id="uploadZone">
+                    <input type="file" id="rosterFile" accept=".xlsx,.xls" onchange="handleRosterFile(event)">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    <span id="uploadLabel">Haz clic o arrastra el archivo Excel aquí</span>
+                </div>
+                <div id="rosterPreview" style="display:none; margin-top:18px;">
+                    <p id="rosterPreviewText" style="margin-bottom: 12px; color:#2d3748; font-weight:600;"></p>
+                    <button class="btn btn-success" id="rosterUploadBtn" onclick="uploadRoster()">
+                        <i class="fas fa-database"></i> Cargar a la Base de Datos
+                    </button>
+                </div>
+                <div class="stat-line">
+                    <i class="fas fa-users" style="color:#c8102e;"></i>
+                    <span>Estudiantes actualmente cargados: <strong id="rosterCount">—</strong></span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal QR -->
+<div class="modal" id="qrModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="qrModalTitle">Código QR del Taller</h3>
+            <span class="close" onclick="closeModal('qrModal')">&times;</span>
+        </div>
+        <div class="modal-body">
+            <div id="qrCanvas"></div>
+            <div class="link-box" id="qrLink"></div>
+            <div style="display:flex; gap:10px;">
+                <button class="btn btn-info" style="flex:1; justify-content:center;" onclick="copyTallerLink()">
+                    <i class="fas fa-copy"></i> Copiar Enlace
+                </button>
+                <button class="btn btn-secondary" style="flex:1; justify-content:center;" onclick="printQR()">
+                    <i class="fas fa-print"></i> Imprimir
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Asistencia -->
+<div class="modal" id="asistenciaModal">
+    <div class="modal-content" style="max-width: 750px;">
+        <div class="modal-header">
+            <h3 id="asistenciaModalTitle">Asistencia</h3>
+            <span class="close" onclick="closeModal('asistenciaModal')">&times;</span>
+        </div>
+        <div class="modal-body">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                <span id="asistenciaCount" style="font-weight:700; color:#2d3748;"></span>
+                <button class="btn btn-success btn-small" onclick="exportAsistencia()">
+                    <i class="fas fa-file-excel"></i> Exportar
+                </button>
+            </div>
+            <div id="asistenciaTableContainer"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+const firebaseConfig = {
+    apiKey: "AIzaSyBFgSuKNJMUoVcKgHjsqOsInArSPBsb32A",
+    authDomain: "uagm-portal-de-empleo-17aed.firebaseapp.com",
+    projectId: "uagm-portal-de-empleo-17aed",
+    storageBucket: "uagm-portal-de-empleo-17aed.firebasestorage.app",
+    messagingSenderId: "582147767835",
+    appId: "1:582147767835:web:546ab8f2557b6da6ccc2be"
+};
+
+// ⚠️ Cambia esta contraseña por la que prefieras
+const ADMIN_PASSWORD = "talleres2026";
+
+let app, db;
+let talleres = [];
+let currentTallerId = null;
+let parsedRosterRows = [];
+
+function checkPassword() {
+    const val = document.getElementById('passwordInput').value;
+    if (val === ADMIN_PASSWORD) {
+        document.getElementById('loginScreen').style.display = 'none';
+        document.getElementById('mainApp').style.display = 'block';
+        initApp();
+    } else {
+        document.getElementById('loginError').style.display = 'block';
+    }
+}
+
+async function initApp() {
+    app = firebase.initializeApp(firebaseConfig);
+    db = firebase.firestore();
+    await loadTalleres();
+    await loadRosterCount();
+}
+
+function switchTab(tab) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    document.getElementById('tabBtn' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.add('active');
+    document.getElementById('tab' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.add('active');
+}
+
+// ===== TALLERES =====
+async function crearTaller() {
+    const nombre = document.getElementById('newTallerNombre').value.trim();
+    const fecha = document.getElementById('newTallerFecha').value;
+
+    if (!nombre || !fecha) {
+        showNotification('Completa el nombre y la fecha del taller', 'warning');
+        return;
+    }
+
+    try {
+        await db.collection('talleres').add({
+            nombre, fecha,
+            createdAt: new Date().toISOString()
+        });
+        document.getElementById('newTallerNombre').value = '';
+        document.getElementById('newTallerFecha').value = '';
+        showNotification('Taller creado exitosamente', 'success');
+        await loadTalleres();
+    } catch (error) {
+        console.error(error);
+        showNotification('Error creando el taller', 'error');
+    }
+}
+
+async function loadTalleres() {
+    const container = document.getElementById('talleresList');
+    try {
+        const snapshot = await db.collection('talleres').orderBy('createdAt', 'desc').get();
+        talleres = [];
+        snapshot.forEach(doc => talleres.push({ id: doc.id, ...doc.data() }));
+
+        if (talleres.length === 0) {
+            container.innerHTML = '<p style="color:#6c757d; text-align:center; padding:20px;">No hay talleres creados todavía.</p>';
+            return;
+        }
+
+        // Contar asistencia por taller
+        const asistSnapshot = await db.collection('asistencias_talleres').get();
+        const counts = {};
+        asistSnapshot.forEach(doc => {
+            const tId = doc.data().tallerId;
+            counts[tId] = (counts[tId] || 0) + 1;
+        });
+
+        let html = '';
+        talleres.forEach(t => {
+            const count = counts[t.id] || 0;
+            html += `
+                <div class="taller-item">
+                    <div class="taller-info">
+                        <strong>${t.nombre}</strong>
+                        <div><i class="fas fa-calendar"></i> ${formatFecha(t.fecha)} &nbsp;·&nbsp; <span class="badge">${count} registrado${count !== 1 ? 's' : ''}</span></div>
+                    </div>
+                    <div class="taller-actions">
+                        <button class="btn btn-info btn-small" onclick="showQR('${t.id}', '${t.nombre.replace(/'/g, "\\'")}')">
+                            <i class="fas fa-qrcode"></i> QR
+                        </button>
+                        <button class="btn btn-secondary btn-small" onclick="showAsistencia('${t.id}', '${t.nombre.replace(/'/g, "\\'")}')">
+                            <i class="fas fa-list"></i> Asistencia
+                        </button>
+                    </div>
+                </div>
+            `;
+        });
+        container.innerHTML = html;
+    } catch (error) {
+        console.error(error);
+        container.innerHTML = '<p style="color:#dc3545; text-align:center; padding:20px;">Error cargando talleres.</p>';
+    }
+}
+
+function formatFecha(fechaStr) {
+    if (!fechaStr) return 'Sin fecha';
+    const [y, m, d] = fechaStr.split('-');
+    return new Date(y, m - 1, d).toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' });
+}
+
+function showQR(tallerId, nombre) {
+    currentTallerId = tallerId;
+    const baseURL = window.location.origin + window.location.pathname.replace('taller-admin.html', 'taller-asistencia.html');
+    const link = `${baseURL}?taller=${tallerId}`;
+
+    document.getElementById('qrModalTitle').textContent = `QR: ${nombre}`;
+    document.getElementById('qrLink').textContent = link;
+    document.getElementById('qrCanvas').innerHTML = '';
+    new QRCode(document.getElementById('qrCanvas'), { text: link, width: 220, height: 220 });
+
+    document.getElementById('qrModal').style.display = 'flex';
+}
+
+function copyTallerLink() {
+    const link = document.getElementById('qrLink').textContent;
+    navigator.clipboard.writeText(link).then(() => showNotification('Enlace copiado', 'success'));
+}
+
+function printQR() {
+    const content = document.getElementById('qrCanvas').innerHTML;
+    const title = document.getElementById('qrModalTitle').textContent;
+    const win = window.open('', '_blank');
+    win.document.write(`
+        <html><head><title>${title}</title></head>
+        <body style="text-align:center; font-family: Arial, sans-serif; padding: 40px;">
+            <h2>${title}</h2>
+            <p>Escanea este código para registrar tu asistencia</p>
+            <div style="margin-top:20px;">${content}</div>
+        </body></html>
+    `);
+    win.document.close();
+    win.print();
+}
+
+async function showAsistencia(tallerId, nombre) {
+    currentTallerId = tallerId;
+    document.getElementById('asistenciaModalTitle').textContent = `Asistencia: ${nombre}`;
+    document.getElementById('asistenciaTableContainer').innerHTML = '<p style="text-align:center; padding:20px; color:#6c757d;">Cargando...</p>';
+    document.getElementById('asistenciaModal').style.display = 'flex';
+
+    try {
+        const snapshot = await db.collection('asistencias_talleres').where('tallerId', '==', tallerId).get();
+        const rows = [];
+        snapshot.forEach(doc => rows.push(doc.data()));
+        rows.sort((a, b) => new Date(a.registeredAt) - new Date(b.registeredAt));
+
+        document.getElementById('asistenciaCount').textContent = `${rows.length} estudiante${rows.length !== 1 ? 's' : ''} registrado${rows.length !== 1 ? 's' : ''}`;
+
+        if (rows.length === 0) {
+            document.getElementById('asistenciaTableContainer').innerHTML = '<p style="text-align:center; padding:20px; color:#6c757d;">Nadie se ha registrado todavía.</p>';
+            return;
+        }
+
+        let html = `<table class="data-table"><thead><tr>
+            <th>ID</th><th>Nombre</th><th>Concentración</th><th>Email</th><th>Teléfono</th><th>Hora</th>
+        </tr></thead><tbody>`;
+        rows.forEach(r => {
+            html += `<tr>
+                <td>${r.studentId}</td>
+                <td>${r.firstName} ${r.lastName}</td>
+                <td>${r.concentracion || ''}</td>
+                <td>${r.email || ''}</td>
+                <td>${r.phone || ''}</td>
+                <td>${new Date(r.registeredAt).toLocaleTimeString('es-ES')}</td>
+            </tr>`;
+        });
+        html += '</tbody></table>';
+        document.getElementById('asistenciaTableContainer').innerHTML = html;
+
+    } catch (error) {
+        console.error(error);
+        document.getElementById('asistenciaTableContainer').innerHTML = '<p style="text-align:center; padding:20px; color:#dc3545;">Error cargando la asistencia.</p>';
+    }
+}
+
+async function exportAsistencia() {
+    if (!currentTallerId) return;
+    const taller = talleres.find(t => t.id === currentTallerId);
+    try {
+        const snapshot = await db.collection('asistencias_talleres').where('tallerId', '==', currentTallerId).get();
+        const rows = [];
+        snapshot.forEach(doc => rows.push(doc.data()));
+        rows.sort((a, b) => new Date(a.registeredAt) - new Date(b.registeredAt));
+
+        if (rows.length === 0) {
+            showNotification('No hay asistencia para exportar', 'warning');
+            return;
+        }
+
+        const data = rows.map(r => ({
+            'ID': r.studentId,
+            'Nombre': r.firstName,
+            'Apellido': r.lastName,
+            'Concentración': r.concentracion || '',
+            'Grado': r.grado || '',
+            'Email': r.email || '',
+            'Teléfono': r.phone || '',
+            'Hora de Registro': new Date(r.registeredAt).toLocaleString('es-ES')
+        }));
+
+        const ws = XLSX.utils.json_to_sheet(data);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Asistencia");
+        const safeNombre = (taller?.nombre || 'Taller').replace(/[^a-zA-Z0-9]/g, '_').slice(0, 40);
+        XLSX.writeFile(wb, `Asistencia_${safeNombre}_${new Date().toISOString().split('T')[0]}.xlsx`);
+
+    } catch (error) {
+        console.error(error);
+        showNotification('Error exportando la asistencia', 'error');
+    }
+}
+
+function closeModal(id) {
+    document.getElementById(id).style.display = 'none';
+}
+
+// ===== ROSTER (Lista de estudiantes) =====
+function normalizeHeader(h) {
+    return h.toString().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+}
+
+const HEADER_MAP = {
+    'id': 'studentId', 'no estudiante': 'studentId', 'numero de estudiante': 'studentId', 'id estudiante': 'studentId',
+    'nombre': 'firstName',
+    'apellido': 'lastName', 'apellidos': 'lastName',
+    'telefono': 'phone', 'tel': 'phone',
+    'email': 'email', 'correo': 'email', 'correo electronico': 'email',
+    'concentracion': 'concentracion',
+    'grado': 'grado', 'nivel academico': 'grado', 'grado academico': 'grado'
+};
+
+function handleRosterFile(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    document.getElementById('uploadLabel').textContent = file.name;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const workbook = XLSX.read(e.target.result, { type: 'binary' });
+            const sheet = workbook.Sheets[workbook.SheetNames[0]];
+            const rawRows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+
+            parsedRosterRows = rawRows.map(row => {
+                const mapped = {};
+                Object.keys(row).forEach(key => {
+                    const normalized = normalizeHeader(key);
+                    const field = HEADER_MAP[normalized];
+                    if (field) mapped[field] = row[key].toString().trim();
+                });
+                return mapped;
+            }).filter(r => r.studentId);
+
+            document.getElementById('rosterPreviewText').textContent =
+                `Se encontraron ${parsedRosterRows.length} estudiantes con ID válido, listos para cargar.`;
+            document.getElementById('rosterPreview').style.display = 'block';
+
+        } catch (error) {
+            console.error(error);
+            showNotification('No se pudo leer el archivo. Verifica que sea un Excel válido.', 'error');
+        }
+    };
+    reader.readAsBinaryString(file);
+}
+
+async function uploadRoster() {
+    if (parsedRosterRows.length === 0) return;
+
+    const btn = document.getElementById('rosterUploadBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Cargando...';
+
+    try {
+        // Firestore permite max 500 operaciones por batch
+        const chunks = [];
+        for (let i = 0; i < parsedRosterRows.length; i += 450) {
+            chunks.push(parsedRosterRows.slice(i, i + 450));
+        }
+
+        for (const chunk of chunks) {
+            const batch = db.batch();
+            chunk.forEach(row => {
+                const ref = db.collection('roster_estudiantes').doc(row.studentId);
+                batch.set(ref, row, { merge: true });
+            });
+            await batch.commit();
+        }
+
+        showNotification(`${parsedRosterRows.length} estudiantes cargados exitosamente`, 'success');
+        document.getElementById('rosterPreview').style.display = 'none';
+        document.getElementById('rosterFile').value = '';
+        document.getElementById('uploadLabel').textContent = 'Haz clic o arrastra el archivo Excel aquí';
+        parsedRosterRows = [];
+        await loadRosterCount();
+
+    } catch (error) {
+        console.error(error);
+        showNotification('Error cargando la lista. Intenta de nuevo.', 'error');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-database"></i> Cargar a la Base de Datos';
+    }
+}
+
+async function loadRosterCount() {
+    try {
+        const snapshot = await db.collection('roster_estudiantes').get();
+        document.getElementById('rosterCount').textContent = snapshot.size;
+    } catch (error) {
+        console.error(error);
+        document.getElementById('rosterCount').textContent = '—';
+    }
+}
+
+// ===== Notificaciones =====
+function showNotification(message, type = 'info') {
+    const existing = document.querySelector('.notification');
+    if (existing) existing.remove();
+
+    const colors = { success: '#28a745', error: '#dc3545', warning: '#ffc107', info: '#17a2b8' };
+    const icons = { success: 'fa-check-circle', error: 'fa-exclamation-circle', warning: 'fa-exclamation-triangle', info: 'fa-info-circle' };
+
+    const notif = document.createElement('div');
+    notif.className = 'notification';
+    notif.style.background = colors[type] || colors.info;
+    notif.innerHTML = `<i class="fas ${icons[type] || icons.info}"></i> ${message}`;
+    document.body.appendChild(notif);
+    setTimeout(() => notif.remove(), 4000);
+}
+
+window.onclick = function(event) {
+    if (event.target.classList.contains('modal')) {
+        event.target.style.display = 'none';
+    }
+};
+</script>
+</body>
+</html>
