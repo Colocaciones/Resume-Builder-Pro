@@ -195,7 +195,7 @@ function showConfirmForm(student) {
 
     const camposHtml = camposAdicionales.length > 0 ? `
         <div class="form-group">
-            <label>Marca lo que aplique</label>
+            <label>Marca lo que aplique <span style="color:#c8102e;">*</span></label>
             ${camposAdicionales.map((campo, i) => `
                 <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
                     <input type="radio" name="campoExtraRadio" class="campoExtraCheck" value="${campo}" id="campoExtra${i}" style="width:auto;">
@@ -309,6 +309,11 @@ async function confirmarAsistencia() {
 
     const camposExtraSeleccionado = document.querySelector('.campoExtraCheck:checked');
     const camposExtra = camposExtraSeleccionado ? [camposExtraSeleccionado.value] : [];
+
+    if ((tallerData.camposAdicionales || []).length > 0 && !camposExtraSeleccionado) {
+        showNotification('Por favor marca una opción antes de continuar', 'error');
+        return;
+    }
 
     let firmaData = {};
     if (tipoFirma === 'dibujada') {
