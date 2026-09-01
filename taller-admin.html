@@ -362,6 +362,9 @@ async function loadTalleres() {
                         <button class="btn btn-secondary btn-small" onclick="showAsistencia('${t.id}', '${t.nombre.replace(/'/g, "\\'")}')">
                             <i class="fas fa-list"></i> Asistencia
                         </button>
+                        <button class="btn btn-danger btn-small" onclick="deleteTaller('${t.id}', '${t.nombre.replace(/'/g, "\\'")}', ${count})" title="Eliminar taller">
+                            <i class="fas fa-trash"></i>
+                        </button>
                     </div>
                 </div>
             `;
@@ -512,6 +515,38 @@ async function exportAsistencia() {
     } catch (error) {
         console.error(error);
         showNotification('Error exportando la asistencia', 'error');
+    }
+}
+
+async function deleteTaller(tallerId, nombre, count) {
+    const advertencia = count > 0
+        ? `¿Eliminar el taller "${nombre}"? Esto también borrará permanentemente ${count} registro${count !== 1 ? 's' : ''} de asistencia asociado${count !== 1 ? 's' : ''}. Esta acción no se puede deshacer.`
+        : `¿Eliminar el taller "${nombre}"? Esta acción no se puede deshacer.`;
+
+    if (!confirm(advertencia)) return;
+
+    try {
+        // Borrar primero toda la asistencia asociada, para no dejar registros huérfanos
+        const asistSnapshot = await db.collection('asistencias_talleres').where('tallerId', '==', tallerId).get();
+        if (!asistSnapshot.empty) {
+            const chunks = [];
+            const docs = asistSnapshot.docs;
+            for (let i = 0; i < docs.length; i += 450) chunks.push(docs.slice(i, i + 450));
+            for (const chunk of chunks) {
+                const batch = db.batch();
+                chunk.forEach(doc => batch.delete(doc.ref));
+                await batch.commit();
+            }
+        }
+
+        await db.collection('talleres').doc(tallerId).delete();
+
+        showNotification('Taller eliminado exitosamente', 'success');
+        await loadTalleres();
+
+    } catch (error) {
+        console.error(error);
+        showNotification('Error eliminando el taller', 'error');
     }
 }
 
