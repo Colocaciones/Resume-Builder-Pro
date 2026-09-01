@@ -184,6 +184,19 @@ async function buscarEstudiante() {
 
 function showConfirmForm(student) {
     const tipoFirma = tallerData.tipoFirma || 'escrita';
+    const camposAdicionales = tallerData.camposAdicionales || [];
+
+    const camposHtml = camposAdicionales.length > 0 ? `
+        <div class="form-group">
+            <label>Marca lo que aplique</label>
+            ${camposAdicionales.map((campo, i) => `
+                <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
+                    <input type="checkbox" class="campoExtraCheck" data-campo="${campo}" id="campoExtra${i}" style="width:auto;">
+                    <label style="margin:0; font-weight:normal;" for="campoExtra${i}">${campo}</label>
+                </div>
+            `).join('')}
+        </div>
+    ` : '';
 
     const firmaHtml = tipoFirma === 'dibujada' ? `
         <div class="form-group">
@@ -207,10 +220,12 @@ function showConfirmForm(student) {
     document.getElementById('cardBody').innerHTML = `
         <div class="confirm-box"><p><i class="fas fa-check-circle" style="color:#28a745;"></i> Encontramos tu información.</p></div>
         <div class="readonly-field"><label>Nombre</label><div>${student.firstName || ''} ${student.lastName || ''}</div></div>
+        <div class="readonly-field"><label>Recinto</label><div>${student.campus || '—'}</div></div>
         <div class="readonly-field"><label>Teléfono</label><div>${student.phone || '—'}</div></div>
         <div class="readonly-field"><label>Email</label><div>${student.email || '—'}</div></div>
         <div class="readonly-field"><label>Concentración</label><div>${student.concentracion || '—'}</div></div>
         <div class="readonly-field"><label>Grado Académico</label><div>${student.grado || '—'}</div></div>
+        ${camposHtml}
         ${firmaHtml}
         <button class="btn" id="confirmBtn" onclick="confirmarAsistencia()">
             <i class="fas fa-check"></i> Confirmar Asistencia
@@ -282,7 +297,10 @@ async function confirmarAsistencia() {
     const email = foundStudent.email || '';
     const concentracion = foundStudent.concentracion || '';
     const grado = foundStudent.grado || '';
+    const campus = foundStudent.campus || '';
     const tipoFirma = tallerData.tipoFirma || 'escrita';
+
+    const camposExtra = Array.from(document.querySelectorAll('.campoExtraCheck:checked')).map(cb => cb.dataset.campo);
 
     let firmaData = {};
     if (tipoFirma === 'dibujada') {
@@ -325,7 +343,8 @@ async function confirmarAsistencia() {
             tallerId,
             tallerNombre: tallerData.nombre,
             studentId: foundStudent.studentId,
-            firstName, lastName, phone, email, concentracion, grado,
+            firstName, lastName, phone, email, concentracion, grado, campus,
+            camposExtra,
             ...firmaData,
             registeredAt: new Date().toISOString()
         });

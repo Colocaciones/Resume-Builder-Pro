@@ -177,6 +177,18 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
                         <i class="fas fa-plus"></i> Crear
                     </button>
                 </div>
+
+                <div class="form-group" style="margin-top:18px; margin-bottom:0;">
+                    <label>Casillas adicionales para este taller (opcional)</label>
+                    <div style="display:flex; gap:10px;">
+                        <input type="text" id="newCampoInput" placeholder="Ej: Programa de Honor" onkeypress="if(event.key==='Enter'){event.preventDefault(); agregarCampoAdicional();}">
+                        <button type="button" class="btn btn-secondary btn-small" onclick="agregarCampoAdicional()" style="white-space:nowrap;">
+                            <i class="fas fa-plus"></i> Agregar
+                        </button>
+                    </div>
+                    <div id="camposAdicionalesList" style="display:flex; flex-wrap:wrap; gap:8px; margin-top:10px;"></div>
+                    <p style="font-size:12px; color:#adb5bd; margin-top:6px;">El estudiante verá una casilla por cada una de estas antes de firmar. Déjalo vacío si este taller no necesita ninguna.</p>
+                </div>
             </div>
 
             <div class="card">
@@ -193,7 +205,7 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
                 <h3><i class="fas fa-file-excel"></i> Cargar Lista de Estudiantes</h3>
                 <div class="info-box">
                     <strong>Columnas reconocidas en el Excel</strong> (el orden no importa):<br>
-                    <code>ID</code> · <code>FIRST_NAME</code> / Nombre · <code>LAST_NAME</code> / Apellido · <code>PHONES</code> / Teléfono · <code>EMAIL_AGM_UM</code> / Email · <code>MAJR</code> / Concentración · <code>DEGC</code> / Grado<br><br>
+                    <code>ID</code> · <code>FIRST_NAME</code> / Nombre · <code>LAST_NAME</code> / Apellido · <code>PHONES</code> / Teléfono · <code>EMAIL_AGM_UM</code> / Email · <code>MAJR</code> / Concentración · <code>DEGC</code> / Grado · <code>CAMP</code> / Recinto<br><br>
                     Cargar un archivo nuevo <strong>actualiza</strong> a los estudiantes que ya existan (por su ID) y agrega los que sean nuevos — no duplica a nadie.
                 </div>
                 <div class="upload-zone" id="uploadZone">
@@ -279,6 +291,35 @@ let app, db;
 let talleres = [];
 let currentTallerId = null;
 let parsedRosterRows = [];
+let newCamposAdicionales = [];
+
+function renderCamposAdicionalesList() {
+    const container = document.getElementById('camposAdicionalesList');
+    container.innerHTML = newCamposAdicionales.map((campo, i) => `
+        <span style="background:#f1f3f5; padding:6px 12px; border-radius:20px; font-size:13px; display:inline-flex; align-items:center; gap:8px;">
+            ${campo}
+            <i class="fas fa-times" style="cursor:pointer; color:#dc3545;" onclick="quitarCampoAdicional(${i})"></i>
+        </span>
+    `).join('');
+}
+
+function agregarCampoAdicional() {
+    const input = document.getElementById('newCampoInput');
+    const val = input.value.trim();
+    if (!val) return;
+    if (newCamposAdicionales.includes(val)) {
+        showNotification('Ese campo ya está en la lista', 'warning');
+        return;
+    }
+    newCamposAdicionales.push(val);
+    input.value = '';
+    renderCamposAdicionalesList();
+}
+
+function quitarCampoAdicional(index) {
+    newCamposAdicionales.splice(index, 1);
+    renderCamposAdicionalesList();
+}
 
 function checkPassword() {
     const val = document.getElementById('passwordInput').value;
@@ -319,10 +360,13 @@ async function crearTaller() {
     try {
         await db.collection('talleres').add({
             nombre, fecha, tipoFirma,
+            camposAdicionales: [...newCamposAdicionales],
             createdAt: new Date().toISOString()
         });
         document.getElementById('newTallerNombre').value = '';
         document.getElementById('newTallerFecha').value = '';
+        newCamposAdicionales = [];
+        renderCamposAdicionalesList();
         showNotification('Taller creado exitosamente', 'success');
         await loadTalleres();
     } catch (error) {
@@ -424,6 +468,9 @@ function printQR() {
 
 async function showAsistencia(tallerId, nombre) {
     currentTallerId = tallerId;
+    const taller = talleres.find(t => t.id === tallerId);
+    const camposExtra = (taller && taller.camposAdicionales) || [];
+
     document.getElementById('asistenciaModalTitle').textContent = `Asistencia: ${nombre}`;
     document.getElementById('asistenciaTableContainer').innerHTML = '<p style="text-align:center; padding:20px; color:#6c757d;">Cargando...</p>';
     document.getElementById('asistenciaModal').style.display = 'flex';
@@ -441,8 +488,10 @@ async function showAsistencia(tallerId, nombre) {
             return;
         }
 
+        const extraHeaders = camposExtra.map(c => `<th>${c}</th>`).join('');
+
         let html = `<table class="data-table"><thead><tr>
-            <th>ID</th><th>Nombre</th><th>Concentración</th><th>Email</th><th>Teléfono</th><th>Hora</th><th>Firma</th><th></th>
+            <th>ID</th><th>Nombre</th><th>Recinto</th><th>Concentración</th><th>Email</th><th>Teléfono</th>${extraHeaders}<th>Hora</th><th>Firma</th><th></th>
         </tr></thead><tbody>`;
         rows.forEach(r => {
             let firmaHtml = '<span style="color:#adb5bd;">—</span>';
@@ -451,12 +500,18 @@ async function showAsistencia(tallerId, nombre) {
             } else if (r.firmaTipo === 'escrita' && r.firmaTexto) {
                 firmaHtml = `<span style="font-style:italic; color:#495057;">"${r.firmaTexto}"</span>`;
             }
+            const extraCells = camposExtra.map(c => {
+                const marcado = (r.camposExtra || []).includes(c);
+                return `<td>${marcado ? '<i class="fas fa-check" style="color:#28a745;"></i>' : '—'}</td>`;
+            }).join('');
             html += `<tr>
                 <td>${r.studentId}</td>
                 <td>${r.firstName} ${r.lastName}</td>
+                <td>${r.campus || ''}</td>
                 <td>${r.concentracion || ''}</td>
                 <td>${r.email || ''}</td>
                 <td>${r.phone || ''}</td>
+                ${extraCells}
                 <td>${new Date(r.registeredAt).toLocaleTimeString('es-ES')}</td>
                 <td>${firmaHtml}</td>
                 <td><button class="btn btn-danger btn-small" onclick="deleteAsistencia('${r.docId}', '${(r.firstName + ' ' + r.lastName).replace(/'/g, "\\'")}')" title="Eliminar registro"><i class="fas fa-trash"></i></button></td>
@@ -500,17 +555,24 @@ async function exportAsistencia() {
             return;
         }
 
-        const data = rows.map(r => ({
-            'ID': r.studentId,
-            'Nombre': r.firstName,
-            'Apellido': r.lastName,
-            'Concentración': r.concentracion || '',
-            'Grado': r.grado || '',
-            'Email': r.email || '',
-            'Teléfono': r.phone || '',
-            'Hora de Registro': new Date(r.registeredAt).toLocaleString('es-ES'),
-            'Firma': r.firmaTipo === 'dibujada' ? 'Firma dibujada (ver en el panel)' : (r.firmaTexto || '')
-        }));
+        const data = rows.map(r => {
+            const base = {
+                'ID': r.studentId,
+                'Nombre': r.firstName,
+                'Apellido': r.lastName,
+                'Recinto': r.campus || '',
+                'Concentración': r.concentracion || '',
+                'Grado': r.grado || '',
+                'Email': r.email || '',
+                'Teléfono': r.phone || ''
+            };
+            (taller?.camposAdicionales || []).forEach(c => {
+                base[c] = (r.camposExtra || []).includes(c) ? 'Sí' : 'No';
+            });
+            base['Hora de Registro'] = new Date(r.registeredAt).toLocaleString('es-ES');
+            base['Firma'] = r.firmaTipo === 'dibujada' ? 'Firma dibujada (ver en el panel)' : (r.firmaTexto || '');
+            return base;
+        });
 
         const ws = XLSX.utils.json_to_sheet(data);
         const wb = XLSX.utils.book_new();
@@ -580,6 +642,15 @@ async function generatePDFAsistencia() {
         const margin = 12;
         let yPos = margin;
 
+        const camposExtra = taller.camposAdicionales || [];
+        const colNombre = margin + 8;
+        const colID = margin + 53;
+        const colRecinto = margin + 81;
+        const colConcentracion = margin + 103;
+        const colCamposStart = margin + 143;
+        const campoColWidth = 20;
+        const colFirma = colCamposStart + (campoColWidth * camposExtra.length);
+
         function addHeader() {
             doc.setFontSize(14);
             doc.setFont('helvetica', 'bold');
@@ -602,16 +673,20 @@ async function generatePDFAsistencia() {
             yPos += 8;
 
             doc.setFont('helvetica', 'bold');
-            doc.setFontSize(9);
+            doc.setFontSize(8);
             doc.setDrawColor(200, 16, 46);
             doc.setLineWidth(0.5);
             doc.line(margin, yPos, pageWidth - margin, yPos);
             yPos += 5;
             doc.text('#', margin, yPos);
-            doc.text('Nombre', margin + 10, yPos);
-            doc.text('ID', margin + 75, yPos);
-            doc.text('Concentración', margin + 110, yPos);
-            doc.text('Firma', margin + 195, yPos);
+            doc.text('Nombre', colNombre, yPos);
+            doc.text('ID', colID, yPos);
+            doc.text('Recinto', colRecinto, yPos);
+            doc.text('Concentración', colConcentracion, yPos);
+            camposExtra.forEach((campo, i) => {
+                doc.text(campo.substring(0, 14), colCamposStart + (i * campoColWidth), yPos);
+            });
+            doc.text('Firma', colFirma, yPos);
             yPos += 2;
             doc.setLineWidth(0.2);
             doc.setDrawColor(180, 180, 180);
@@ -632,25 +707,30 @@ async function generatePDFAsistencia() {
                 addHeader();
             }
 
-            doc.setFontSize(9);
+            doc.setFontSize(8);
             doc.setTextColor(0, 0, 0);
             doc.text(String(index + 1), margin, yPos + 4);
-            doc.text(`${r.firstName || ''} ${r.lastName || ''}`, margin + 10, yPos + 4);
-            doc.text(r.studentId || '', margin + 75, yPos + 4);
-            doc.text((r.concentracion || '').substring(0, 32), margin + 110, yPos + 4);
+            doc.text(`${r.firstName || ''} ${r.lastName || ''}`.substring(0, 26), colNombre, yPos + 4);
+            doc.text(r.studentId || '', colID, yPos + 4);
+            doc.text(r.campus || '', colRecinto, yPos + 4);
+            doc.text((r.concentracion || '').substring(0, 22), colConcentracion, yPos + 4);
+            camposExtra.forEach((campo, i) => {
+                const marcado = (r.camposExtra || []).includes(campo);
+                doc.text(marcado ? 'Sí' : '—', colCamposStart + (i * campoColWidth), yPos + 4);
+            });
 
             if (r.firmaTipo === 'dibujada' && r.firmaImagen) {
                 try {
-                    doc.addImage(r.firmaImagen, 'PNG', margin + 195, yPos - 2, 45, 18);
+                    doc.addImage(r.firmaImagen, 'PNG', colFirma, yPos - 2, 45, 18);
                 } catch (e) {
-                    doc.text('(error mostrando firma)', margin + 195, yPos + 4);
+                    doc.text('(error mostrando firma)', colFirma, yPos + 4);
                 }
             } else if (r.firmaTipo === 'escrita' && r.firmaTexto) {
                 doc.setFont('helvetica', 'italic');
-                doc.text(r.firmaTexto, margin + 195, yPos + 4);
+                doc.text(r.firmaTexto, colFirma, yPos + 4);
                 doc.setFont('helvetica', 'normal');
             } else {
-                doc.text('—', margin + 195, yPos + 4);
+                doc.text('—', colFirma, yPos + 4);
             }
 
             doc.setDrawColor(230, 230, 230);
@@ -693,7 +773,8 @@ const HEADER_MAP = {
     'telefono': 'phone', 'tel': 'phone', 'phones': 'phone', 'phone': 'phone',
     'email': 'email', 'correo': 'email', 'correo electronico': 'email', 'email agm um': 'email',
     'concentracion': 'concentracion', 'majr': 'concentracion',
-    'grado': 'grado', 'nivel academico': 'grado', 'grado academico': 'grado', 'degc': 'grado'
+    'grado': 'grado', 'nivel academico': 'grado', 'grado academico': 'grado', 'degc': 'grado',
+    'campus': 'campus', 'recinto': 'campus', 'camp': 'campus'
 };
 
 function handleRosterFile(event) {
