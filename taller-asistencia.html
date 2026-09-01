@@ -129,23 +129,30 @@ function showIdForm() {
     document.getElementById('cardBody').innerHTML = `
         <div class="form-group">
             <label>Número de Estudiante</label>
-            <input type="text" id="studentIdInput" placeholder="S0123456789" onkeypress="if(event.key==='Enter') buscarEstudiante()">
+            <input type="text" id="studentIdInput" value="S0" placeholder="S0123456789" onkeypress="if(event.key==='Enter') buscarEstudiante()">
         </div>
         <button class="btn" id="buscarBtn" onclick="buscarEstudiante()">
             <i class="fas fa-search"></i> Buscar mi Información
         </button>
         <p class="hint">Escribe tu número de estudiante para completar tu registro automáticamente</p>
     `;
-    document.getElementById('studentIdInput').focus();
+    const input = document.getElementById('studentIdInput');
+    input.focus();
+    input.setSelectionRange(input.value.length, input.value.length);
 }
 
 async function buscarEstudiante() {
     const input = document.getElementById('studentIdInput');
-    const studentId = input.value.trim();
+    let studentId = input.value.trim().toUpperCase();
 
     if (!studentId) {
         input.focus();
         return;
+    }
+
+    // Si por alguna razón no trae el prefijo S0, se lo agregamos automáticamente
+    if (!studentId.startsWith('S0')) {
+        studentId = 'S0' + studentId.replace(/^S/i, '');
     }
 
     const btn = document.getElementById('buscarBtn');
