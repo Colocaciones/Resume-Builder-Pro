@@ -183,8 +183,8 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
             <div class="card">
                 <h3><i class="fas fa-file-excel"></i> Cargar Lista de Estudiantes</h3>
                 <div class="info-box">
-                    <strong>Columnas esperadas en el Excel</strong> (el orden no importa, pero los encabezados de la primera fila deben ser similares a estos):<br>
-                    <code>ID</code> · <code>Nombre</code> · <code>Apellido</code> · <code>Teléfono</code> · <code>Email</code> · <code>Concentración</code> · <code>Grado</code><br><br>
+                    <strong>Columnas reconocidas en el Excel</strong> (el orden no importa):<br>
+                    <code>ID</code> · <code>FIRST_NAME</code> / Nombre · <code>LAST_NAME</code> / Apellido · <code>PHONES</code> / Teléfono · <code>EMAIL_AGM_UM</code> / Email · <code>MAJR</code> / Concentración · <code>DEGC</code> / Grado<br><br>
                     Cargar un archivo nuevo <strong>actualiza</strong> a los estudiantes que ya existan (por su ID) y agrega los que sean nuevos — no duplica a nadie.
                 </div>
                 <div class="upload-zone" id="uploadZone">
@@ -487,17 +487,17 @@ function closeModal(id) {
 
 // ===== ROSTER (Lista de estudiantes) =====
 function normalizeHeader(h) {
-    return h.toString().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+    return h.toString().toLowerCase().replace(/_/g, ' ').normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
 }
 
 const HEADER_MAP = {
     'id': 'studentId', 'no estudiante': 'studentId', 'numero de estudiante': 'studentId', 'id estudiante': 'studentId',
-    'nombre': 'firstName',
-    'apellido': 'lastName', 'apellidos': 'lastName',
-    'telefono': 'phone', 'tel': 'phone',
-    'email': 'email', 'correo': 'email', 'correo electronico': 'email',
-    'concentracion': 'concentracion',
-    'grado': 'grado', 'nivel academico': 'grado', 'grado academico': 'grado'
+    'nombre': 'firstName', 'first name': 'firstName',
+    'apellido': 'lastName', 'apellidos': 'lastName', 'last name': 'lastName',
+    'telefono': 'phone', 'tel': 'phone', 'phones': 'phone', 'phone': 'phone',
+    'email': 'email', 'correo': 'email', 'correo electronico': 'email', 'email agm um': 'email',
+    'concentracion': 'concentracion', 'majr': 'concentracion',
+    'grado': 'grado', 'nivel academico': 'grado', 'grado academico': 'grado', 'degc': 'grado'
 };
 
 function handleRosterFile(event) {
