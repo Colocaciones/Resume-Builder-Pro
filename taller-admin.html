@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Panel de Talleres - UAGM</title>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -581,7 +580,9 @@ function printQR() {
     win.print();
 }
 
-async function showAsistencia(tallerId, nombre) {
+let asistenciaUnsubscribe = null;
+
+function showAsistencia(tallerId, nombre) {
     currentTallerId = tallerId;
     const taller = talleres.find(t => t.id === tallerId);
     const camposExtra = (taller && taller.camposAdicionales) || [];
@@ -590,55 +591,64 @@ async function showAsistencia(tallerId, nombre) {
     document.getElementById('asistenciaTableContainer').innerHTML = '<p style="text-align:center; padding:20px; color:#6c757d;">Cargando...</p>';
     document.getElementById('asistenciaModal').style.display = 'flex';
 
-    try {
-        const snapshot = await db.collection('asistencias_talleres').where('tallerId', '==', tallerId).get();
-        const rows = [];
-        snapshot.forEach(doc => rows.push({ docId: doc.id, ...doc.data() }));
-        rows.sort((a, b) => new Date(a.registeredAt) - new Date(b.registeredAt));
-
-        document.getElementById('asistenciaCount').textContent = `${rows.length} estudiante${rows.length !== 1 ? 's' : ''} registrado${rows.length !== 1 ? 's' : ''}`;
-
-        if (rows.length === 0) {
-            document.getElementById('asistenciaTableContainer').innerHTML = '<p style="text-align:center; padding:20px; color:#6c757d;">Nadie se ha registrado todavía.</p>';
-            return;
-        }
-
-        const extraHeaders = camposExtra.map(c => `<th>${c}</th>`).join('');
-
-        let html = `<table class="data-table"><thead><tr>
-            <th>ID</th><th>Nombre</th><th>Recinto</th><th>Concentración</th><th>Email</th><th>Teléfono</th>${extraHeaders}<th>Hora</th><th>Firma</th><th></th>
-        </tr></thead><tbody>`;
-        rows.forEach(r => {
-            let firmaHtml = '<span style="color:#adb5bd;">—</span>';
-            if (r.firmaTipo === 'dibujada' && r.firmaImagen) {
-                firmaHtml = `<img src="${r.firmaImagen}" style="height:30px; border:1px solid #e2e8f0; border-radius:4px; cursor:pointer;" onclick="verFirmaAmpliada('${r.firmaImagen}')">`;
-            } else if (r.firmaTipo === 'escrita' && r.firmaTexto) {
-                firmaHtml = `<span style="font-family:'Dancing Script', cursive; font-size:20px; color:#2d3748;">${r.firmaTexto}</span>`;
-            }
-            const extraCells = camposExtra.map(c => {
-                const marcado = (r.camposExtra || []).includes(c);
-                return `<td>${marcado ? '<i class="fas fa-check" style="color:#28a745;"></i>' : '—'}</td>`;
-            }).join('');
-            html += `<tr>
-                <td>${r.studentId}</td>
-                <td>${r.firstName} ${r.lastName}</td>
-                <td>${r.campus || ''}</td>
-                <td>${r.concentracion || ''}</td>
-                <td>${r.email || ''}</td>
-                <td>${r.phone || ''}</td>
-                ${extraCells}
-                <td>${new Date(r.registeredAt).toLocaleTimeString('es-ES')}</td>
-                <td>${firmaHtml}</td>
-                <td><button class="btn btn-danger btn-small" onclick="deleteAsistencia('${r.docId}', '${(r.firstName + ' ' + r.lastName).replace(/'/g, "\\'")}')" title="Eliminar registro"><i class="fas fa-trash"></i></button></td>
-            </tr>`;
-        });
-        html += '</tbody></table>';
-        document.getElementById('asistenciaTableContainer').innerHTML = html;
-
-    } catch (error) {
-        console.error(error);
-        document.getElementById('asistenciaTableContainer').innerHTML = '<p style="text-align:center; padding:20px; color:#dc3545;">Error cargando la asistencia.</p>';
+    // Si había un oyente activo de otro taller, lo cerramos primero
+    if (asistenciaUnsubscribe) {
+        asistenciaUnsubscribe();
+        asistenciaUnsubscribe = null;
     }
+
+    asistenciaUnsubscribe = db.collection('asistencias_talleres').where('tallerId', '==', tallerId)
+        .onSnapshot(snapshot => {
+            const rows = [];
+            snapshot.forEach(doc => rows.push({ docId: doc.id, ...doc.data() }));
+            rows.sort((a, b) => new Date(a.registeredAt) - new Date(b.registeredAt));
+
+            document.getElementById('asistenciaCount').textContent = `${rows.length} estudiante${rows.length !== 1 ? 's' : ''} registrado${rows.length !== 1 ? 's' : ''}`;
+
+            if (rows.length === 0) {
+                document.getElementById('asistenciaTableContainer').innerHTML = '<p style="text-align:center; padding:20px; color:#6c757d;">Nadie se ha registrado todavía.</p>';
+                return;
+            }
+
+            const extraHeaders = camposExtra.map(c => `<th>${c}</th>`).join('');
+
+            let html = `<table class="data-table"><thead><tr>
+                <th>ID</th><th>Nombre</th><th>Recinto</th><th>Concentración</th><th>Email</th><th>Teléfono</th>${extraHeaders}<th>Hora</th><th>Firma</th><th></th>
+            </tr></thead><tbody>`;
+            rows.forEach(r => {
+                let firmaHtml = '<span style="color:#adb5bd;">—</span>';
+                if (r.firmaTipo === 'dibujada' && r.firmaImagen) {
+                    firmaHtml = `<img src="${r.firmaImagen}" style="height:30px; border:1px solid #e2e8f0; border-radius:4px; cursor:pointer;" onclick="verFirmaAmpliada('${r.firmaImagen}')">`;
+                } else if (r.firmaTipo === 'escrita' && r.firmaTexto) {
+                    firmaHtml = `<span style="font-style:italic; color:#495057;">"${r.firmaTexto}"</span>`;
+                }
+                const extraCells = camposExtra.map(c => {
+                    const marcado = (r.camposExtra || []).includes(c);
+                    return `<td>${marcado ? '<i class="fas fa-check" style="color:#28a745;"></i>' : '—'}</td>`;
+                }).join('');
+                html += `<tr>
+                    <td>${r.studentId}</td>
+                    <td>${r.firstName} ${r.lastName}</td>
+                    <td>${r.campus || ''}</td>
+                    <td>${r.concentracion || ''}</td>
+                    <td>${r.email || ''}</td>
+                    <td>${r.phone || ''}</td>
+                    ${extraCells}
+                    <td>${new Date(r.registeredAt).toLocaleTimeString('es-ES')}</td>
+                    <td>${firmaHtml}</td>
+                    <td><button class="btn btn-danger btn-small" onclick="deleteAsistencia('${r.docId}', '${(r.firstName + ' ' + r.lastName).replace(/'/g, "\\'")}')" title="Eliminar registro"><i class="fas fa-trash"></i></button></td>
+                </tr>`;
+            });
+            html += '</tbody></table>';
+            document.getElementById('asistenciaTableContainer').innerHTML = html;
+
+            // Mantener actualizado el contador en la lista de talleres también
+            loadTalleres();
+
+        }, error => {
+            console.error(error);
+            document.getElementById('asistenciaTableContainer').innerHTML = '<p style="text-align:center; padding:20px; color:#dc3545;">Error cargando la asistencia.</p>';
+        });
 }
 
 async function deleteAsistencia(docId, nombre) {
@@ -648,8 +658,7 @@ async function deleteAsistencia(docId, nombre) {
     try {
         await db.collection('asistencias_talleres').doc(docId).delete();
         showNotification('Registro eliminado', 'success');
-        await showAsistencia(currentTallerId, document.getElementById('asistenciaModalTitle').textContent.replace('Asistencia: ', ''));
-        await loadTalleres();
+        // La tabla se actualiza sola gracias al oyente en tiempo real — no hace falta recargarla a mano
     } catch (error) {
         console.error(error);
         showNotification('Error eliminando el registro', 'error');
@@ -877,6 +886,10 @@ async function generatePDFAsistencia() {
 
 function closeModal(id) {
     document.getElementById(id).style.display = 'none';
+    if (id === 'asistenciaModal' && asistenciaUnsubscribe) {
+        asistenciaUnsubscribe();
+        asistenciaUnsubscribe = null;
+    }
 }
 
 function verFirmaAmpliada(imgData) {
@@ -1006,6 +1019,10 @@ function showNotification(message, type = 'info') {
 window.onclick = function(event) {
     if (event.target.classList.contains('modal')) {
         event.target.style.display = 'none';
+        if (event.target.id === 'asistenciaModal' && asistenciaUnsubscribe) {
+            asistenciaUnsubscribe();
+            asistenciaUnsubscribe = null;
+        }
     }
 };
 </script>
