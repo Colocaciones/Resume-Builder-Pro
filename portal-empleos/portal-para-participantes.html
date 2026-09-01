@@ -1289,7 +1289,7 @@ function initializeFirebase() {
             }
         }
 
-        // Configurar upload de archivos
+                // Configurar upload de archivos
         function setupFileUpload() {
             const fileInput = document.getElementById('resume');
             const uploadContainer = document.getElementById('resumeUpload');
@@ -1298,6 +1298,15 @@ function initializeFirebase() {
             fileInput.addEventListener('change', function() {
                 if (this.files.length > 0) {
                     const file = this.files[0];
+
+                    if (!isValidResumeFile(file)) {
+                        showNotification('Solo se aceptan archivos PDF o Word (.pdf, .doc, .docx) — no fotos ni imágenes', 'error');
+                        fileInput.value = '';
+                        label.textContent = 'Haz clic para seleccionar tu resumé';
+                        uploadContainer.classList.remove('has-file');
+                        return;
+                    }
+
                     const fileName = file.name;
                     const fileSize = (file.size / 1024 / 1024).toFixed(2);
                     
@@ -1456,13 +1465,19 @@ if (!isValidPhone(phone)) {
     return false;
 }
 
-           // Validar archivo (solo si es requerido según el servicio)
+                      // Validar archivo (solo si es requerido según el servicio)
 const fileInput = document.getElementById('resume');
 const selectedService = document.getElementById('requestedServices').value;
 
 // Solo obligatorio para "Interesado en Ofertas de Empleo"
 if (selectedService === 'interesado' && !fileInput.files.length) {
     showNotification('Por favor selecciona tu resumé para este servicio', 'error');
+    return false;
+}
+
+// Si hay un archivo seleccionado, verificar que sea PDF o Word real, sin importar si es obligatorio
+if (fileInput.files.length && !isValidResumeFile(fileInput.files[0])) {
+    showNotification('Solo se aceptan archivos PDF o Word (.pdf, .doc, .docx) — no fotos ni imágenes', 'error');
     return false;
 }
 
@@ -1478,10 +1493,20 @@ if (selectedService === 'interesado' && !fileInput.files.length) {
             return true;
         }
 
-        // Validar email
+               // Validar email
         function isValidEmail(email) {
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             return emailRegex.test(email);
+        }
+
+        // Validar que el archivo sea realmente PDF o Word (revisa el contenido real, no solo el nombre)
+        function isValidResumeFile(file) {
+            const validTypes = [
+                'application/pdf',
+                'application/msword',
+                'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+            ];
+            return validTypes.includes(file.type);
         }
 
 // Validar teléfono
