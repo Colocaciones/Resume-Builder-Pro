@@ -1217,6 +1217,7 @@ function initializeFirebase() {
     setupFileUpload();
     setupConditionalFields();
     setupPhoneFormatting(); // ← NUEVA LÍNEA
+    setupStudentIdLookup();
     checkForPromotion();
 
         // Si ya se registró hace un momento en esta misma pestaña, no mostrar el formulario otra vez
@@ -1422,6 +1423,51 @@ function setupPhoneFormatting() {
         
         e.target.value = value;
     });
+}
+
+// Buscar Concentración y Grado Académico automáticamente cuando el estudiante termina de escribir su ID
+function setupStudentIdLookup() {
+    const studentIdInput = document.getElementById('studentId');
+
+    studentIdInput.addEventListener('blur', async function() {
+        const studentId = this.value.trim().toUpperCase();
+        if (!studentId || !isFirebaseInitialized || !db) return;
+
+        try {
+            const doc = await db.collection('roster_estudiantes').doc(studentId).get();
+            if (!doc.exists) return;
+
+            const data = doc.data();
+
+            if (data.concentracion) {
+                document.getElementById('concentration').value = data.concentracion;
+            }
+
+            const gradoMapeado = mapGradoToAcademicDegree(data.grado);
+            if (gradoMapeado) {
+                document.getElementById('academicDegree').value = gradoMapeado;
+            }
+
+        } catch (error) {
+            console.error('Error buscando información del estudiante:', error);
+        }
+    });
+}
+
+// Traduce el valor de grado de tu lista de estudiantes (ej: "Bachillerato en...") a una de las opciones fijas del menú
+function mapGradoToAcademicDegree(gradoText) {
+    if (!gradoText) return '';
+    const normalized = gradoText.toString().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
+    if (normalized.includes('doctor')) return 'doctorado';
+    if (normalized.includes('maestr') || normalized.includes('master')) return 'maestria';
+    if (normalized.includes('bachiller')) return 'bachillerato';
+    if (normalized.includes('asociado')) return 'asociado';
+    if (normalized.includes('certificado')) return 'certificado';
+    if (normalized.includes('cuarto')) return 'cuarto';
+    if (normalized.includes('11mo') || normalized.includes('undecimo') || normalized.includes('once')) return '11mo';
+
+    return ''; // No se reconoce el valor — se deja en blanco para que lo complete a mano
 }
 
         // Validar formulario de registro
