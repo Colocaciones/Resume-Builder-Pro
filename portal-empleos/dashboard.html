@@ -854,13 +854,19 @@
                         <i class="fas fa-chart-line"></i>
                         Panel de Control
                     </h2>
-                    <div class="section-actions">
-                        <button class="btn btn-success" onclick="exportAllData()">
-                            <i class="fas fa-download"></i> Exportar Todo
-                        </button>
-                        <button class="btn btn-info" onclick="refreshData()">
-                            <i class="fas fa-sync-alt"></i> Actualizar
-                        </button>
+                                        <div class="section-actions" style="flex-direction: column; align-items: flex-end; gap: 6px;">
+                        <div style="display: flex; gap: 12px;">
+                            <button class="btn btn-success" onclick="exportAllData()">
+                                <i class="fas fa-download"></i> Exportar Todo
+                            </button>
+                            <button class="btn btn-info" onclick="refreshData()">
+                                <i class="fas fa-sync-alt"></i> Actualizar
+                            </button>
+                            <button class="btn btn-secondary" onclick="configurarCarpetaExpedientes()">
+                                <i class="fas fa-folder-open"></i> Configurar Carpeta de Expedientes
+                            </button>
+                        </div>
+                        <span id="expedientesFolderStatus" style="font-size: 12px; color: #6c757d;">Carpeta no configurada</span>
                     </div>
                 </div>
 
@@ -1699,7 +1705,7 @@ let lastCheckedParticipants = localStorage.getItem('lastCheckedParticipants') ? 
 let lastCheckedApplications = localStorage.getItem('lastCheckedApplications') ? parseInt(localStorage.getItem('lastCheckedApplications')) : 0;
 let lastCheckedAppointments = localStorage.getItem('lastCheckedAppointments') ? parseInt(localStorage.getItem('lastCheckedAppointments')) : 0;
 
-        // Inicializar dashboard
+                // Inicializar dashboard
         document.addEventListener('DOMContentLoaded', async function() {
     isFirebaseInitialized = initializeFirebase();
     
@@ -1718,6 +1724,10 @@ let lastCheckedAppointments = localStorage.getItem('lastCheckedAppointments') ? 
     updateNotificationBadge();
     updatePendingCount();
     switchTab('offers');
+
+    expedientesDirHandle = await cargarDirHandle();
+    actualizarEstadoCarpetaExpedientes();
+
     console.log('Dashboard Administrativo cargado correctamente');
 });
 
@@ -2291,8 +2301,11 @@ case 'followups':
                                 <button class="btn btn-warning btn-small" onclick="viewParticipantHistory('${participant.id}')" title="Ver historial">
                                     <i class="fas fa-history"></i>
                                 </button>
-                                <button class="btn btn-success btn-small" onclick="downloadResume('${participant.id}')" title="Descargar resumé">
+                                                                <button class="btn btn-success btn-small" onclick="downloadResume('${participant.id}')" title="Descargar resumé">
                                     <i class="fas fa-download"></i>
+                                </button>
+                                <button class="btn btn-primary btn-small" onclick="generarExpediente('${participant.id}')" title="Generar expediente en carpeta local">
+                                    <i class="fas fa-folder-plus"></i>
                                 </button>
                                 <button class="btn btn-danger btn-small" onclick="deleteParticipant('${participant.id}')" title="Eliminar">
                                     <i class="fas fa-trash"></i>
@@ -3727,8 +3740,11 @@ function filterParticipants() {
                                 <button class="btn btn-warning btn-small" onclick="viewParticipantHistory('${participant.id}')" title="Ver historial">
                                     <i class="fas fa-history"></i>
                                 </button>
-                                <button class="btn btn-success btn-small" onclick="downloadResume('${participant.id}')" title="Descargar resumé">
+                                                                <button class="btn btn-success btn-small" onclick="downloadResume('${participant.id}')" title="Descargar resumé">
                                     <i class="fas fa-download"></i>
+                                </button>
+                                <button class="btn btn-primary btn-small" onclick="generarExpediente('${participant.id}')" title="Generar expediente en carpeta local">
+                                    <i class="fas fa-folder-plus"></i>
                                 </button>
                                 <button class="btn btn-danger btn-small" onclick="deleteParticipant('${participant.id}')" title="Eliminar">
                                     <i class="fas fa-trash"></i>
@@ -8127,13 +8143,13 @@ yPos += lineHeight;
 }
 
 // Función para generar PDF del expediente de participante
-function generateParticipantPDF(participantId) {
+function generateParticipantPDF(participantId, returnBlob = false) {
     const participant = participants.find(p => p.id === participantId);
     if (!participant) {
         showNotification('Participante no encontrado', 'error');
+        if (returnBlob) return null;
         return;
     }
-
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
     
@@ -8358,12 +8374,156 @@ function generateParticipantPDF(participantId) {
     addText('Generado el: ' + new Date().toLocaleString('es-ES'), margin, yPos + 5);
     addText('Este documento contiene información confidencial del participante', margin, yPos + 10);
 
-    // Generar y descargar
+        // Generar y descargar (o devolver como blob si se pide para el expediente local)
+    if (returnBlob) {
+        return doc.output('blob');
+    }
+
     const fileName = `Expediente_${participant.firstName}_${participant.lastName}_${new Date().toISOString().split('T')[0]}.pdf`;
     doc.save(fileName);
     
     showNotification('PDF del expediente generado: ' + fileName, 'success');
 }
+
+// ============= SISTEMA DE EXPEDIENTES LOCALES =============
+
+let expedientesDirHandle = null;
+
+function abrirIndexedDB() {
+    return new Promise((resolve, reject) => {
+        const request = indexedDB.open('UAGM_Expedientes', 1);
+        request.onupgradeneeded = () => {
+            request.result.createObjectStore('handles');
+        };
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+    });
+}
+
+async function guardarDirHandle(handle) {
+    try {
+        const idb = await abrirIndexedDB();
+        return new Promise((resolve, reject) => {
+            const tx = idb.transaction('handles', 'readwrite');
+            tx.objectStore('handles').put(handle, 'expedientesDir');
+            tx.oncomplete = () => resolve();
+            tx.onerror = () => reject(tx.error);
+        });
+    } catch (e) {
+        console.error('Error guardando la carpeta:', e);
+    }
+}
+
+async function cargarDirHandle() {
+    try {
+        const idb = await abrirIndexedDB();
+        return new Promise((resolve) => {
+            const tx = idb.transaction('handles', 'readonly');
+            const req = tx.objectStore('handles').get('expedientesDir');
+            req.onsuccess = () => resolve(req.result || null);
+            req.onerror = () => resolve(null);
+        });
+    } catch (e) {
+        return null;
+    }
+}
+
+async function configurarCarpetaExpedientes() {
+    if (!window.showDirectoryPicker) {
+        showNotification('Esta función solo funciona en Chrome o Edge', 'error');
+        return;
+    }
+    try {
+        const handle = await window.showDirectoryPicker();
+        expedientesDirHandle = handle;
+        await guardarDirHandle(handle);
+        showNotification('Carpeta de expedientes configurada correctamente', 'success');
+        actualizarEstadoCarpetaExpedientes();
+    } catch (error) {
+        if (error.name !== 'AbortError') {
+            console.error('Error configurando carpeta:', error);
+            showNotification('Error configurando la carpeta', 'error');
+        }
+    }
+}
+
+async function verificarPermisoCarpeta() {
+    if (!expedientesDirHandle) {
+        expedientesDirHandle = await cargarDirHandle();
+        actualizarEstadoCarpetaExpedientes();
+    }
+    if (!expedientesDirHandle) return false;
+
+    const opts = { mode: 'readwrite' };
+    let permiso = await expedientesDirHandle.queryPermission(opts);
+    if (permiso !== 'granted') {
+        permiso = await expedientesDirHandle.requestPermission(opts);
+    }
+    return permiso === 'granted';
+}
+
+function actualizarEstadoCarpetaExpedientes() {
+    const el = document.getElementById('expedientesFolderStatus');
+    if (!el) return;
+    el.textContent = expedientesDirHandle ? `📁 Carpeta configurada: ${expedientesDirHandle.name}` : 'Carpeta no configurada';
+}
+
+async function generarExpediente(participantId) {
+    const participant = participants.find(p => p.id === participantId);
+    if (!participant) return;
+
+    const tienePermiso = await verificarPermisoCarpeta();
+    if (!tienePermiso) {
+        showNotification('Primero dale clic a "Configurar Carpeta de Expedientes"', 'warning');
+        return;
+    }
+
+    showNotification(`Generando expediente de ${participant.firstName} ${participant.lastName}...`, 'info');
+
+    try {
+        const lastName = (participant.lastName || 'Sin_Apellido').trim();
+        const firstName = (participant.firstName || 'Sin_Nombre').trim();
+        const studentId = (participant.studentId || 'Sin_ID').trim();
+        const folderName = `${lastName}, ${firstName} - ${studentId}`.replace(/[\\/:*?"<>|]/g, '');
+
+        const carpetaParticipante = await expedientesDirHandle.getDirectoryHandle(folderName, { create: true });
+
+        // 1. Descargar y guardar el resumé, si existe
+        if (participant.resume && participant.resume.startsWith('http')) {
+            try {
+                const response = await fetch(participant.resume);
+                const blob = await response.blob();
+                const extension = (participant.resumeFileName || 'Resume.pdf').split('.').pop();
+                const resumeFileHandle = await carpetaParticipante.getFileHandle(`Resume.${extension}`, { create: true });
+                const writable = await resumeFileHandle.createWritable();
+                await writable.write(blob);
+                await writable.close();
+            } catch (e) {
+                console.error('Error descargando resumé:', e);
+                showNotification('No se pudo descargar el resumé, pero se generó el resto del expediente', 'warning');
+            }
+        }
+
+        // 2. Generar el PDF del expediente y guardarlo
+        const pdfBlob = generateParticipantPDF(participantId, true);
+        if (pdfBlob) {
+            const pdfFileHandle = await carpetaParticipante.getFileHandle('Expediente.pdf', { create: true });
+            const writablePdf = await pdfFileHandle.createWritable();
+            await writablePdf.write(pdfBlob);
+            await writablePdf.close();
+        }
+
+        showNotification(`Expediente de ${participant.firstName} ${participant.lastName} generado exitosamente`, 'success');
+
+    } catch (error) {
+        console.error('Error generando expediente:', error);
+        showNotification('Error generando el expediente. Intenta de nuevo.', 'error');
+    }
+}
+
+// ============= FIN SISTEMA DE EXPEDIENTES LOCALES =============
+
+// ============= FUNCIONES PARA RESUME BUILDER =============
 
 // ============= FUNCIONES PARA RESUME BUILDER =============
 
