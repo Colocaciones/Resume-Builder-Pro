@@ -8481,10 +8481,11 @@ async function generarExpediente(participantId) {
     showNotification(`Generando expediente de ${participant.firstName} ${participant.lastName}...`, 'info');
 
     try {
-        const lastName = (participant.lastName || 'Sin_Apellido').trim();
+                const lastName = (participant.lastName || 'Sin_Apellido').trim();
         const firstName = (participant.firstName || 'Sin_Nombre').trim();
         const studentId = (participant.studentId || 'Sin_ID').trim();
-        const folderName = `${lastName}, ${firstName} - ${studentId}`.replace(/[\\/:*?"<>|]/g, '');
+        const concentration = (participant.concentration || 'Sin_Concentracion').trim();
+        const folderName = `${lastName}, ${firstName} - ${studentId} - ${concentration}`.replace(/[\\/:*?"<>|]/g, '');
 
         const carpetaParticipante = await expedientesDirHandle.getDirectoryHandle(folderName, { create: true });
 
