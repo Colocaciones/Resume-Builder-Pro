@@ -8496,9 +8496,13 @@ async function generarExpediente(participantId) {
     try {
                 const lastName = (participant.lastName || 'Sin_Apellido').trim();
         const firstName = (participant.firstName || 'Sin_Nombre').trim();
-        const studentId = (participant.studentId || 'Sin_ID').trim();
+        const tipoLabels = { 'student': 'Estudiante', 'alumni': 'Exalumno', 'community': 'Comunidad' };
+        const tipo = tipoLabels[participant.studentType] || 'Sin_Tipo';
+        const studentId = (participant.studentId && participant.studentId.trim())
+            ? participant.studentId.trim()
+            : (participant.email && participant.email.trim() ? participant.email.trim() : 'Sin_Identificador');
         const concentration = (participant.concentration || 'Sin_Concentracion').trim();
-        const folderName = `${lastName}, ${firstName} - ${studentId} - ${concentration}`.replace(/[\\/:*?"<>|]/g, '');
+        const folderName = `${lastName}, ${firstName} - ${tipo} - ${studentId} - ${concentration}`.replace(/[\\/:*?"<>|]/g, '');
 
         const carpetaParticipante = await expedientesDirHandle.getDirectoryHandle(folderName, { create: true });
 
