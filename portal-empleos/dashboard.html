@@ -8213,9 +8213,22 @@ function generateParticipantPDF(participantId, returnBlob = false) {
     addText(participant.city, 80, yPos);
     yPos += lineHeight;
     
-    addText('Fecha de Registro:', margin, yPos, 10, 'bold');
+        addText('Fecha de Registro:', margin, yPos, 10, 'bold');
     addText(new Date(participant.registeredAt).toLocaleDateString('es-ES'), 80, yPos);
     yPos += 15;
+
+    // SERVICIO SOLICITADO (destacado, ya que es el propósito de la solicitud)
+    doc.setFillColor(255, 243, 205);
+    doc.rect(margin - 5, yPos - 5, 175, 20, 'F');
+    doc.setTextColor(133, 100, 4);
+    addText('SERVICIO SOLICITADO', margin, yPos, 12, 'bold');
+    yPos += 8;
+    doc.setTextColor(0, 0, 0);
+    const serviceLines = doc.splitTextToSize(getServiceLabel(participant.requestedServices), 160);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(10);
+    doc.text(serviceLines, margin, yPos);
+    yPos += serviceLines.length * 5 + 15;
 
     // INFORMACIÓN ACADÉMICA
     doc.setTextColor(200, 16, 46);
