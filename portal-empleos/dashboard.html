@@ -854,7 +854,7 @@
                         <i class="fas fa-chart-line"></i>
                         Panel de Control
                     </h2>
-                                        <div class="section-actions" style="flex-direction: column; align-items: flex-end; gap: 6px;">
+                                                            <div class="section-actions" style="flex-direction: column; align-items: flex-end; gap: 6px;">
                         <div style="display: flex; gap: 12px;">
                             <button class="btn btn-success" onclick="exportAllData()">
                                 <i class="fas fa-download"></i> Exportar Todo
@@ -863,10 +863,16 @@
                                 <i class="fas fa-sync-alt"></i> Actualizar
                             </button>
                             <button class="btn btn-secondary" onclick="configurarCarpetaExpedientes()">
-                                <i class="fas fa-folder-open"></i> Configurar Carpeta de Expedientes
+                                <i class="fas fa-folder-open"></i> Carpeta de Participantes
+                            </button>
+                            <button class="btn btn-secondary" onclick="configurarCarpetaPatronos()">
+                                <i class="fas fa-folder-open"></i> Carpeta de Patronos
                             </button>
                         </div>
-                        <span id="expedientesFolderStatus" style="font-size: 12px; color: #6c757d;">Carpeta no configurada</span>
+                        <div style="display: flex; gap: 20px;">
+                            <span id="expedientesFolderStatus" style="font-size: 12px; color: #6c757d;">Participantes: carpeta no configurada</span>
+                            <span id="patronosFolderStatus" style="font-size: 12px; color: #6c757d;">Patronos: carpeta no configurada</span>
+                        </div>
                     </div>
                 </div>
 
@@ -1725,8 +1731,10 @@ let lastCheckedAppointments = localStorage.getItem('lastCheckedAppointments') ? 
     updatePendingCount();
     switchTab('offers');
 
-    expedientesDirHandle = await cargarDirHandle();
+        expedientesDirHandle = await cargarDirHandle('expedientesDir');
     actualizarEstadoCarpetaExpedientes();
+    patronosDirHandle = await cargarDirHandle('patronosDir');
+    actualizarEstadoCarpetaPatronos();
 
     console.log('Dashboard Administrativo cargado correctamente');
 });
@@ -2208,8 +2216,11 @@ case 'followups':
                                  <button class="btn btn-info btn-small" onclick="viewOfferDetails('${offer.id}')" title="Ver detalles">
                                      <i class="fas fa-eye"></i>
                                 </button>
-                                <button class="btn btn-success btn-small" onclick="generateOfferPDF('${offer.id}')" title="Generar PDF">
+                                                                <button class="btn btn-success btn-small" onclick="generateOfferPDF('${offer.id}')" title="Generar PDF">
                                      <i class="fas fa-file-pdf"></i>
+                                </button>
+                                <button class="btn btn-primary btn-small" onclick="generarExpedientePatrono('${offer.id}')" title="Guardar en carpeta de patronos">
+                                    <i class="fas fa-folder-plus"></i>
                                 </button>
                                 <button class="btn btn-warning btn-small" onclick="editOffer('${offer.id}')" title="Editar">
                                     <i class="fas fa-edit"></i>
@@ -3611,12 +3622,15 @@ function filterOffers() {
         <button class="btn btn-info btn-small" onclick="viewOfferDetails('${offer.id}')" title="Ver detalles">
             <i class="fas fa-eye"></i>
         </button>
-        <button class="btn btn-success btn-small" onclick="generateOfferPDF('${offer.id}')" title="Generar PDF">
-            <i class="fas fa-file-pdf"></i>
-        </button>
-        <button class="btn btn-warning btn-small" onclick="editOffer('${offer.id}')" title="Editar">
-            <i class="fas fa-edit"></i>
-        </button>
+                                        <button class="btn btn-success btn-small" onclick="generateOfferPDF('${offer.id}')" title="Generar PDF">
+                                     <i class="fas fa-file-pdf"></i>
+                                </button>
+                                <button class="btn btn-primary btn-small" onclick="generarExpedientePatrono('${offer.id}')" title="Guardar en carpeta de patronos">
+                                    <i class="fas fa-folder-plus"></i>
+                                </button>
+                                <button class="btn btn-warning btn-small" onclick="editOffer('${offer.id}')" title="Editar">
+                                    <i class="fas fa-edit"></i>
+                                </button>
 	<button class="btn btn-warning btn-small" onclick="generatePromoURL('${offer.id}')" title="Generar URL promocional">
     	    <i class="fas fa-bullhorn"></i>
 	</button>
@@ -7888,13 +7902,13 @@ function formatLocalDate(dateString) {
 }
 
 // Función para generar PDF de la oferta de un patrono específico
-function generateOfferPDF(offerId) {
+function generateOfferPDF(offerId, returnBlob = false) {
     const offer = offers.find(o => o.id === offerId);
     if (!offer) {
+        if (returnBlob) return null;
         showNotification('Oferta no encontrada', 'error');
         return;
     }
-
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
     
@@ -8132,6 +8146,10 @@ yPos += lineHeight;
     doc.setTextColor(100, 100, 100);
     addText('Documento generado por el Sistema Administrativo - Portal de Empleos UAGM', margin, yPos);
     addText('Generado el: ' + new Date().toLocaleString('es-ES'), margin, yPos + 5);
+
+        if (returnBlob) {
+        return doc.output('blob');
+    }
 
     // Generar y descargar el PDF
     const companyNameClean = (offer.companyName || 'Sin_Nombre').replace(/[^a-zA-Z0-9]/g, '_');
@@ -8413,12 +8431,12 @@ function abrirIndexedDB() {
     });
 }
 
-async function guardarDirHandle(handle) {
+async function guardarDirHandle(key, handle) {
     try {
         const idb = await abrirIndexedDB();
         return new Promise((resolve, reject) => {
             const tx = idb.transaction('handles', 'readwrite');
-            tx.objectStore('handles').put(handle, 'expedientesDir');
+            tx.objectStore('handles').put(handle, key);
             tx.oncomplete = () => resolve();
             tx.onerror = () => reject(tx.error);
         });
@@ -8427,12 +8445,12 @@ async function guardarDirHandle(handle) {
     }
 }
 
-async function cargarDirHandle() {
+async function cargarDirHandle(key) {
     try {
         const idb = await abrirIndexedDB();
         return new Promise((resolve) => {
             const tx = idb.transaction('handles', 'readonly');
-            const req = tx.objectStore('handles').get('expedientesDir');
+            const req = tx.objectStore('handles').get(key);
             req.onsuccess = () => resolve(req.result || null);
             req.onerror = () => resolve(null);
         });
@@ -8440,16 +8458,15 @@ async function cargarDirHandle() {
         return null;
     }
 }
-
 async function configurarCarpetaExpedientes() {
     if (!window.showDirectoryPicker) {
         showNotification('Esta función solo funciona en Chrome o Edge', 'error');
         return;
     }
     try {
-        const handle = await window.showDirectoryPicker();
+                const handle = await window.showDirectoryPicker();
         expedientesDirHandle = handle;
-        await guardarDirHandle(handle);
+        await guardarDirHandle('expedientesDir', handle);
         showNotification('Carpeta de expedientes configurada correctamente', 'success');
         actualizarEstadoCarpetaExpedientes();
     } catch (error) {
@@ -8462,10 +8479,11 @@ async function configurarCarpetaExpedientes() {
 
 async function verificarPermisoCarpeta() {
     if (!expedientesDirHandle) {
-        expedientesDirHandle = await cargarDirHandle();
+        expedientesDirHandle = await cargarDirHandle('expedientesDir');
         actualizarEstadoCarpetaExpedientes();
-    }
-    if (!expedientesDirHandle) return false;
+    }   
+
+ if (!expedientesDirHandle) return false;
 
     const opts = { mode: 'readwrite' };
     let permiso = await expedientesDirHandle.queryPermission(opts);
@@ -8478,9 +8496,8 @@ async function verificarPermisoCarpeta() {
 function actualizarEstadoCarpetaExpedientes() {
     const el = document.getElementById('expedientesFolderStatus');
     if (!el) return;
-    el.textContent = expedientesDirHandle ? `📁 Carpeta configurada: ${expedientesDirHandle.name}` : 'Carpeta no configurada';
+    el.textContent = expedientesDirHandle ? `Participantes: 📁 ${expedientesDirHandle.name}` : 'Participantes: carpeta no configurada';
 }
-
 async function generarExpediente(participantId) {
     const participant = participants.find(p => p.id === participantId);
     if (!participant) return;
@@ -8541,8 +8558,88 @@ async function generarExpediente(participantId) {
 
 // ============= FIN SISTEMA DE EXPEDIENTES LOCALES =============
 
-// ============= FUNCIONES PARA RESUME BUILDER =============
+// ============= SISTEMA DE EXPEDIENTES DE PATRONOS =============
 
+let patronosDirHandle = null;
+
+async function configurarCarpetaPatronos() {
+    if (!window.showDirectoryPicker) {
+        showNotification('Esta función solo funciona en Chrome o Edge', 'error');
+        return;
+    }
+    try {
+        const handle = await window.showDirectoryPicker();
+        patronosDirHandle = handle;
+        await guardarDirHandle('patronosDir', handle);
+        showNotification('Carpeta de patronos configurada correctamente', 'success');
+        actualizarEstadoCarpetaPatronos();
+    } catch (error) {
+        if (error.name !== 'AbortError') {
+            console.error('Error configurando carpeta:', error);
+            showNotification('Error configurando la carpeta', 'error');
+        }
+    }
+}
+
+async function verificarPermisoCarpetaPatronos() {
+    if (!patronosDirHandle) {
+        patronosDirHandle = await cargarDirHandle('patronosDir');
+        actualizarEstadoCarpetaPatronos();
+    }
+    if (!patronosDirHandle) return false;
+
+    const opts = { mode: 'readwrite' };
+    let permiso = await patronosDirHandle.queryPermission(opts);
+    if (permiso !== 'granted') {
+        permiso = await patronosDirHandle.requestPermission(opts);
+    }
+    return permiso === 'granted';
+}
+
+function actualizarEstadoCarpetaPatronos() {
+    const el = document.getElementById('patronosFolderStatus');
+    if (!el) return;
+    el.textContent = patronosDirHandle ? `Patronos: 📁 ${patronosDirHandle.name}` : 'Patronos: carpeta no configurada';
+}
+
+async function generarExpedientePatrono(offerId) {
+    const offer = offers.find(o => o.id === offerId);
+    if (!offer) return;
+
+    const tienePermiso = await verificarPermisoCarpetaPatronos();
+    if (!tienePermiso) {
+        showNotification('Primero dale clic a "Carpeta de Patronos"', 'warning');
+        return;
+    }
+
+    showNotification(`Guardando oferta de ${offer.companyName}...`, 'info');
+
+    try {
+        const folderName = (offer.companyName || 'Sin_Empresa').trim().replace(/[\\/:*?"<>|]/g, '');
+        const carpetaEmpresa = await patronosDirHandle.getDirectoryHandle(folderName, { create: true });
+
+        const pdfBlob = generateOfferPDF(offerId, true);
+        if (pdfBlob) {
+            const positionClean = (offer.position || 'Sin_Posicion').replace(/[^a-zA-Z0-9]/g, '_');
+            const dateStr = new Date().toISOString().split('T')[0];
+            const fileName = `Oferta_${positionClean}_${dateStr}.pdf`;
+            const pdfFileHandle = await carpetaEmpresa.getFileHandle(fileName, { create: true });
+            const writablePdf = await pdfFileHandle.createWritable();
+            await writablePdf.write(pdfBlob);
+            await writablePdf.close();
+        }
+
+        showNotification(`Oferta de ${offer.companyName} guardada exitosamente`, 'success');
+
+    } catch (error) {
+        console.error('Error generando expediente de patrono:', error);
+        showNotification('Error guardando el expediente. Intenta de nuevo.', 'error');
+    }
+}
+
+// ============= FIN SISTEMA DE EXPEDIENTES DE PATRONOS =============
+
+// ============= FUNCIONES PARA RESUME BUILDER =============
 // ============= FUNCIONES PARA RESUME BUILDER =============
 
 // Cargar tabla de registros Resume Builder
