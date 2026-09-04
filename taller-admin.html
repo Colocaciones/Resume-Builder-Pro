@@ -178,16 +178,28 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
                     </button>
                 </div>
 
+                <div class="form-group" style="margin-top:14px; margin-bottom:0; display:flex; align-items:center; gap:10px;">
+                    <input type="checkbox" id="newTallerManual" style="width:auto;">
+                    <label for="newTallerManual" style="margin:0; font-weight:600;">Permitir registro manual para exalumnos/comunidad sin número de estudiante</label>
+                </div>
+
                 <div class="form-group" style="margin-top:18px; margin-bottom:0;">
-                    <label>Casillas adicionales para este taller (opcional)</label>
-                    <div style="display:flex; gap:10px;">
-                        <input type="text" id="newCampoInput" placeholder="Ej: Programa de Honor" onkeypress="if(event.key==='Enter'){event.preventDefault(); agregarCampoAdicional();}">
-                        <button type="button" class="btn btn-secondary btn-small" onclick="agregarCampoAdicional()" style="white-space:nowrap;">
-                            <i class="fas fa-plus"></i> Agregar
+                    <label>Preguntas adicionales para este taller (opcional)</label>
+                    <div style="background:#f8f9fa; padding:14px; border-radius:10px; margin-bottom:10px;">
+                        <input type="text" id="newPreguntaTexto" placeholder="Texto de la pregunta, ej: ¿Eres candidato a graduación?" style="margin-bottom:8px;">
+                        <div style="display:flex; gap:10px; margin-bottom:8px;">
+                            <input type="text" id="newOpcionTexto" placeholder="Opción, ej: Sí" onkeypress="if(event.key==='Enter'){event.preventDefault(); agregarOpcionActual();}">
+                            <button type="button" class="btn btn-secondary btn-small" onclick="agregarOpcionActual()" style="white-space:nowrap;">
+                                <i class="fas fa-plus"></i> Agregar Opción
+                            </button>
+                        </div>
+                        <div id="opcionesActualesList" style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:10px;"></div>
+                        <button type="button" class="btn btn-primary btn-small" onclick="guardarPreguntaActual()">
+                            <i class="fas fa-check"></i> Guardar esta Pregunta
                         </button>
                     </div>
-                    <div id="camposAdicionalesList" style="display:flex; flex-wrap:wrap; gap:8px; margin-top:10px;"></div>
-                    <p style="font-size:12px; color:#adb5bd; margin-top:6px;">El estudiante verá una casilla por cada una de estas antes de firmar. Déjalo vacío si este taller no necesita ninguna.</p>
+                    <div id="preguntasGuardadasList"></div>
+                    <p style="font-size:12px; color:#adb5bd; margin-top:6px;">El estudiante verá cada pregunta con sus opciones antes de firmar. Puedes agregar varias preguntas distintas, o ninguna si este taller no las necesita.</p>
                 </div>
             </div>
 
@@ -252,15 +264,26 @@ body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:
                 </select>
                 <p style="font-size:12px; color:#adb5bd; margin-top:6px;">Esto solo afecta a los registros nuevos — no cambia las firmas que ya se guardaron.</p>
             </div>
+            <div class="form-group" style="display:flex; align-items:center; gap:10px;">
+                <input type="checkbox" id="editTallerManual" style="width:auto;">
+                <label for="editTallerManual" style="margin:0; font-weight:600;">Permitir registro manual para exalumnos/comunidad sin número de estudiante</label>
+            </div>
             <div class="form-group">
-                <label>Casillas adicionales</label>
-                <div style="display:flex; gap:10px;">
-                    <input type="text" id="editCampoInput" placeholder="Ej: Programa de Honor" onkeypress="if(event.key==='Enter'){event.preventDefault(); agregarCampoEdicion();}">
-                    <button type="button" class="btn btn-secondary btn-small" onclick="agregarCampoEdicion()" style="white-space:nowrap;">
-                        <i class="fas fa-plus"></i> Agregar
+                <label>Preguntas adicionales</label>
+                <div style="background:#f8f9fa; padding:14px; border-radius:10px; margin-bottom:10px;">
+                    <input type="text" id="editPreguntaTexto" placeholder="Texto de la pregunta, ej: ¿Eres candidato a graduación?" style="margin-bottom:8px;">
+                    <div style="display:flex; gap:10px; margin-bottom:8px;">
+                        <input type="text" id="editOpcionTexto" placeholder="Opción, ej: Sí" onkeypress="if(event.key==='Enter'){event.preventDefault(); agregarOpcionEdicion();}">
+                        <button type="button" class="btn btn-secondary btn-small" onclick="agregarOpcionEdicion()" style="white-space:nowrap;">
+                            <i class="fas fa-plus"></i> Agregar Opción
+                        </button>
+                    </div>
+                    <div id="editOpcionesActualesList" style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:10px;"></div>
+                    <button type="button" class="btn btn-primary btn-small" onclick="guardarPreguntaEdicion()">
+                        <i class="fas fa-check"></i> Guardar esta Pregunta
                     </button>
                 </div>
-                <div id="editCamposList" style="display:flex; flex-wrap:wrap; gap:8px; margin-top:10px;"></div>
+                <div id="editPreguntasGuardadasList"></div>
             </div>
             <button class="btn btn-primary" style="width:100%; justify-content:center;" onclick="guardarEdicionTaller()">
                 <i class="fas fa-save"></i> Guardar Cambios
@@ -332,39 +355,87 @@ let app, db;
 let talleres = [];
 let currentTallerId = null;
 let parsedRosterRows = [];
-let newCamposAdicionales = [];
+let newPreguntas = [];
+let opcionesActuales = [];
 
-function renderCamposAdicionalesList() {
-    const container = document.getElementById('camposAdicionalesList');
-    container.innerHTML = newCamposAdicionales.map((campo, i) => `
-        <span style="background:#f1f3f5; padding:6px 12px; border-radius:20px; font-size:13px; display:inline-flex; align-items:center; gap:8px;">
-            ${campo}
-            <i class="fas fa-times" style="cursor:pointer; color:#dc3545;" onclick="quitarCampoAdicional(${i})"></i>
+// Convierte el formato viejo (lista simple de casillas) al formato nuevo (preguntas con opciones),
+// para que los talleres creados antes de este cambio sigan funcionando sin tocarlos.
+function normalizarPreguntas(camposAdicionales) {
+    if (!camposAdicionales || camposAdicionales.length === 0) return [];
+    if (typeof camposAdicionales[0] === 'string') {
+        return [{ pregunta: 'Marca lo que aplique', opciones: camposAdicionales }];
+    }
+    return camposAdicionales;
+}
+
+function renderOpcionesActuales() {
+    const container = document.getElementById('opcionesActualesList');
+    container.innerHTML = opcionesActuales.map((op, i) => `
+        <span style="background:#e9ecef; padding:5px 10px; border-radius:16px; font-size:12px; display:inline-flex; align-items:center; gap:6px;">
+            ${op}
+            <i class="fas fa-times" style="cursor:pointer; color:#dc3545;" onclick="quitarOpcionActual(${i})"></i>
         </span>
     `).join('');
 }
 
-function agregarCampoAdicional() {
-    const input = document.getElementById('newCampoInput');
+function agregarOpcionActual() {
+    const input = document.getElementById('newOpcionTexto');
     const val = input.value.trim();
     if (!val) return;
-    if (newCamposAdicionales.includes(val)) {
-        showNotification('Ese campo ya está en la lista', 'warning');
+    if (opcionesActuales.includes(val)) {
+        showNotification('Esa opción ya está agregada', 'warning');
         return;
     }
-    newCamposAdicionales.push(val);
+    opcionesActuales.push(val);
     input.value = '';
-    renderCamposAdicionalesList();
+    renderOpcionesActuales();
 }
 
-function quitarCampoAdicional(index) {
-    newCamposAdicionales.splice(index, 1);
-    renderCamposAdicionalesList();
+function quitarOpcionActual(index) {
+    opcionesActuales.splice(index, 1);
+    renderOpcionesActuales();
+}
+
+function renderPreguntasGuardadas() {
+    const container = document.getElementById('preguntasGuardadasList');
+    container.innerHTML = newPreguntas.map((p, i) => `
+        <div style="background:#fff; border:1px solid #e2e8f0; border-radius:10px; padding:10px 14px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
+            <div>
+                <strong style="font-size:13px;">${p.pregunta}</strong>
+                <div style="font-size:12px; color:#6c757d; margin-top:4px;">${p.opciones.join(' · ')}</div>
+            </div>
+            <i class="fas fa-trash" style="cursor:pointer; color:#dc3545;" onclick="quitarPreguntaGuardada(${i})"></i>
+        </div>
+    `).join('');
+}
+
+function guardarPreguntaActual() {
+    const preguntaInput = document.getElementById('newPreguntaTexto');
+    const pregunta = preguntaInput.value.trim();
+    if (!pregunta) {
+        showNotification('Escribe el texto de la pregunta', 'warning');
+        return;
+    }
+    if (opcionesActuales.length < 2) {
+        showNotification('Agrega al menos 2 opciones para esta pregunta', 'warning');
+        return;
+    }
+    newPreguntas.push({ pregunta, opciones: [...opcionesActuales] });
+    preguntaInput.value = '';
+    opcionesActuales = [];
+    renderOpcionesActuales();
+    renderPreguntasGuardadas();
+}
+
+function quitarPreguntaGuardada(index) {
+    newPreguntas.splice(index, 1);
+    renderPreguntasGuardadas();
 }
 
 // ===== Editar taller =====
 let currentEditTallerId = null;
-let editCamposAdicionales = [];
+let editPreguntas = [];
+let editOpcionesActuales = [];
 
 function editTaller(tallerId) {
     const taller = talleres.find(t => t.id === tallerId);
@@ -374,44 +445,84 @@ function editTaller(tallerId) {
     document.getElementById('editTallerNombre').value = taller.nombre || '';
     document.getElementById('editTallerFecha').value = taller.fecha || '';
     document.getElementById('editTallerFirma').value = taller.tipoFirma || 'escrita';
-    editCamposAdicionales = [...(taller.camposAdicionales || [])];
-    renderEditCamposList();
+    document.getElementById('editTallerManual').checked = !!taller.permiteManual;
+    editPreguntas = normalizarPreguntas(taller.camposAdicionales).map(p => ({ pregunta: p.pregunta, opciones: [...p.opciones] }));
+    editOpcionesActuales = [];
+    renderEditOpcionesActuales();
+    renderEditPreguntasGuardadas();
 
     document.getElementById('editTallerModal').style.display = 'flex';
 }
 
-function renderEditCamposList() {
-    const container = document.getElementById('editCamposList');
-    container.innerHTML = editCamposAdicionales.map((campo, i) => `
-        <span style="background:#f1f3f5; padding:6px 12px; border-radius:20px; font-size:13px; display:inline-flex; align-items:center; gap:8px;">
-            ${campo}
-            <i class="fas fa-times" style="cursor:pointer; color:#dc3545;" onclick="quitarCampoEdicion(${i})"></i>
+function renderEditOpcionesActuales() {
+    const container = document.getElementById('editOpcionesActualesList');
+    container.innerHTML = editOpcionesActuales.map((op, i) => `
+        <span style="background:#e9ecef; padding:5px 10px; border-radius:16px; font-size:12px; display:inline-flex; align-items:center; gap:6px;">
+            ${op}
+            <i class="fas fa-times" style="cursor:pointer; color:#dc3545;" onclick="quitarOpcionEdicion(${i})"></i>
         </span>
     `).join('');
 }
 
-function agregarCampoEdicion() {
-    const input = document.getElementById('editCampoInput');
+function agregarOpcionEdicion() {
+    const input = document.getElementById('editOpcionTexto');
     const val = input.value.trim();
     if (!val) return;
-    if (editCamposAdicionales.includes(val)) {
-        showNotification('Ese campo ya está en la lista', 'warning');
+    if (editOpcionesActuales.includes(val)) {
+        showNotification('Esa opción ya está agregada', 'warning');
         return;
     }
-    editCamposAdicionales.push(val);
+    editOpcionesActuales.push(val);
     input.value = '';
-    renderEditCamposList();
+    renderEditOpcionesActuales();
 }
 
-function quitarCampoEdicion(index) {
-    editCamposAdicionales.splice(index, 1);
-    renderEditCamposList();
+function quitarOpcionEdicion(index) {
+    editOpcionesActuales.splice(index, 1);
+    renderEditOpcionesActuales();
+}
+
+function renderEditPreguntasGuardadas() {
+    const container = document.getElementById('editPreguntasGuardadasList');
+    container.innerHTML = editPreguntas.map((p, i) => `
+        <div style="background:#fff; border:1px solid #e2e8f0; border-radius:10px; padding:10px 14px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
+            <div>
+                <strong style="font-size:13px;">${p.pregunta}</strong>
+                <div style="font-size:12px; color:#6c757d; margin-top:4px;">${p.opciones.join(' · ')}</div>
+            </div>
+            <i class="fas fa-trash" style="cursor:pointer; color:#dc3545;" onclick="quitarPreguntaGuardadaEdicion(${i})"></i>
+        </div>
+    `).join('');
+}
+
+function guardarPreguntaEdicion() {
+    const preguntaInput = document.getElementById('editPreguntaTexto');
+    const pregunta = preguntaInput.value.trim();
+    if (!pregunta) {
+        showNotification('Escribe el texto de la pregunta', 'warning');
+        return;
+    }
+    if (editOpcionesActuales.length < 2) {
+        showNotification('Agrega al menos 2 opciones para esta pregunta', 'warning');
+        return;
+    }
+    editPreguntas.push({ pregunta, opciones: [...editOpcionesActuales] });
+    preguntaInput.value = '';
+    editOpcionesActuales = [];
+    renderEditOpcionesActuales();
+    renderEditPreguntasGuardadas();
+}
+
+function quitarPreguntaGuardadaEdicion(index) {
+    editPreguntas.splice(index, 1);
+    renderEditPreguntasGuardadas();
 }
 
 async function guardarEdicionTaller() {
     const nombre = document.getElementById('editTallerNombre').value.trim();
     const fecha = document.getElementById('editTallerFecha').value;
     const tipoFirma = document.getElementById('editTallerFirma').value;
+    const permiteManual = document.getElementById('editTallerManual').checked;
 
     if (!nombre || !fecha) {
         showNotification('Completa el nombre y la fecha del taller', 'warning');
@@ -420,8 +531,8 @@ async function guardarEdicionTaller() {
 
     try {
         await db.collection('talleres').doc(currentEditTallerId).update({
-            nombre, fecha, tipoFirma,
-            camposAdicionales: [...editCamposAdicionales]
+            nombre, fecha, tipoFirma, permiteManual,
+            camposAdicionales: editPreguntas.map(p => ({ pregunta: p.pregunta, opciones: [...p.opciones] }))
         });
         closeModal('editTallerModal');
         showNotification('Taller actualizado exitosamente', 'success');
@@ -462,6 +573,7 @@ async function crearTaller() {
     const nombre = document.getElementById('newTallerNombre').value.trim();
     const fecha = document.getElementById('newTallerFecha').value;
     const tipoFirma = document.getElementById('newTallerFirma').value;
+    const permiteManual = document.getElementById('newTallerManual').checked;
 
     if (!nombre || !fecha) {
         showNotification('Completa el nombre y la fecha del taller', 'warning');
@@ -470,14 +582,17 @@ async function crearTaller() {
 
     try {
         await db.collection('talleres').add({
-            nombre, fecha, tipoFirma,
-            camposAdicionales: [...newCamposAdicionales],
+            nombre, fecha, tipoFirma, permiteManual,
+            camposAdicionales: newPreguntas.map(p => ({ pregunta: p.pregunta, opciones: [...p.opciones] })),
             createdAt: new Date().toISOString()
         });
         document.getElementById('newTallerNombre').value = '';
         document.getElementById('newTallerFecha').value = '';
-        newCamposAdicionales = [];
-        renderCamposAdicionalesList();
+        document.getElementById('newTallerManual').checked = false;
+        newPreguntas = [];
+        opcionesActuales = [];
+        renderPreguntasGuardadas();
+        renderOpcionesActuales();
         showNotification('Taller creado exitosamente', 'success');
         await loadTalleres();
     } catch (error) {
@@ -582,10 +697,19 @@ function printQR() {
 
 let asistenciaUnsubscribe = null;
 
+function obtenerRespuesta(camposExtra, preguntaTexto) {
+    if (!camposExtra) return null;
+    if (Array.isArray(camposExtra)) {
+        // Formato viejo: un array con la opción seleccionada, sin asociar a una pregunta específica
+        return camposExtra.length > 0 ? camposExtra[0] : null;
+    }
+    return camposExtra[preguntaTexto] || null;
+}
+
 function showAsistencia(tallerId, nombre) {
     currentTallerId = tallerId;
     const taller = talleres.find(t => t.id === tallerId);
-    const camposExtra = (taller && taller.camposAdicionales) || [];
+    const preguntas = normalizarPreguntas(taller && taller.camposAdicionales);
 
     document.getElementById('asistenciaModalTitle').textContent = `Asistencia: ${nombre}`;
     document.getElementById('asistenciaTableContainer').innerHTML = '<p style="text-align:center; padding:20px; color:#6c757d;">Cargando...</p>';
@@ -610,7 +734,7 @@ function showAsistencia(tallerId, nombre) {
                 return;
             }
 
-            const extraHeaders = camposExtra.map(c => `<th>${c}</th>`).join('');
+            const extraHeaders = preguntas.map(p => `<th>${p.pregunta}</th>`).join('');
 
             let html = `<table class="data-table"><thead><tr>
                 <th>ID</th><th>Nombre</th><th>Recinto</th><th>Concentración</th><th>Email</th><th>Teléfono</th>${extraHeaders}<th>Hora</th><th>Firma</th><th></th>
@@ -622,9 +746,9 @@ function showAsistencia(tallerId, nombre) {
                 } else if (r.firmaTipo === 'escrita' && r.firmaTexto) {
                     firmaHtml = `<span style="font-style:italic; color:#495057;">"${r.firmaTexto}"</span>`;
                 }
-                const extraCells = camposExtra.map(c => {
-                    const marcado = (r.camposExtra || []).includes(c);
-                    return `<td>${marcado ? '<i class="fas fa-check" style="color:#28a745;"></i>' : '—'}</td>`;
+                const extraCells = preguntas.map(p => {
+                    const respuesta = obtenerRespuesta(r.camposExtra, p.pregunta);
+                    return `<td>${respuesta || '—'}</td>`;
                 }).join('');
                 html += `<tr>
                     <td>${r.studentId}</td>
@@ -690,8 +814,8 @@ async function exportAsistencia() {
                 'Email': r.email || '',
                 'Teléfono': r.phone || ''
             };
-            (taller?.camposAdicionales || []).forEach(c => {
-                base[c] = (r.camposExtra || []).includes(c) ? 'Sí' : 'No';
+            normalizarPreguntas(taller?.camposAdicionales).forEach(p => {
+                base[p.pregunta] = obtenerRespuesta(r.camposExtra, p.pregunta) || '';
             });
             base['Hora de Registro'] = new Date(r.registeredAt).toLocaleString('es-ES');
             base['Firma'] = r.firmaTipo === 'dibujada' ? 'Firma dibujada (ver en el panel)' : (r.firmaTexto || '');
@@ -766,17 +890,17 @@ async function generatePDFAsistencia() {
         const margin = 12;
         let yPos = margin;
 
-        const camposExtra = taller.camposAdicionales || [];
+        const preguntas = normalizarPreguntas(taller.camposAdicionales);
         const colNombre = margin + 8;
         const colID = colNombre + 40;
         const colRecinto = colID + 20;
         const colConcentracion = colRecinto + 32;
         const colCamposStart = colConcentracion + 42;
         const campoColWidth = 26;
-        const colFirma = colCamposStart + (campoColWidth * camposExtra.length);
+        const colFirma = colCamposStart + (campoColWidth * preguntas.length);
 
-        // Encabezados de casillas personalizadas: se parten en varias líneas si son largos, en vez de encimarse
-        const campoHeaderLines = camposExtra.map(campo => doc.splitTextToSize(campo, campoColWidth - 2));
+        // Encabezados de las preguntas: se parten en varias líneas si son largos, en vez de encimarse
+        const campoHeaderLines = preguntas.map(p => doc.splitTextToSize(p.pregunta, campoColWidth - 2));
         const maxCampoLines = campoHeaderLines.length > 0 ? Math.max(...campoHeaderLines.map(l => l.length)) : 1;
 
         function addHeader() {
@@ -849,9 +973,9 @@ async function generatePDFAsistencia() {
             doc.text((r.campus || '').substring(0, 18), colRecinto, yPos + 4);
             doc.text((r.concentracion || '').substring(0, 26), colConcentracion, yPos + 4);
 
-            camposExtra.forEach((campo, i) => {
-                const marcado = (r.camposExtra || []).includes(campo);
-                doc.text(marcado ? 'Sí' : '—', colCamposStart + (i * campoColWidth), yPos + 4);
+            preguntas.forEach((p, i) => {
+                const respuesta = obtenerRespuesta(r.camposExtra, p.pregunta);
+                doc.text(respuesta ? respuesta.substring(0, 16) : '—', colCamposStart + (i * campoColWidth), yPos + 4);
             });
 
             if (r.firmaTipo === 'dibujada' && r.firmaImagen) {

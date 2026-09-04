@@ -126,6 +126,14 @@ function formatFecha(fechaStr) {
 }
 
 function showIdForm() {
+    const manualLink = tallerData.permiteManual ? `
+        <p class="hint" style="margin-top:16px;">
+            <a href="#" onclick="event.preventDefault(); mostrarRegistroManual();" style="color:#c8102e; font-weight:600;">
+                ¿No tienes número de estudiante? Regístrate aquí
+            </a>
+        </p>
+    ` : '';
+
     document.getElementById('cardBody').innerHTML = `
         <div class="form-group">
             <label>Número de Estudiante</label>
@@ -135,10 +143,59 @@ function showIdForm() {
             <i class="fas fa-search"></i> Buscar mi Información
         </button>
         <p class="hint">Escribe tu número de estudiante para completar tu registro automáticamente</p>
+        ${manualLink}
     `;
     const input = document.getElementById('studentIdInput');
     input.focus();
     input.setSelectionRange(input.value.length, input.value.length);
+}
+
+function mostrarRegistroManual() {
+    document.getElementById('cardBody').innerHTML = `
+        <div class="confirm-box" style="border-left-color:#ffc107;"><p><i class="fas fa-info-circle" style="color:#ffc107;"></i> Completa tu información para registrarte.</p></div>
+        <div class="form-group">
+            <label>Nombre <span style="color:#c8102e;">*</span></label>
+            <input type="text" id="manualNombre">
+        </div>
+        <div class="form-group">
+            <label>Apellido <span style="color:#c8102e;">*</span></label>
+            <input type="text" id="manualApellido">
+        </div>
+        <div class="form-group">
+            <label>Teléfono</label>
+            <input type="text" id="manualTelefono" placeholder="787-555-1234">
+        </div>
+        <div class="form-group">
+            <label>Email</label>
+            <input type="email" id="manualEmail">
+        </div>
+        <button class="btn" onclick="continuarRegistroManual()">
+            <i class="fas fa-arrow-right"></i> Continuar
+        </button>
+        <button class="btn btn-outline" onclick="showIdForm()">
+            <i class="fas fa-arrow-left"></i> Volver
+        </button>
+    `;
+    document.getElementById('manualNombre').focus();
+}
+
+function continuarRegistroManual() {
+    const firstName = document.getElementById('manualNombre').value.trim();
+    const lastName = document.getElementById('manualApellido').value.trim();
+    const phone = document.getElementById('manualTelefono').value.trim();
+    const email = document.getElementById('manualEmail').value.trim();
+
+    if (!firstName || !lastName) {
+        showNotification('Por favor completa al menos tu nombre y apellido', 'error');
+        return;
+    }
+
+    foundStudent = {
+        studentId: 'manual_' + Date.now(),
+        firstName, lastName, phone, email,
+        concentracion: '', grado: '', campus: ''
+    };
+    showConfirmForm(foundStudent);
 }
 
 async function buscarEstudiante() {
@@ -189,21 +246,29 @@ async function buscarEstudiante() {
     }
 }
 
+function normalizarPreguntas(camposAdicionales) {
+    if (!camposAdicionales || camposAdicionales.length === 0) return [];
+    if (typeof camposAdicionales[0] === 'string') {
+        return [{ pregunta: 'Marca lo que aplique', opciones: camposAdicionales }];
+    }
+    return camposAdicionales;
+}
+
 function showConfirmForm(student) {
     const tipoFirma = tallerData.tipoFirma || 'escrita';
-    const camposAdicionales = tallerData.camposAdicionales || [];
+    const preguntas = normalizarPreguntas(tallerData.camposAdicionales);
 
-    const camposHtml = camposAdicionales.length > 0 ? `
+    const camposHtml = preguntas.map((p, qIndex) => `
         <div class="form-group">
-            <label>Marca lo que aplique <span style="color:#c8102e;">*</span></label>
-            ${camposAdicionales.map((campo, i) => `
+            <label>${p.pregunta} <span style="color:#c8102e;">*</span></label>
+            ${p.opciones.map((op, i) => `
                 <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
-                    <input type="radio" name="campoExtraRadio" class="campoExtraCheck" value="${campo}" id="campoExtra${i}" style="width:auto;">
-                    <label style="margin:0; font-weight:normal;" for="campoExtra${i}">${campo}</label>
+                    <input type="radio" name="pregunta${qIndex}" class="campoExtraCheck" data-pregunta="${p.pregunta}" value="${op}" id="pregunta${qIndex}_opcion${i}" style="width:auto;">
+                    <label style="margin:0; font-weight:normal;" for="pregunta${qIndex}_opcion${i}">${op}</label>
                 </div>
             `).join('')}
         </div>
-    ` : '';
+    `).join('');
 
     const firmaHtml = tipoFirma === 'dibujada' ? `
         <div class="form-group">
@@ -307,11 +372,20 @@ async function confirmarAsistencia() {
     const campus = foundStudent.campus || '';
     const tipoFirma = tallerData.tipoFirma || 'escrita';
 
-    const camposExtraSeleccionado = document.querySelector('.campoExtraCheck:checked');
-    const camposExtra = camposExtraSeleccionado ? [camposExtraSeleccionado.value] : [];
+    const preguntas = normalizarPreguntas(tallerData.camposAdicionales);
+    const camposExtra = {};
+    let faltaAlguna = false;
+    preguntas.forEach((p, qIndex) => {
+        const seleccionado = document.querySelector(`input[name="pregunta${qIndex}"]:checked`);
+        if (seleccionado) {
+            camposExtra[p.pregunta] = seleccionado.value;
+        } else {
+            faltaAlguna = true;
+        }
+    });
 
-    if ((tallerData.camposAdicionales || []).length > 0 && !camposExtraSeleccionado) {
-        showNotification('Por favor marca una opción antes de continuar', 'error');
+    if (preguntas.length > 0 && faltaAlguna) {
+        showNotification('Por favor responde todas las preguntas antes de continuar', 'error');
         return;
     }
 
