@@ -1150,8 +1150,11 @@
             <option value="week">Esta Semana</option>
             <option value="month">Este Mes</option>
         </select>
-                <button class="btn btn-primary" onclick="exportPendingData()">
+                                <button class="btn btn-primary" onclick="exportPendingData()">
             <i class="fas fa-file-excel"></i> Exportar
+        </button>
+        <button class="btn btn-success" onclick="approveAndSendBatch()">
+            <i class="fas fa-envelope-open-text"></i> Aprobar y Enviar en Lote
         </button>
         <button class="btn btn-secondary" onclick="selectAllPendingCheckboxes()">
             <i class="fas fa-check-square"></i> Seleccionar Todos
@@ -5534,6 +5537,91 @@ function formatDateForPR(dateString) {
 // Variables globales para el sistema manual
 let currentApplicationForEmail = null;
 
+// Agrupa solicitudes pendientes por participante, para no repetir su información por cada oferta a la que aplicó
+function agruparPendientesPorParticipante(apps) {
+    const grupos = {};
+    const orden = [];
+    apps.forEach(app => {
+        const participant = app.participantData || participants.find(p => p.id === app.participantId);
+        const offer = app.offerData || offers.find(o => o.id === app.offerId);
+        if (!participant || !offer) return;
+
+        const key = participant.id || participant.email;
+        if (!grupos[key]) {
+            grupos[key] = { participant, items: [] };
+            orden.push(key);
+        }
+        grupos[key].items.push({ app, offer });
+    });
+    return orden.map(key => grupos[key]);
+}
+
+// Genera el HTML de una tarjeta agrupada por participante, con una fila por cada oferta a la que aplicó
+function renderParticipantGroupCard(grupo) {
+    const { participant, items } = grupo;
+
+    const ofertasHtml = items.map(({ app, offer }) => `
+        <div style="background: #f8f9fa; border-radius: 10px; padding: 15px; margin-bottom: 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            <div>
+                                <div style="display: flex; gap: 15px; margin-bottom: 8px; font-size: 12px; color: #6c757d;">
+                    <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                        <input type="checkbox" class="pending-checkbox" value="${app.id}"> Seleccionar para eliminar
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                        <input type="checkbox" class="batch-email-checkbox" value="${app.id}"> Incluir en correo combinado
+                    </label>
+                </div>
+                </label>
+                <strong style="font-size: 15px;">${offer.position}</strong>
+                <p style="margin: 4px 0;"><i class="fas fa-building"></i> ${offer.companyName}</p>
+                <p style="margin: 4px 0;"><i class="fas fa-map-marker-alt"></i> ${offer.location} &nbsp; <i class="fas fa-dollar-sign"></i> ${offer.salary}</p>
+                <p style="margin: 4px 0; font-size: 12px; color: #6c757d;"><i class="fas fa-calendar-alt"></i> Vence: ${new Date(offer.deadline).toLocaleDateString()} &nbsp;·&nbsp; Aplicó: ${new Date(app.appliedAt).toLocaleDateString()}</p>
+                <button class="btn btn-secondary btn-small" onclick="viewOfferRequirements('${offer.id}')" style="margin-top: 6px;">
+                    📋 Ver Requisitos
+                </button>
+            </div>
+            <div>
+                <div class="decision-buttons" style="display: flex; flex-direction: column; gap: 8px;">
+                    <button class="btn btn-success btn-small" onclick="approveAndSendEmail('${app.id}')">
+                        ✅ Aprobar y Enviar
+                    </button>
+                    <button class="btn btn-warning btn-small" onclick="approveWithNotes('${app.id}')">
+                        📝 Aprobar con Nota
+                    </button>
+                    <button class="btn btn-danger btn-small" onclick="rejectApplicationWithReason('${app.id}')">
+                        ❌ Rechazar
+                    </button>
+                </div>
+                <textarea id="adminNotes-${app.id}" placeholder="Razones, recomendaciones..." style="width: 100%; height: 50px; font-size: 12px; padding: 6px; margin-top: 8px; border: 1px solid #ddd; border-radius: 4px;"></textarea>
+            </div>
+        </div>
+    `).join('');
+
+    return `
+        <div class="participant-group-card" style="border: 2px solid #e2e8f0; border-radius: 15px; padding: 20px; margin-bottom: 20px; background: white;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; padding-bottom: 15px; margin-bottom: 15px; border-bottom: 2px solid #f1f3f5;">
+                <div>
+                    <h4 style="color: #c8102e; margin-bottom: 10px;">👤 ${participant.firstName} ${participant.lastName}
+                        <span style="font-size: 12px; font-weight: normal; color: #6c757d;">— ${items.length} solicitud${items.length !== 1 ? 'es' : ''} pendiente${items.length !== 1 ? 's' : ''}</span>
+                    </h4>
+                    <div style="display: flex; flex-wrap: wrap; gap: 4px 18px; font-size: 13px; color: #4a5568;">
+                        <span><i class="fas fa-envelope"></i> ${participant.email}</span>
+                        <span><i class="fas fa-phone"></i> ${participant.phone}</span>
+                        <span><i class="fas fa-graduation-cap"></i> ${participant.concentration}</span>
+                        <span><i class="fas fa-university"></i> ${getCampusLabel(participant.campus)} - ${participant.studyYear}° año</span>
+                        <span><i class="fas fa-user-graduate"></i> Graduación: ${participant.graduationCandidate === 'yes' ? 'Sí' : 'No'}</span>
+                        <span><i class="fas fa-id-card"></i> ID: ${participant.studentId}</span>
+                    </div>
+                </div>
+                <button class="btn btn-info btn-small" onclick="viewResumeInModal('${participant.resume}', '${participant.firstName} ${participant.lastName}')" style="white-space: nowrap;">
+                    📄 Ver Resumé
+                </button>
+            </div>
+            ${ofertasHtml}
+        </div>
+    `;
+}
+
 // Cargar tabla de solicitudes pendientes
 function loadPendingApplicationsTable() {
     const container = document.getElementById('pendingApplicationsContainer');
@@ -5552,106 +5640,12 @@ function loadPendingApplicationsTable() {
         return;
     }
 
-    let html = '<div class="pending-applications-grid">';
-    
-    pendingApps.forEach(app => {
-        // Buscar datos completos del participante y oferta
-        const participant = app.participantData || participants.find(p => p.id === app.participantId);
-        const offer = app.offerData || offers.find(o => o.id === app.offerId);
-        
-        if (!participant || !offer) return;
+    const grupos = agruparPendientesPorParticipante(pendingApps);
+    container.innerHTML = grupos.map(renderParticipantGroupCard).join('');
 
-                html += `
-            <div class="application-review-card" style="border: 2px solid #e2e8f0; border-radius: 15px; padding: 20px; margin-bottom: 20px; background: white;">
-                <label style="display: flex; align-items: center; gap: 8px; margin-bottom: 15px; cursor: pointer; font-size: 13px; color: #6c757d;">
-                    <input type="checkbox" class="pending-checkbox" value="${app.id}"> Seleccionar para eliminar
-                </label>
-                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px;">
-                    
-                    <!-- CANDIDATO -->
-                    <div class="candidate-profile">
-                        <h4 style="color: #c8102e; margin-bottom: 15px;">👤 CANDIDATO</h4>
-                        <div class="candidate-info">
-                            <strong style="font-size: 16px;">${participant.firstName} ${participant.lastName}</strong>
-                            <p><i class="fas fa-envelope"></i> ${participant.email}</p>
-                            <p><i class="fas fa-phone"></i> ${participant.phone}</p>
-                            <p><i class="fas fa-graduation-cap"></i> ${participant.concentration}</p>
-                            <p><i class="fas fa-university"></i> ${getCampusLabel(participant.campus)} - ${participant.studyYear}° año</p>
-                            <p><i class="fas fa-user-graduate"></i> Graduación: ${participant.graduationCandidate === 'yes' ? 'Sí' : 'No'}</p>
-                            <p><i class="fas fa-id-card"></i> ID: ${participant.studentId}</p>
-                        </div>
-                        
-                        <div style="margin-top: 15px;">
-                            <button class="btn btn-info btn-small" onclick="viewResumeInModal('${participant.resume}', '${participant.firstName} ${participant.lastName}')">
-                                📄 Ver Resumé
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <!-- OFERTA -->
-                    <div class="offer-details">
-                        <h4 style="color: #c8102e; margin-bottom: 15px;">💼 OFERTA</h4>
-                        <div class="offer-info">
-                            <strong style="font-size: 16px;">${offer.position}</strong>
-                            <p><i class="fas fa-building"></i> ${offer.companyName}</p>
-                            <p><i class="fas fa-user"></i> ${offer.contactPerson}</p>
-                            <p><i class="fas fa-envelope"></i> ${offer.email}</p>
-                            <p><i class="fas fa-phone"></i> ${offer.phone}</p>
-                            <p><i class="fas fa-map-marker-alt"></i> ${offer.location}</p>
-                            <p><i class="fas fa-dollar-sign"></i> ${offer.salary}</p>
-                            <p><i class="fas fa-clock"></i> ${getPositionTypeLabel(offer)}</p>
-                            <p><i class="fas fa-calendar-alt"></i> Vence: ${new Date(offer.deadline).toLocaleDateString()}</p>
-                        </div>
-                        
-                        <div style="margin-top: 15px;">
-                            <button class="btn btn-secondary btn-small" onclick="viewOfferRequirements('${offer.id}')">
-                                📋 Ver Requisitos
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <!-- DECISIÓN -->
-                    <div class="decision-section">
-                        <h4 style="color: #c8102e; margin-bottom: 15px;">🎯 DECISIÓN</h4>
-                        
-                        <div style="margin-bottom: 15px;">
-                            <p><strong>Aplicó:</strong> ${new Date(app.appliedAt).toLocaleDateString()} a las ${new Date(app.appliedAt).toLocaleTimeString()}</p>
-                        </div>
-                        
-                        <div class="decision-buttons" style="display: flex; flex-direction: column; gap: 10px;">
-                            <button class="btn btn-success" onclick="approveAndSendEmail('${app.id}')" style="width: 100%;">
-                                ✅ APROBAR Y ENVIAR
-                                <small style="display: block; font-weight: normal;">Preparar email para patrono</small>
-                            </button>
-                            
-                            <button class="btn btn-warning" onclick="approveWithNotes('${app.id}')" style="width: 100%;">
-                                📝 APROBAR CON NOTA
-                                <small style="display: block; font-weight: normal;">Agregar comentarios</small>
-                            </button>
-                            
-                            <button class="btn btn-danger" onclick="rejectApplicationWithReason('${app.id}')" style="width: 100%;">
-                                ❌ RECHAZAR
-                                <small style="display: block; font-weight: normal;">No cumple requisitos</small>
-                            </button>
-                        </div>
-                        
-                        <div style="margin-top: 15px;">
-                            <label style="font-size: 12px; color: #666;">Notas del administrador:</label>
-                            <textarea id="adminNotes-${app.id}" placeholder="Razones, recomendaciones..." style="width: 100%; height: 60px; font-size: 12px; padding: 8px; border: 1px solid #ddd; border-radius: 4px;"></textarea>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
-    });
-    
-    html += '</div>';
-    container.innerHTML = html;
-    
     // Actualizar contador de pendientes
     updatePendingCount();
 }
-
 // Función principal: Aprobar y preparar email
 function approveAndSendEmail(applicationId) {
     const app = applications.find(a => a.id === applicationId);
@@ -5909,9 +5903,251 @@ async function markApplicationAsSent(applicationId) {
             }
         });
         
-    } catch (error) {
+        } catch (error) {
 
         console.error('Error marcando como enviado:', error);
+        showNotification('Error actualizando el estado. Intenta de nuevo.', 'error');
+    }
+}
+
+// ===== CORREO COMBINADO PARA VARIOS CANDIDATOS DE LA MISMA EMPRESA =====
+
+function approveAndSendBatch() {
+    const selectedIds = Array.from(document.querySelectorAll('.batch-email-checkbox:checked')).map(cb => cb.value);
+
+    if (selectedIds.length === 0) {
+        showNotification('Selecciona al menos una solicitud para el correo combinado', 'warning');
+        return;
+    }
+
+    const items = selectedIds.map(id => {
+        const app = applications.find(a => a.id === id);
+        const participant = app?.participantData || participants.find(p => p.id === app?.participantId);
+        const offer = app?.offerData || offers.find(o => o.id === app?.offerId);
+        return { app, participant, offer };
+    }).filter(item => item.app && item.participant && item.offer);
+
+    const companies = [...new Set(items.map(i => i.offer.companyName))];
+    if (companies.length > 1) {
+        showNotification('Las solicitudes seleccionadas son de empresas distintas. Selecciona solo solicitudes de la misma empresa.', 'error');
+        return;
+    }
+
+    if (items.length === 1) {
+        // Un solo candidato: usar el flujo individual normal
+        approveAndSendEmail(items[0].app.id);
+        return;
+    }
+
+    showBatchEmailPreparationModal(items);
+}
+
+function generateBatchEmailBody(items) {
+    const porPosicion = {};
+    items.forEach(({ participant, offer }) => {
+        if (!porPosicion[offer.position]) porPosicion[offer.position] = [];
+        porPosicion[offer.position].push(participant);
+    });
+
+    const contactPerson = items[0].offer.contactPerson;
+
+    let cuerpo = `Estimado/a ${contactPerson},\n\nSaludos cordiales desde la Oficina de Carreras y Colocaciones de la Universidad Ana G. Méndez Recinto de Cupey.\n\nLe referimos los siguientes candidatos:\n\n`;
+
+    Object.keys(porPosicion).forEach(posicion => {
+        const candidatos = porPosicion[posicion];
+        const etiqueta = candidatos.length > 1 ? `Candidatos para ${posicion}` : `Candidato/a para ${posicion}`;
+        cuerpo += `${etiqueta}:\n`;
+        candidatos.forEach(p => {
+            cuerpo += `- ${p.firstName} ${p.lastName} | Email: ${p.email} | Teléfono: ${p.phone}\n`;
+        });
+        cuerpo += `\n`;
+    });
+
+    cuerpo += `Adjunto los resumés de cada candidato para su evaluación.\n\nPuede contactar directamente a cada candidato a través del email o teléfono proporcionado.\n\nSi necesita información adicional o tiene alguna pregunta, no dude en contactarnos.\n\nCordialmente,`;
+
+    return cuerpo;
+}
+
+function showBatchEmailPreparationModal(items) {
+    const offer = items[0].offer;
+    const names = items.map(i => `${i.participant.firstName} ${i.participant.lastName}`).join(', ');
+    const emailBody = generateBatchEmailBody(items);
+    const applicationIds = items.map(i => i.app.id);
+
+    const emailData = {
+        to: offer.email,
+        cc: 'carreras_colocacionescu@uagm.edu',
+        subject: `Candidatos referidos para ${offer.companyName}: ${names}`,
+        body: emailBody
+    };
+
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.style.display = 'flex';
+    modal.id = 'batchEmailPreparationModal';
+
+    const resumeButtonsHtml = items.map(i => `
+        <button class="btn btn-info btn-small" onclick="downloadResumeForAttachment('${i.participant.resume}')" style="margin: 4px;">
+            📄 ${i.participant.firstName} ${i.participant.lastName}
+        </button>
+    `).join('');
+
+    modal.innerHTML = `
+        <div class="modal-content" style="max-width: 800px; max-height: 90vh; overflow-y: auto;">
+            <div class="modal-header">
+                <h3>📧 Preparar Correo Combinado (${items.length} candidatos)</h3>
+                <span class="close" onclick="closeBatchEmailModal()">&times;</span>
+            </div>
+            
+            <div class="modal-body">
+                <div class="email-preview">
+                    <h4>📋 Vista Previa del Email:</h4>
+                    <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 10px 0;">
+                        <p><strong>Para:</strong> ${emailData.to}</p>
+                        <p><strong>CC:</strong> ${emailData.cc}</p>
+                        <p><strong>Asunto:</strong> ${emailData.subject}</p>
+                    </div>
+                    
+                    <div style="background: #fff; border: 1px solid #ddd; padding: 15px; border-radius: 8px; max-height: 300px; overflow-y: auto; font-family: monospace; font-size: 11px; white-space: pre-wrap;">${emailData.body}</div>
+                </div>
+                
+                <div class="resume-section" style="margin: 20px 0; padding: 15px; background: #e3f2fd; border-radius: 8px;">
+                    <h4>📎 Resumés de los Candidatos (${items.length}):</h4>
+                    <p>Descarga cada uno y adjúntalos todos manualmente al correo:</p>
+                    <div>${resumeButtonsHtml}</div>
+                </div>
+                
+                <div class="instructions" style="background: #fff3cd; padding: 15px; border-radius: 8px; margin: 10px 0;">
+                    <h4>📝 Instrucciones:</h4>
+                    <ol>
+                        <li>Descarga el resumé de cada candidato con los botones de arriba</li>
+                        <li>Haz clic en "Abrir Outlook" (se abrirá con el mensaje pre-escrito)</li>
+                        <li>Adjunta manualmente los ${items.length} resumés descargados</li>
+                        <li>Revisa el contenido si deseas hacer cambios</li>
+                        <li>Haz clic en "Enviar" en Outlook</li>
+                        <li>Vuelve aquí y marca como "Enviado"</li>
+                    </ol>
+                </div>
+            </div>
+            
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeBatchEmailModal()">
+                    Cancelar
+                </button>
+                <button class="btn btn-primary" onclick="openOutlookWithBatchEmail('${encodeURIComponent(JSON.stringify(emailData))}', '${encodeURIComponent(JSON.stringify(applicationIds))}')">
+                    📧 Abrir Outlook
+                </button>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+}
+
+function closeBatchEmailModal() {
+    const modal = document.getElementById('batchEmailPreparationModal');
+    if (modal) modal.remove();
+}
+
+function openOutlookWithBatchEmail(encodedEmailData, encodedApplicationIds) {
+    const emailData = JSON.parse(decodeURIComponent(encodedEmailData));
+    const applicationIds = JSON.parse(decodeURIComponent(encodedApplicationIds));
+
+    const subject = encodeURIComponent(emailData.subject);
+    const body = encodeURIComponent(emailData.body);
+    const to = encodeURIComponent(emailData.to);
+    const cc = encodeURIComponent(emailData.cc);
+
+    const mailtoUrl = `mailto:${to}?cc=${cc}&subject=${subject}&body=${body}`;
+    window.location.href = mailtoUrl;
+
+    setTimeout(() => {
+        showBatchSentConfirmation(applicationIds);
+    }, 3000);
+}
+
+function showBatchSentConfirmation(applicationIds) {
+    const confirmModal = document.createElement('div');
+    confirmModal.className = 'modal';
+    confirmModal.style.display = 'flex';
+
+    confirmModal.innerHTML = `
+        <div class="modal-content" style="max-width: 400px; text-align: center;">
+            <div class="modal-body">
+                <i class="fas fa-envelope" style="font-size: 48px; color: #c8102e; margin-bottom: 20px;"></i>
+                <h3>¿Email Enviado?</h3>
+                <p>¿Completaste el envío del correo combinado desde Outlook?</p>
+            </div>
+            
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="this.closest('.modal').remove()">
+                    No, cancelar
+                </button>
+                <button class="btn btn-success" onclick='markApplicationsAsSentBatch(${JSON.stringify(applicationIds)}); this.closest(".modal").remove();'>
+                    ✅ Sí, enviado
+                </button>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(confirmModal);
+}
+
+async function markApplicationsAsSentBatch(applicationIds) {
+    try {
+        const sentAt = new Date().toISOString();
+        const reviewData = {
+            status: 'approved_sent',
+            adminReview: {
+                reviewed: true,
+                reviewedBy: 'admin@uagm.edu',
+                reviewedAt: sentAt,
+                decision: 'approved',
+                sentAt: sentAt
+            }
+        };
+
+        for (const applicationId of applicationIds) {
+            if (isFirebaseInitialized) {
+                const snapshot = await db.collection('applications').where('id', '==', applicationId).get();
+                if (!snapshot.empty) {
+                    const batch = db.batch();
+                    snapshot.docs.forEach(doc => batch.update(doc.ref, reviewData));
+                    await batch.commit();
+                }
+            }
+
+            const application = applications.find(app => app.id === applicationId);
+            if (application) {
+                application.status = 'approved_sent';
+                application.adminReview = { ...reviewData.adminReview };
+
+                await createReferralRecord(application);
+
+                await addToParticipantHistory(application.participantId, {
+                    eventType: 'referral',
+                    eventTitle: 'Referido a Patrono',
+                    description: `Fue referido a "${application.offerTitle}" en ${application.companyName} (correo combinado)`,
+                    data: {
+                        participantName: application.participantName,
+                        companyName: application.companyName,
+                        offerTitle: application.offerTitle,
+                        applicationId: application.id
+                    }
+                });
+            }
+        }
+
+        localStorage.setItem('applications', JSON.stringify(applications));
+
+        closeBatchEmailModal();
+        loadPendingApplicationsTable();
+        updateStats();
+
+        showNotification(`✅ Correo enviado y ${applicationIds.length} referidos registrados exitosamente`, 'success');
+
+    } catch (error) {
+        console.error('Error marcando lote como enviado:', error);
         showNotification('Error actualizando el estado. Intenta de nuevo.', 'error');
     }
 }
@@ -6240,101 +6476,8 @@ function displayFilteredPendingApplications(filteredApps) {
        return;
    }
    
-   // Reutilizar la misma lógica de loadPendingApplicationsTable pero con filteredApps
-   let html = '<div class="pending-applications-grid">';
-   
-   filteredApps.forEach(app => {
-       const participant = app.participantData || participants.find(p => p.id === app.participantId);
-       const offer = app.offerData || offers.find(o => o.id === app.offerId);
-       
-       if (!participant || !offer) return;
-
-              html += `
-           <div class="application-review-card" style="border: 2px solid #e2e8f0; border-radius: 15px; padding: 20px; margin-bottom: 20px; background: white;">
-               <label style="display: flex; align-items: center; gap: 8px; margin-bottom: 15px; cursor: pointer; font-size: 13px; color: #6c757d;">
-                   <input type="checkbox" class="pending-checkbox" value="${app.id}"> Seleccionar para eliminar
-               </label>
-               <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px;">
-                   
-                   <!-- CANDIDATO -->
-                   <div class="candidate-profile">
-                       <h4 style="color: #c8102e; margin-bottom: 15px;">👤 CANDIDATO</h4>
-                       <div class="candidate-info">
-                           <strong style="font-size: 16px;">${participant.firstName} ${participant.lastName}</strong>
-                           <p><i class="fas fa-envelope"></i> ${participant.email}</p>
-                           <p><i class="fas fa-phone"></i> ${participant.phone}</p>
-                           <p><i class="fas fa-graduation-cap"></i> ${participant.concentration}</p>
-                           <p><i class="fas fa-university"></i> ${getCampusLabel(participant.campus)} - ${participant.studyYear}° año</p>
-                           <p><i class="fas fa-user-graduate"></i> Graduación: ${participant.graduationCandidate === 'yes' ? 'Sí' : 'No'}</p>
-                           <p><i class="fas fa-id-card"></i> ID: ${participant.studentId}</p>
-                       </div>
-                       
-                       <div style="margin-top: 15px;">
-                           <button class="btn btn-info btn-small" onclick="viewResumeInModal('${participant.resume}', '${participant.firstName} ${participant.lastName}')">
-                               📄 Ver Resumé
-                           </button>
-                       </div>
-                   </div>
-                   
-                   <!-- OFERTA -->
-                   <div class="offer-details">
-                       <h4 style="color: #c8102e; margin-bottom: 15px;">💼 OFERTA</h4>
-                       <div class="offer-info">
-                           <strong style="font-size: 16px;">${offer.position}</strong>
-                           <p><i class="fas fa-building"></i> ${offer.companyName}</p>
-                           <p><i class="fas fa-user"></i> ${offer.contactPerson}</p>
-                           <p><i class="fas fa-envelope"></i> ${offer.email}</p>
-                           <p><i class="fas fa-phone"></i> ${offer.phone}</p>
-                           <p><i class="fas fa-map-marker-alt"></i> ${offer.location}</p>
-                           <p><i class="fas fa-dollar-sign"></i> ${offer.salary}</p>
-                           <p><i class="fas fa-clock"></i> ${getPositionTypeLabel(offer)}</p>
-                           <p><i class="fas fa-calendar-alt"></i> Vence: ${new Date(offer.deadline).toLocaleDateString()}</p>
-                       </div>
-                       
-                       <div style="margin-top: 15px;">
-                           <button class="btn btn-secondary btn-small" onclick="viewOfferRequirements('${offer.id}')">
-                               📋 Ver Requisitos
-                           </button>
-                       </div>
-                   </div>
-                   
-                   <!-- DECISIÓN -->
-                   <div class="decision-section">
-                       <h4 style="color: #c8102e; margin-bottom: 15px;">🎯 DECISIÓN</h4>
-                       
-                       <div style="margin-bottom: 15px;">
-                           <p><strong>Aplicó:</strong> ${new Date(app.appliedAt).toLocaleDateString()} a las ${new Date(app.appliedAt).toLocaleTimeString()}</p>
-                       </div>
-                       
-                       <div class="decision-buttons" style="display: flex; flex-direction: column; gap: 10px;">
-                           <button class="btn btn-success" onclick="approveAndSendEmail('${app.id}')" style="width: 100%;">
-                               ✅ APROBAR Y ENVIAR
-                               <small style="display: block; font-weight: normal;">Preparar email para patrono</small>
-                           </button>
-                           
-                           <button class="btn btn-warning" onclick="approveWithNotes('${app.id}')" style="width: 100%;">
-                               📝 APROBAR CON NOTA
-                               <small style="display: block; font-weight: normal;">Agregar comentarios</small>
-                           </button>
-                           
-                           <button class="btn btn-danger" onclick="rejectApplicationWithReason('${app.id}')" style="width: 100%;">
-                               ❌ RECHAZAR
-                               <small style="display: block; font-weight: normal;">No cumple requisitos</small>
-                           </button>
-                       </div>
-                       
-                       <div style="margin-top: 15px;">
-                           <label style="font-size: 12px; color: #666;">Notas del administrador:</label>
-                           <textarea id="adminNotes-${app.id}" placeholder="Razones, recomendaciones..." style="width: 100%; height: 60px; font-size: 12px; padding: 8px; border: 1px solid #ddd; border-radius: 4px;"></textarea>
-                       </div>
-                   </div>
-               </div>
-           </div>
-       `;
-   });
-   
-   html += '</div>';
-   container.innerHTML = html;
+   const grupos = agruparPendientesPorParticipante(filteredApps);
+   container.innerHTML = grupos.map(renderParticipantGroupCard).join('');
 }
 
 // Actualizar contador de pendientes
