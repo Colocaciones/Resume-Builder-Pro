@@ -1241,7 +1241,7 @@ body {
 <div class="tab-content" id="pendingContent">
         <div class="quick-stats">
         <div class="quick-stat warning">
-            <div class="quick-stat-number" id="pendingApplications">0</div>
+            <div class="quick-stat-number" id="pendingReviewCount">0</div>
             <div class="quick-stat-label">Pendientes Revisión</div>
         </div>
         <div class="quick-stat good">
@@ -2201,8 +2201,8 @@ if (document.getElementById('thisMonthFollowups')) {
             new Date(app.adminReview?.reviewedAt || '').toDateString() === today.toDateString()
         ).length;
         
-        if (document.getElementById('pendingApplications')) {
-            document.getElementById('pendingApplications').textContent = pendingAppsCount;
+                if (document.getElementById('pendingReviewCount')) {
+            document.getElementById('pendingReviewCount').textContent = pendingAppsCount;
         }
         if (document.getElementById('approvedToday')) {
             document.getElementById('approvedToday').textContent = approvedToday;
