@@ -8062,10 +8062,12 @@ async function saveAppointmentChanges() {
         return;
     }
     
-    if (!currentEditingAppointment) {
+        if (!currentEditingAppointment) {
         showNotification('Error: No hay cita seleccionada', 'error');
         return;
     }
+    
+    const appointmentBeingEdited = currentEditingAppointment;
     
     const changeReason = document.getElementById('edit-changeReason').value.trim();
     if (!changeReason) {
@@ -8135,15 +8137,15 @@ async function saveAppointmentChanges() {
         
         showNotification('Cita actualizada exitosamente', 'success');
         
-        // Registrar en historial si cambió la fecha/hora
+                // Registrar en historial si cambió la fecha/hora
         const participant = participants.find(p => 
-            p.email === currentEditingAppointment.email || 
-            (p.firstName === currentEditingAppointment.firstName && p.lastName === currentEditingAppointment.lastName)
+            p.email === appointmentBeingEdited.email || 
+            (p.firstName === appointmentBeingEdited.firstName && p.lastName === appointmentBeingEdited.lastName)
         );
         
         if (participant) {
-            const oldDate = currentEditingAppointment.appointmentDate;
-            const oldTime = currentEditingAppointment.appointmentTime;
+            const oldDate = appointmentBeingEdited.appointmentDate;
+            const oldTime = appointmentBeingEdited.appointmentTime;
             const newDate = document.getElementById('edit-appointmentDate').value;
             const newTime = document.getElementById('edit-appointmentTime').value;
             
@@ -8153,14 +8155,14 @@ async function saveAppointmentChanges() {
                     eventTitle: 'Cita Reprogramada',
                     description: `Cita reprogramada de ${formatLocalDate(oldDate)} ${oldTime} a ${formatLocalDate(newDate)} ${newTime}`,
                     data: {
-                        participantName: `${currentEditingAppointment.firstName} ${currentEditingAppointment.lastName}`,
+                        participantName: `${appointmentBeingEdited.firstName} ${appointmentBeingEdited.lastName}`,
                         oldDate: oldDate,
                         oldTime: oldTime,
                         newDate: newDate,
                         newTime: newTime,
-                        serviceType: currentEditingAppointment.serviceType,
+                        serviceType: appointmentBeingEdited.serviceType,
                         changeReason: document.getElementById('edit-changeReason').value,
-                        appointmentId: currentEditingAppointment.id
+                        appointmentId: appointmentBeingEdited.id
                     }
                 });
             }
