@@ -619,10 +619,10 @@ body {
 </div>
 
                 <div class="form-row">
-                    <div class="form-group">
-                        <label>Fecha (Solo Miércoles) <span class="required">*</span></label>
+                                        <div class="form-group">
+                        <label>Fecha (Solo Jueves) <span class="required">*</span></label>
                         <select id="appointmentDate" required>
-                            <option value="">Seleccionar miércoles...</option>
+                            <option value="">Seleccionar jueves...</option>
                         </select>
                     </div>
                     <div class="form-group">
@@ -667,8 +667,11 @@ body {
 
         // Variables globales Firebase
         let app, db, auth, storage;
-        let isFirebaseInitialized = false;
-        let isWaitlistModeEnabled = false; 
+                let isFirebaseInitialized = false;
+        let isWaitlistModeEnabled = false;
+
+        // Horarios disponibles (fuente única — también se usa para calcular cuándo una fecha está llena)
+        const ALL_TIME_SLOTS = ['09:00', '09:30', '10:00', '10:30', '11:00', '11:30', '13:00', '13:30', '14:00'];
 
 
         function initializeFirebase() {
@@ -709,7 +712,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     console.log('✅ Sistema de Citas cargado correctamente');
 });
 
-function generateWednesdayDates() {
+async function generateWednesdayDates() {
     const dateSelect = document.getElementById('appointmentDate');
     
     // Si está en modo lista de espera, no generar fechas
@@ -718,45 +721,82 @@ function generateWednesdayDates() {
         return;
     }
 
-    // ✅ FECHAS ESPECÍFICAS (formato: YYYY-MM-DD)
+    // ✅ FECHAS ESPECÍFICAS (formato: YYYY-MM-DD), en orden de apertura
     const specificDates = [
-		
-        '2026-04-29'   // Miércoles 29 de abril 2026
+        '2026-10-01',  // Jueves 1 de octubre 2026
+        '2026-10-22',  // Jueves 22 de octubre 2026
+        '2026-12-03'   // Jueves 3 de diciembre 2026
     ];
 
     // Limpiar opciones anteriores
-    dateSelect.innerHTML = '<option value="">Seleccionar miércoles...</option>';
+    dateSelect.innerHTML = '<option value="">Seleccionar jueves...</option>';
 
-    // Agregar las fechas específicas al select
-    specificDates.forEach(dateString => {
-        const [year, month, day] = dateString.split('-');
-        const date = new Date(year, month - 1, day);
-        
-        const option = document.createElement('option');
-        const displayDate = date.toLocaleDateString('es-ES', {
-            weekday: 'long',
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-        });
-        
-        option.value = dateString;
-        option.textContent = displayDate;
-        dateSelect.appendChild(option);
-    });
+    // Buscar la primera fecha que no haya pasado y no esté llena
+    const activeDate = await findActiveDate(specificDates);
 
-    // Si no hay fechas disponibles
-    if (specificDates.length === 0) {
+    if (!activeDate) {
         const option = document.createElement('option');
         option.value = '';
-        option.textContent = 'No hay fechas disponibles';
+        option.textContent = 'No hay fechas disponibles por el momento';
         option.disabled = true;
         dateSelect.appendChild(option);
+        console.log('📭 No hay fecha activa (todas llenas o vencidas)');
+        return;
     }
 
-    console.log(`Se cargaron ${specificDates.length} fechas específicas`);
+    const [year, month, day] = activeDate.split('-');
+    const date = new Date(year, month - 1, day);
+
+    const option = document.createElement('option');
+    const displayDate = date.toLocaleDateString('es-ES', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+    });
+
+    option.value = activeDate;
+    option.textContent = displayDate;
+    dateSelect.appendChild(option);
+
+    console.log(`✅ Fecha activa: ${activeDate}`);
 }
 
+// Recorre las fechas en orden y devuelve la primera que no haya pasado ni esté llena
+async function findActiveDate(specificDates) {
+    const todayString = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD en hora local
+
+    for (const dateString of specificDates) {
+        if (dateString < todayString) {
+            console.log(`⏭️ ${dateString} ya pasó, se salta`);
+            continue;
+        }
+
+        const full = await isDateFull(dateString);
+        if (!full) {
+            return dateString;
+        }
+        console.log(`🈵 ${dateString} está llena, pasando a la siguiente`);
+    }
+
+    return null;
+}
+
+// Verifica en Firebase si una fecha ya alcanzó el máximo de citas agendadas
+async function isDateFull(dateString) {
+    try {
+        const snapshot = await db.collection('appointments')
+            .where('appointmentDate', '==', dateString)
+            .where('status', '==', 'scheduled')
+            .get();
+
+        return snapshot.size >= ALL_TIME_SLOTS.length;
+    } catch (error) {
+        console.error('Error verificando cupo de la fecha:', error);
+        // Si falla la verificación, se asume que NO está llena para no bloquear el formulario
+        return false;
+    }
+}
 // **NUEVA FUNCIÓN: Activar modo lista de espera**
 function enableWaitlistMode() {
     const dateGroup = document.getElementById('appointmentDate').closest('.form-group');
@@ -916,15 +956,8 @@ async function loadAppointmentMode() {
         return;
     }
 
-    // Horarios disponibles
-    const allTimeSlots = [
-        '09:00', '09:30',
-	'10:00', '10:30', 
-   	'11:00', '11:30',
-        '13:00', '13:30',
-        '14:00', '14:30',
-        '15:00', '15:30'
-    ];
+        // Horarios disponibles (definidos una sola vez arriba, en ALL_TIME_SLOTS)
+    const allTimeSlots = ALL_TIME_SLOTS;
 
     // Verificar horarios ocupados
     await checkAvailableSlots(selectedDate, allTimeSlots);
@@ -1259,24 +1292,52 @@ const appointmentData = {
     source: 'sistema-citas'
 };
 
-            try {
-                // Intentar guardar en Firebase
-                if (isFirebaseInitialized) {
-                    const result = await FirebaseHelper.saveDoc('appointments', appointmentData);
-                    if (result.success) {
-                        console.log('Cita guardada en Firebase:', result.id);
-// Enviar email de confirmación
-await sendConfirmationEmail(appointmentData);
-                        showSuccessMessage(appointmentData);
-                    } else {
-                        throw new Error('Error de Firebase');
-                    }
-                } else {
+                        try {
+                if (!isFirebaseInitialized) {
                     throw new Error('Firebase no inicializado');
                 }
+
+                if (!isWaitlistModeEnabled) {
+                    // Candado de horario: evita que dos personas reserven la misma cita al mismo tiempo
+                    const slotId = `${appointmentData.appointmentDate}_${appointmentData.appointmentTime.replace(':', '-')}`;
+                    const slotRef = db.collection('appointment_slots').doc(slotId);
+
+                    await db.runTransaction(async (transaction) => {
+                        const slotDoc = await transaction.get(slotRef);
+                        if (slotDoc.exists) {
+                            throw new Error('SLOT_TAKEN');
+                        }
+
+                        const newAppointmentRef = db.collection('appointments').doc();
+                        transaction.set(newAppointmentRef, appointmentData);
+                        transaction.set(slotRef, {
+                            appointmentDate: appointmentData.appointmentDate,
+                            appointmentTime: appointmentData.appointmentTime,
+                            appointmentId: newAppointmentRef.id,
+                            createdAt: new Date().toISOString()
+                        });
+                    });
+                } else {
+                    // En modo lista de espera no hay horario específico que bloquear
+                    const result = await FirebaseHelper.saveDoc('appointments', appointmentData);
+                    if (!result.success) {
+                        throw new Error('Error de Firebase');
+                    }
+                }
+
+                console.log('Cita guardada en Firebase');
+                // Enviar email de confirmación
+                await sendConfirmationEmail(appointmentData);
+                showSuccessMessage(appointmentData);
+
             } catch (error) {
-                console.error('Error con Firebase:', error);
-                showNotification('Error al registrar la cita. Por favor intenta de nuevo.', 'error');
+                if (error.message === 'SLOT_TAKEN') {
+                    showNotification('Ese horario ya fue reservado por otra persona. Por favor selecciona otro horario.', 'error');
+                    await generateTimeSlots();
+                } else {
+                    console.error('Error con Firebase:', error);
+                    showNotification('Error al registrar la cita. Por favor intenta de nuevo.', 'error');
+                }
             }
         }
 
@@ -1542,5 +1603,4 @@ const dateObj = new Date(year, month - 1, day);
 </body>
 
 </html>
-
 
