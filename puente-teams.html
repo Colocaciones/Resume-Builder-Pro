@@ -7,6 +7,8 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -175,7 +177,17 @@
             <h1 id="clicsModalTitle" style="font-size:17px;">Registros</h1>
             <i class="fas fa-times" style="cursor:pointer; font-size:18px; color:#6c757d;" onclick="cerrarClicsModal()"></i>
         </div>
-        <p class="sub" id="clicsCount" style="margin-top:6px; margin-bottom:0;"></p>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:6px;">
+            <p class="sub" id="clicsCount" style="margin-bottom:0;"></p>
+            <div style="display:flex; gap:8px;">
+                <button class="btn-small" style="width:auto; background:#1E8E5A;" onclick="exportarClicsExcel()">
+                    <i class="fas fa-file-excel"></i> Excel
+                </button>
+                <button class="btn-small" style="width:auto; background:#C0362C;" onclick="exportarClicsPDF()">
+                    <i class="fas fa-file-pdf"></i> PDF
+                </button>
+            </div>
+        </div>
         <div id="clicsTableContainer"></div>
     </div>
 </div>
@@ -358,8 +370,11 @@
     }
 
     let clicsUnsubscribe = null;
+    let clicsActuales = [];
+    let clicsNombreActual = '';
 
     function verClics(puenteId, nombre) {
+        clicsNombreActual = nombre;
         document.getElementById('clicsModalTitle').textContent = nombre;
         document.getElementById('clicsModal').classList.add('show');
         document.getElementById('clicsTableContainer').innerHTML = '<p class="sub">Cargando...</p>';
@@ -371,6 +386,7 @@
                 const rows = [];
                 snapshot.forEach(doc => rows.push(doc.data()));
                 rows.sort((a, b) => new Date(a.clickedAt) - new Date(b.clickedAt));
+                clicsActuales = rows;
 
                 document.getElementById('clicsCount').textContent = `${rows.length} estudiante${rows.length !== 1 ? 's' : ''} entraron`;
 
@@ -397,6 +413,110 @@
     function cerrarClicsModal() {
         document.getElementById('clicsModal').classList.remove('show');
         if (clicsUnsubscribe) { clicsUnsubscribe(); clicsUnsubscribe = null; }
+    }
+
+    function exportarClicsExcel() {
+        if (clicsActuales.length === 0) {
+            alert('No hay registros para exportar todavía.');
+            return;
+        }
+
+        const data = clicsActuales.map(r => ({
+            'ID': r.studentId,
+            'Nombre': r.firstName,
+            'Apellido': r.lastName,
+            'Concentración': r.concentracion || '',
+            'Recinto': r.campus || '',
+            'Fecha y Hora de Entrada': new Date(r.clickedAt).toLocaleString('es-ES')
+        }));
+
+        const ws = XLSX.utils.json_to_sheet(data);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Asistencia");
+        const safeNombre = clicsNombreActual.replace(/[^a-zA-Z0-9]/g, '_').slice(0, 40);
+        XLSX.writeFile(wb, `Asistencia_${safeNombre}_${new Date().toISOString().split('T')[0]}.xlsx`);
+    }
+
+    function exportarClicsPDF() {
+        if (clicsActuales.length === 0) {
+            alert('No hay registros para exportar todavía.');
+            return;
+        }
+
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF('l', 'mm', 'a4');
+        const pageWidth = doc.internal.pageSize.getWidth();
+        const pageHeight = doc.internal.pageSize.getHeight();
+        const margin = 12;
+
+        // Columnas
+        const colID = margin;
+        const colNombre = colID + 26;
+        const colApellido = colNombre + 45;
+        const colConcentracion = colApellido + 45;
+        const colRecinto = colConcentracion + 55;
+        const colHora = colRecinto + 35;
+
+        function dibujarEncabezado() {
+            // Banda roja institucional
+            doc.setFillColor(200, 16, 46);
+            doc.rect(0, 0, pageWidth, 22, 'F');
+            doc.setTextColor(255, 255, 255);
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(13);
+            doc.text('Oficina de Carreras y Colocaciones - UAGM', margin, 10);
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(10);
+            doc.text(clicsNombreActual, margin, 17);
+
+            doc.setTextColor(0, 0, 0);
+            let y = 30;
+
+            // Encabezados de tabla
+            doc.setFillColor(241, 242, 244);
+            doc.rect(margin, y - 5, pageWidth - margin * 2, 8, 'F');
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(9);
+            doc.text('ID', colID + 1, y);
+            doc.text('Nombre', colNombre + 1, y);
+            doc.text('Apellido', colApellido + 1, y);
+            doc.text('Concentración', colConcentracion + 1, y);
+            doc.text('Recinto', colRecinto + 1, y);
+            doc.text('Hora de Entrada', colHora + 1, y);
+            doc.setFont('helvetica', 'normal');
+
+            return y + 8;
+        }
+
+        let yPos = dibujarEncabezado();
+        const filaAltura = 7;
+
+        clicsActuales.forEach((r) => {
+            if (yPos > pageHeight - 15) {
+                doc.addPage();
+                yPos = dibujarEncabezado();
+            }
+
+            doc.setFontSize(8.5);
+            doc.text(String(r.studentId || ''), colID + 1, yPos);
+            doc.text(String(r.firstName || '').substring(0, 22), colNombre + 1, yPos);
+            doc.text(String(r.lastName || '').substring(0, 22), colApellido + 1, yPos);
+            doc.text(String(r.concentracion || '').substring(0, 28), colConcentracion + 1, yPos);
+            doc.text(String(r.campus || '').substring(0, 16), colRecinto + 1, yPos);
+            doc.text(new Date(r.clickedAt).toLocaleString('es-ES'), colHora + 1, yPos);
+
+            doc.setDrawColor(230, 230, 230);
+            doc.line(margin, yPos + 2, pageWidth - margin, yPos + 2);
+
+            yPos += filaAltura;
+        });
+
+        doc.setFontSize(8);
+        doc.setTextColor(150, 150, 150);
+        doc.text(`Generado el ${new Date().toLocaleDateString('es-ES')} — ${clicsActuales.length} registro(s)`, margin, pageHeight - 8);
+
+        const safeNombre = clicsNombreActual.replace(/[^a-zA-Z0-9]/g, '_').slice(0, 40);
+        doc.save(`Asistencia_${safeNombre}_${new Date().toISOString().split('T')[0]}.pdf`);
     }
 </script>
 </body>
