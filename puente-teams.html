@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Confirmación de Acceso - UAGM</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+        font-family: 'Segoe UI', Arial, sans-serif;
+        background: linear-gradient(135deg, #C8102E 0%, #8B0B1F 100%);
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+    }
+    .card {
+        background: white;
+        border-radius: 16px;
+        padding: 36px 30px;
+        max-width: 440px;
+        width: 100%;
+        box-shadow: 0 12px 40px rgba(0,0,0,0.25);
+        text-align: center;
+    }
+    .card.wide { max-width: 900px; text-align: left; }
+    h1 { font-size: 20px; color: #1a202c; margin-bottom: 6px; }
+    p.sub { color: #6c757d; font-size: 14px; margin-bottom: 24px; }
+    input {
+        width: 100%;
+        padding: 12px 14px;
+        border: 1px solid #dcdfe4;
+        border-radius: 8px;
+        font-size: 15px;
+        margin-bottom: 14px;
+        font-family: inherit;
+    }
+    input:focus { outline: none; border-color: #C8102E; }
+    button {
+        width: 100%;
+        padding: 12px;
+        border: none;
+        border-radius: 8px;
+        background: #C8102E;
+        color: white;
+        font-size: 15px;
+        font-weight: 600;
+        cursor: pointer;
+        font-family: inherit;
+    }
+    button:hover { background: #a30d25; }
+    button:disabled { background: #adb5bd; cursor: not-allowed; }
+    .icon-big { font-size: 40px; color: #C8102E; margin-bottom: 14px; }
+    .error-box { background: #fbeae8; color: #c0362c; padding: 12px 14px; border-radius: 8px; font-size: 14px; margin-bottom: 14px; text-align: left; }
+    .spinner {
+        border: 3px solid #f1f2f4;
+        border-top: 3px solid #C8102E;
+        border-radius: 50%;
+        width: 32px; height: 32px;
+        animation: spin 0.8s linear infinite;
+        margin: 0 auto 16px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    #app { display: none; }
+    #app.show { display: block; }
+
+    /* ===== ADMIN ===== */
+    .admin-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+    .admin-list-item {
+        border: 1px solid #e9eaec;
+        border-radius: 10px;
+        padding: 14px 16px;
+        margin-bottom: 12px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+    .admin-list-item strong { font-size: 14.5px; color: #1a202c; }
+    .admin-list-item .link-preview { font-size: 12px; color: #6c757d; word-break: break-all; margin-top: 4px; }
+    .admin-actions { display: flex; gap: 8px; flex-shrink: 0; }
+    .btn-small { width: auto; padding: 7px 12px; font-size: 12.5px; }
+    .btn-secondary { background: #667080; }
+    .btn-secondary:hover { background: #545c69; }
+    .modal-overlay {
+        display: none;
+        position: fixed; inset: 0;
+        background: rgba(0,0,0,0.5);
+        align-items: center; justify-content: center;
+        z-index: 999;
+    }
+    .modal-overlay.show { display: flex; }
+    .modal-box {
+        background: white;
+        border-radius: 14px;
+        max-width: 700px;
+        width: 92%;
+        max-height: 85vh;
+        overflow-y: auto;
+        padding: 24px;
+    }
+    table { width: 100%; border-collapse: collapse; margin-top: 14px; font-size: 13px; }
+    th, td { text-align: left; padding: 9px 10px; border-bottom: 1px solid #eee; }
+    th { color: #6c757d; font-size: 11px; text-transform: uppercase; }
+</style>
+</head>
+<body>
+
+<!-- ===== PANTALLA: CARGANDO ===== -->
+<div class="card" id="loadingScreen">
+    <div class="spinner"></div>
+    <p class="sub" style="margin-bottom:0;">Cargando...</p>
+</div>
+
+<!-- ===== PANTALLA: ENLACE INVÁLIDO ===== -->
+<div class="card" id="invalidScreen" style="display:none;">
+    <div class="icon-big"><i class="fas fa-exclamation-triangle"></i></div>
+    <h1>Enlace inválido</h1>
+    <p class="sub">Este enlace no existe o ya no está activo. Verifica que lo copiaste completo.</p>
+</div>
+
+<!-- ===== PANTALLA: PIDE ID DE ESTUDIANTE ===== -->
+<div class="card" id="idScreen" style="display:none;">
+    <div class="icon-big"><i class="fas fa-graduation-cap"></i></div>
+    <h1 id="tallerNombre">Confirmar acceso</h1>
+    <p class="sub">Escribe tu número de estudiante para continuar.</p>
+    <div id="idErrorBox"></div>
+    <input type="text" id="studentIdInput" placeholder="Ej: S00209377" autocomplete="off">
+    <button onclick="confirmarYRedirigir()" id="confirmarBtn">Continuar</button>
+</div>
+
+<!-- ===== PANTALLA: REDIRIGIENDO ===== -->
+<div class="card" id="redirectScreen" style="display:none;">
+    <div class="spinner"></div>
+    <h1 id="redirectMsg">Conectándote a la sesión...</h1>
+    <p class="sub">No cierres esta ventana.</p>
+</div>
+
+<!-- ===== ADMIN: LOGIN ===== -->
+<div class="card" id="adminLoginScreen" style="display:none;">
+    <div class="icon-big"><i class="fas fa-lock"></i></div>
+    <h1>Panel de Enlaces Puente</h1>
+    <p class="sub">Ingresa la contraseña para continuar.</p>
+    <input type="password" id="adminPasswordInput" placeholder="Contraseña" onkeypress="if(event.key==='Enter') checkAdminPassword();">
+    <button onclick="checkAdminPassword()">Entrar</button>
+</div>
+
+<!-- ===== ADMIN: PANEL ===== -->
+<div class="card wide" id="adminPanelScreen" style="display:none;">
+    <div class="admin-header">
+        <div>
+            <h1 style="margin-bottom:2px;">Panel de Enlaces Puente</h1>
+            <p class="sub" style="margin-bottom:0;">Crea enlaces que confirman quién entró antes de mandarlos a Teams (o cualquier otro enlace externo).</p>
+        </div>
+    </div>
+
+    <div style="background:#f8f9fa; border-radius:10px; padding:18px; margin-bottom:24px;">
+        <input type="text" id="nuevoNombre" placeholder="Nombre del evento (ej: Taller Empire Gas - Manejo de Casos)">
+        <input type="url" id="nuevoDestino" placeholder="Enlace real de Teams (o el que sea)">
+        <button onclick="crearEnlace()"><i class="fas fa-plus"></i> Crear Enlace</button>
+    </div>
+
+    <div id="enlacesList"></div>
+</div>
+
+<!-- ===== MODAL: VER CLICS ===== -->
+<div class="modal-overlay" id="clicsModal">
+    <div class="modal-box">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <h1 id="clicsModalTitle" style="font-size:17px;">Registros</h1>
+            <i class="fas fa-times" style="cursor:pointer; font-size:18px; color:#6c757d;" onclick="cerrarClicsModal()"></i>
+        </div>
+        <p class="sub" id="clicsCount" style="margin-top:6px; margin-bottom:0;"></p>
+        <div id="clicsTableContainer"></div>
+    </div>
+</div>
+
+<script>
+    // ===================== CONFIGURACIÓN =====================
+    // Pega aquí el mismo bloque de firebaseConfig que ya usas en taller-admin.html / taller-asistencia.html
+    const firebaseConfig = {
+    apiKey: "AIzaSyBFgSuKNJMUoVcKgHjsqOsInArSPBsb32A",
+    authDomain: "uagm-portal-de-empleo-17aed.firebaseapp.com",
+    projectId: "uagm-portal-de-empleo-17aed",
+    storageBucket: "uagm-portal-de-empleo-17aed.firebasestorage.app",
+    messagingSenderId: "582147767835",
+    appId: "1:582147767835:web:546ab8f2557b6da6ccc2be"
+};
+
+
+    const ADMIN_PASSWORD = "talleres2026"; // misma contraseña que taller-admin.html; cámbiala aquí si quieres una distinta
+
+    let db;
+    function initFirebase() {
+        firebase.initializeApp(firebaseConfig);
+        db = firebase.firestore();
+    }
+
+    // ===================== ROUTER =====================
+    const params = new URLSearchParams(window.location.search);
+    const modoAdmin = params.get('admin');
+    const enlaceId = params.get('id');
+
+    window.addEventListener('DOMContentLoaded', () => {
+        initFirebase();
+        document.getElementById('loadingScreen').style.display = 'none';
+
+        if (modoAdmin) {
+            document.getElementById('adminLoginScreen').style.display = 'block';
+        } else if (enlaceId) {
+            cargarEnlaceParticipante(enlaceId);
+        } else {
+            document.getElementById('invalidScreen').style.display = 'block';
+        }
+    });
+
+    // ===================== FLUJO PARTICIPANTE =====================
+    let enlaceActual = null;
+
+    async function cargarEnlaceParticipante(id) {
+        try {
+            const doc = await db.collection('enlaces_puente').doc(id).get();
+            if (!doc.exists) {
+                document.getElementById('invalidScreen').style.display = 'block';
+                return;
+            }
+            enlaceActual = { id: doc.id, ...doc.data() };
+            document.getElementById('tallerNombre').textContent = enlaceActual.nombre;
+            document.getElementById('idScreen').style.display = 'block';
+        } catch (e) {
+            console.error(e);
+            document.getElementById('invalidScreen').style.display = 'block';
+        }
+    }
+
+    async function confirmarYRedirigir() {
+        const input = document.getElementById('studentIdInput');
+        let studentId = input.value.trim().toUpperCase();
+        if (!studentId) return;
+        if (!studentId.startsWith('S') && /^\d+$/.test(studentId)) studentId = 'S' + studentId;
+
+        const btn = document.getElementById('confirmarBtn');
+        btn.disabled = true;
+        btn.textContent = 'Verificando...';
+        document.getElementById('idErrorBox').innerHTML = '';
+
+        try {
+            const rosterDoc = await db.collection('roster_estudiantes').doc(studentId).get();
+            if (!rosterDoc.exists) {
+                document.getElementById('idErrorBox').innerHTML = '<div class="error-box">No te encontramos en nuestro sistema con ese número. Verifica que esté completo y correcto.</div>';
+                btn.disabled = false;
+                btn.textContent = 'Continuar';
+                return;
+            }
+
+            const est = rosterDoc.data();
+
+            await db.collection('clics_puente').add({
+                puenteId: enlaceActual.id,
+                puenteNombre: enlaceActual.nombre,
+                studentId: studentId,
+                firstName: est.firstName || '',
+                lastName: est.lastName || '',
+                concentracion: est.concentracion || '',
+                campus: est.campus || '',
+                clickedAt: new Date().toISOString()
+            });
+
+            document.getElementById('idScreen').style.display = 'none';
+            document.getElementById('redirectMsg').textContent = `Conectándote a ${enlaceActual.nombre}...`;
+            document.getElementById('redirectScreen').style.display = 'block';
+
+            setTimeout(() => {
+                window.location.href = enlaceActual.destino;
+            }, 1200);
+
+        } catch (e) {
+            console.error(e);
+            document.getElementById('idErrorBox').innerHTML = '<div class="error-box">Ocurrió un error. Intenta de nuevo.</div>';
+            btn.disabled = false;
+            btn.textContent = 'Continuar';
+        }
+    }
+
+    // ===================== FLUJO ADMIN =====================
+    function checkAdminPassword() {
+        const val = document.getElementById('adminPasswordInput').value;
+        if (val === ADMIN_PASSWORD) {
+            document.getElementById('adminLoginScreen').style.display = 'none';
+            document.getElementById('adminPanelScreen').style.display = 'block';
+            cargarEnlacesAdmin();
+        } else {
+            alert('Contraseña incorrecta');
+        }
+    }
+
+    async function crearEnlace() {
+        const nombre = document.getElementById('nuevoNombre').value.trim();
+        const destino = document.getElementById('nuevoDestino').value.trim();
+
+        if (!nombre || !destino) {
+            alert('Completa el nombre y el enlace de destino');
+            return;
+        }
+
+        try {
+            const ref = await db.collection('enlaces_puente').add({
+                nombre, destino,
+                createdAt: new Date().toISOString()
+            });
+
+            document.getElementById('nuevoNombre').value = '';
+            document.getElementById('nuevoDestino').value = '';
+
+            const shareUrl = `${window.location.origin}${window.location.pathname}?id=${ref.id}`;
+            prompt('Enlace creado. Copia y comparte este link:', shareUrl);
+
+            cargarEnlacesAdmin();
+        } catch (e) {
+            console.error(e);
+            alert('Error creando el enlace');
+        }
+    }
+
+    async function cargarEnlacesAdmin() {
+        const container = document.getElementById('enlacesList');
+        container.innerHTML = '<p class="sub">Cargando...</p>';
+
+        const snapshot = await db.collection('enlaces_puente').orderBy('createdAt', 'desc').get();
+        if (snapshot.empty) {
+            container.innerHTML = '<p class="sub">Todavía no has creado ningún enlace.</p>';
+            return;
+        }
+
+        let html = '';
+        snapshot.forEach(doc => {
+            const d = doc.data();
+            const shareUrl = `${window.location.origin}${window.location.pathname}?id=${doc.id}`;
+            html += `
+                <div class="admin-list-item">
+                    <div>
+                        <strong>${d.nombre}</strong>
+                        <div class="link-preview">${shareUrl}</div>
+                    </div>
+                    <div class="admin-actions">
+                        <button class="btn-small" style="background:#2B6CB0;" onclick="navigator.clipboard.writeText('${shareUrl}'); this.textContent='Copiado ✓'; setTimeout(()=>this.textContent='Copiar Enlace', 1500);">Copiar Enlace</button>
+                        <button class="btn-small" style="background:#1E8E5A;" onclick="verClics('${doc.id}', '${d.nombre.replace(/'/g, "\\'")}')">Ver Quién Entró</button>
+                    </div>
+                </div>
+            `;
+        });
+        container.innerHTML = html;
+    }
+
+    let clicsUnsubscribe = null;
+
+    function verClics(puenteId, nombre) {
+        document.getElementById('clicsModalTitle').textContent = nombre;
+        document.getElementById('clicsModal').classList.add('show');
+        document.getElementById('clicsTableContainer').innerHTML = '<p class="sub">Cargando...</p>';
+
+        if (clicsUnsubscribe) clicsUnsubscribe();
+
+        clicsUnsubscribe = db.collection('clics_puente').where('puenteId', '==', puenteId)
+            .onSnapshot(snapshot => {
+                const rows = [];
+                snapshot.forEach(doc => rows.push(doc.data()));
+                rows.sort((a, b) => new Date(a.clickedAt) - new Date(b.clickedAt));
+
+                document.getElementById('clicsCount').textContent = `${rows.length} estudiante${rows.length !== 1 ? 's' : ''} entraron`;
+
+                if (rows.length === 0) {
+                    document.getElementById('clicsTableContainer').innerHTML = '<p class="sub">Nadie ha entrado todavía.</p>';
+                    return;
+                }
+
+                let html = '<table><thead><tr><th>ID</th><th>Nombre</th><th>Concentración</th><th>Recinto</th><th>Hora</th></tr></thead><tbody>';
+                rows.forEach(r => {
+                    html += `<tr>
+                        <td>${r.studentId}</td>
+                        <td>${r.firstName} ${r.lastName}</td>
+                        <td>${r.concentracion || ''}</td>
+                        <td>${r.campus || ''}</td>
+                        <td>${new Date(r.clickedAt).toLocaleString('es-ES')}</td>
+                    </tr>`;
+                });
+                html += '</tbody></table>';
+                document.getElementById('clicsTableContainer').innerHTML = html;
+            });
+    }
+
+    function cerrarClicsModal() {
+        document.getElementById('clicsModal').classList.remove('show');
+        if (clicsUnsubscribe) { clicsUnsubscribe(); clicsUnsubscribe = null; }
+    }
+</script>
+</body>
+</html>
