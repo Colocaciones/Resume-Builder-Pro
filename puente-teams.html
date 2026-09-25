@@ -269,7 +269,7 @@
                                     enlaceActual = { id: doc.id, ...doc.data() };
 
             if (enlaceActual.horaMinima && new Date() < new Date(enlaceActual.horaMinima)) {
-                const horaTexto = new Date(enlaceActual.horaMinima).toLocaleString('es-ES', { dateStyle: 'long', timeStyle: 'short' });
+                const horaTexto = new Date(enlaceActual.horaMinima).toLocaleString('es-PR', { dateStyle: 'long', timeStyle: 'short' });
                 document.getElementById('tooEarlyMsg').textContent = `Este enlace estará disponible a partir de: ${horaTexto}`;
                 document.getElementById('tooEarlyScreen').style.display = 'block';
                 return;
