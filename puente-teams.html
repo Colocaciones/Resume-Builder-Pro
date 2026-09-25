@@ -349,7 +349,7 @@
             return;
         }
 
-        let html = '';
+                let html = '';
         snapshot.forEach(doc => {
             const d = doc.data();
             const shareUrl = `${window.location.origin}${window.location.pathname}?id=${doc.id}`;
@@ -362,11 +362,35 @@
                     <div class="admin-actions">
                         <button class="btn-small" style="background:#2B6CB0;" onclick="navigator.clipboard.writeText('${shareUrl}'); this.textContent='Copiado ✓'; setTimeout(()=>this.textContent='Copiar Enlace', 1500);">Copiar Enlace</button>
                         <button class="btn-small" style="background:#1E8E5A;" onclick="verClics('${doc.id}', '${d.nombre.replace(/'/g, "\\'")}')">Ver Quién Entró</button>
+                        <button class="btn-small" style="background:#c0362c;" onclick="eliminarEnlace('${doc.id}', '${d.nombre.replace(/'/g, "\\'")}')">Eliminar</button>
                     </div>
                 </div>
             `;
         });
         container.innerHTML = html;
+    }
+
+    async function eliminarEnlace(id, nombre) {
+        try {
+            const clicsSnapshot = await db.collection('clics_puente').where('puenteId', '==', id).get();
+            const cantidad = clicsSnapshot.size;
+
+            const mensaje = cantidad > 0
+                ? `¿Eliminar "${nombre}"? Esto también borrará los ${cantidad} registro(s) de estudiantes que entraron por este enlace. Esta acción no se puede deshacer.`
+                : `¿Eliminar "${nombre}"? Esta acción no se puede deshacer.`;
+
+            if (!confirm(mensaje)) return;
+
+            const batch = db.batch();
+            clicsSnapshot.forEach(doc => batch.delete(doc.ref));
+            batch.delete(db.collection('enlaces_puente').doc(id));
+            await batch.commit();
+
+            cargarEnlacesAdmin();
+        } catch (e) {
+            console.error(e);
+            alert('Error eliminando el enlace');
+        }
     }
 
     let clicsUnsubscribe = null;
@@ -381,10 +405,10 @@
 
         if (clicsUnsubscribe) clicsUnsubscribe();
 
-        clicsUnsubscribe = db.collection('clics_puente').where('puenteId', '==', puenteId)
+                clicsUnsubscribe = db.collection('clics_puente').where('puenteId', '==', puenteId)
             .onSnapshot(snapshot => {
                 const rows = [];
-                snapshot.forEach(doc => rows.push(doc.data()));
+                snapshot.forEach(doc => rows.push({ docId: doc.id, ...doc.data() }));
                 rows.sort((a, b) => new Date(a.clickedAt) - new Date(b.clickedAt));
                 clicsActuales = rows;
 
@@ -395,7 +419,7 @@
                     return;
                 }
 
-                let html = '<table><thead><tr><th>ID</th><th>Nombre</th><th>Concentración</th><th>Recinto</th><th>Hora</th></tr></thead><tbody>';
+                let html = '<table><thead><tr><th>ID</th><th>Nombre</th><th>Concentración</th><th>Recinto</th><th>Hora</th><th></th></tr></thead><tbody>';
                 rows.forEach(r => {
                     html += `<tr>
                         <td>${r.studentId}</td>
@@ -403,11 +427,22 @@
                         <td>${r.concentracion || ''}</td>
                         <td>${r.campus || ''}</td>
                         <td>${new Date(r.clickedAt).toLocaleString('es-ES')}</td>
+                        <td><i class="fas fa-trash" style="cursor:pointer; color:#c0362c;" onclick="eliminarClic('${r.docId}', '${(r.firstName + ' ' + r.lastName).replace(/'/g, "\\'")}')"></i></td>
                     </tr>`;
                 });
                 html += '</tbody></table>';
                 document.getElementById('clicsTableContainer').innerHTML = html;
             });
+    }
+
+    async function eliminarClic(docId, nombre) {
+        if (!confirm(`¿Eliminar el registro de ${nombre}? Esta acción no se puede deshacer.`)) return;
+        try {
+            await db.collection('clics_puente').doc(docId).delete();
+        } catch (e) {
+            console.error(e);
+            alert('Error eliminando el registro');
+        }
     }
 
     function cerrarClicsModal() {
