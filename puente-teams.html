@@ -133,9 +133,20 @@
     <p class="sub">Escribe tu número de estudiante para continuar.</p>
     <div id="idErrorBox"></div>
     <input type="text" id="studentIdInput" placeholder="Ej: S00209377" autocomplete="off">
+    <div id="becasQuestionBox" style="display:none; text-align:left; margin-bottom:14px;">
+        <label style="font-size:13px; color:#4a5568; display:block; margin-bottom:8px;">¿Eres de Programa de Honor o Fondo Permanente de Becas?</label>
+        <label style="display:flex; align-items:center; gap:8px; margin-bottom:8px; font-weight:normal; font-size:14px;">
+            <input type="radio" name="becasRadio" value="Programa de Honor" style="width:auto; margin-bottom:0;"> Programa de Honor
+        </label>
+        <label style="display:flex; align-items:center; gap:8px; margin-bottom:8px; font-weight:normal; font-size:14px;">
+            <input type="radio" name="becasRadio" value="Fondo Permanente de Becas" style="width:auto; margin-bottom:0;"> Fondo Permanente de Becas
+        </label>
+        <label style="display:flex; align-items:center; gap:8px; margin-bottom:8px; font-weight:normal; font-size:14px;">
+            <input type="radio" name="becasRadio" value="Ninguno de los dos" style="width:auto; margin-bottom:0;"> Ninguno de los dos
+        </label>
+    </div>
     <button onclick="confirmarYRedirigir()" id="confirmarBtn">Continuar</button>
 </div>
-
 <!-- ===== PANTALLA: REDIRIGIENDO ===== -->
 <div class="card" id="redirectScreen" style="display:none;">
     <div class="spinner"></div>
@@ -161,9 +172,13 @@
         </div>
     </div>
 
-    <div style="background:#f8f9fa; border-radius:10px; padding:18px; margin-bottom:24px;">
+        <div style="background:#f8f9fa; border-radius:10px; padding:18px; margin-bottom:24px;">
         <input type="text" id="nuevoNombre" placeholder="Nombre del evento (ej: Taller Empire Gas - Manejo de Casos)">
         <input type="url" id="nuevoDestino" placeholder="Enlace real de Teams (o el que sea)">
+        <label style="display:flex; align-items:center; gap:8px; margin-bottom:14px; font-size:13px; color:#4a5568; cursor:pointer;">
+            <input type="checkbox" id="nuevoPreguntaBecas" style="width:auto; margin-bottom:0;">
+            Preguntar si es de Programa de Honor o Fondo Permanente de Becas
+        </label>
         <button onclick="crearEnlace()"><i class="fas fa-plus"></i> Crear Enlace</button>
     </div>
 
@@ -241,8 +256,12 @@
                 document.getElementById('invalidScreen').style.display = 'block';
                 return;
             }
-            enlaceActual = { id: doc.id, ...doc.data() };
+
+                        enlaceActual = { id: doc.id, ...doc.data() };
             document.getElementById('tallerNombre').textContent = enlaceActual.nombre;
+            if (enlaceActual.preguntaBecas) {
+                document.getElementById('becasQuestionBox').style.display = 'block';
+            }
             document.getElementById('idScreen').style.display = 'block';
         } catch (e) {
             console.error(e);
@@ -250,11 +269,21 @@
         }
     }
 
-    async function confirmarYRedirigir() {
+        async function confirmarYRedirigir() {
         const input = document.getElementById('studentIdInput');
         let studentId = input.value.trim().toUpperCase();
         if (!studentId) return;
         if (!studentId.startsWith('S') && /^\d+$/.test(studentId)) studentId = 'S' + studentId;
+
+        let respuestaBecas = null;
+        if (enlaceActual.preguntaBecas) {
+            const seleccionado = document.querySelector('input[name="becasRadio"]:checked');
+            if (!seleccionado) {
+                document.getElementById('idErrorBox').innerHTML = '<div class="error-box">Selecciona una opción antes de continuar.</div>';
+                return;
+            }
+            respuestaBecas = seleccionado.value;
+        }
 
         const btn = document.getElementById('confirmarBtn');
         btn.disabled = true;
@@ -272,7 +301,7 @@
 
             const est = rosterDoc.data();
 
-            await db.collection('clics_puente').add({
+                        await db.collection('clics_puente').add({
                 puenteId: enlaceActual.id,
                 puenteNombre: enlaceActual.nombre,
                 studentId: studentId,
@@ -280,6 +309,7 @@
                 lastName: est.lastName || '',
                 concentracion: est.concentracion || '',
                 campus: est.campus || '',
+                programaBeca: respuestaBecas,
                 clickedAt: new Date().toISOString()
             });
 
@@ -311,9 +341,10 @@
         }
     }
 
-    async function crearEnlace() {
+        async function crearEnlace() {
         const nombre = document.getElementById('nuevoNombre').value.trim();
         const destino = document.getElementById('nuevoDestino').value.trim();
+        const preguntaBecas = document.getElementById('nuevoPreguntaBecas').checked;
 
         if (!nombre || !destino) {
             alert('Completa el nombre y el enlace de destino');
@@ -322,12 +353,13 @@
 
         try {
             const ref = await db.collection('enlaces_puente').add({
-                nombre, destino,
+                nombre, destino, preguntaBecas,
                 createdAt: new Date().toISOString()
             });
 
             document.getElementById('nuevoNombre').value = '';
             document.getElementById('nuevoDestino').value = '';
+            document.getElementById('nuevoPreguntaBecas').checked = false;
 
             const shareUrl = `${window.location.origin}${window.location.pathname}?id=${ref.id}`;
             prompt('Enlace creado. Copia y comparte este link:', shareUrl);
@@ -419,13 +451,15 @@
                     return;
                 }
 
-                let html = '<table><thead><tr><th>ID</th><th>Nombre</th><th>Concentración</th><th>Recinto</th><th>Hora</th><th></th></tr></thead><tbody>';
+                                const mostrarBecas = rows.some(r => r.programaBeca);
+                let html = `<table><thead><tr><th>ID</th><th>Nombre</th><th>Concentración</th><th>Recinto</th>${mostrarBecas ? '<th>Beca/Honor</th>' : ''}<th>Hora</th><th></th></tr></thead><tbody>`;
                 rows.forEach(r => {
                     html += `<tr>
                         <td>${r.studentId}</td>
                         <td>${r.firstName} ${r.lastName}</td>
                         <td>${r.concentracion || ''}</td>
                         <td>${r.campus || ''}</td>
+                        ${mostrarBecas ? `<td>${r.programaBeca || '—'}</td>` : ''}
                         <td>${new Date(r.clickedAt).toLocaleString('es-ES')}</td>
                         <td><i class="fas fa-trash" style="cursor:pointer; color:#c0362c;" onclick="eliminarClic('${r.docId}', '${(r.firstName + ' ' + r.lastName).replace(/'/g, "\\'")}')"></i></td>
                     </tr>`;
@@ -456,12 +490,13 @@
             return;
         }
 
-        const data = clicsActuales.map(r => ({
+                const data = clicsActuales.map(r => ({
             'ID': r.studentId,
             'Nombre': r.firstName,
             'Apellido': r.lastName,
             'Concentración': r.concentracion || '',
             'Recinto': r.campus || '',
+            'Programa de Honor / Beca': r.programaBeca || '',
             'Fecha y Hora de Entrada': new Date(r.clickedAt).toLocaleString('es-ES')
         }));
 
