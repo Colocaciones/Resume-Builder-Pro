@@ -275,15 +275,18 @@
                 return;
             }
 
-            document.getElementById('tallerNombre').textContent = enlaceActual.nombre;
+                        document.getElementById('tallerNombre').textContent = enlaceActual.nombre;
             if (enlaceActual.preguntaBecas) {
                 document.getElementById('becasQuestionBox').style.display = 'block';
             }
             document.getElementById('idScreen').style.display = 'block';
+        } catch (e) {
+            console.error(e);
+            document.getElementById('invalidScreen').style.display = 'block';
         }
     }
 
-        async function confirmarYRedirigir() {
+    async function confirmarYRedirigir() {
         const input = document.getElementById('studentIdInput');
         let studentId = input.value.trim().toUpperCase();
         if (!studentId) return;
