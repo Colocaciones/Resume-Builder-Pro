@@ -126,6 +126,12 @@
     <p class="sub">Este enlace no existe o ya no está activo. Verifica que lo copiaste completo.</p>
 </div>
 
+<!-- ===== PANTALLA: TODAVÍA NO DISPONIBLE ===== -->
+<div class="card" id="tooEarlyScreen" style="display:none;">
+    <div class="icon-big"><i class="fas fa-clock"></i></div>
+    <h1>Todavía no está disponible</h1>
+    <p class="sub" id="tooEarlyMsg">Este enlace se activa más tarde. Vuelve a intentarlo en el horario indicado.</p>
+</div>
 <!-- ===== PANTALLA: PIDE ID DE ESTUDIANTE ===== -->
 <div class="card" id="idScreen" style="display:none;">
     <div class="icon-big"><i class="fas fa-graduation-cap"></i></div>
@@ -172,13 +178,12 @@
         </div>
     </div>
 
-        <div style="background:#f8f9fa; border-radius:10px; padding:18px; margin-bottom:24px;">
-        <input type="text" id="nuevoNombre" placeholder="Nombre del evento (ej: Taller Empire Gas - Manejo de Casos)">
-        <input type="url" id="nuevoDestino" placeholder="Enlace real de Teams (o el que sea)">
-        <label style="display:flex; align-items:center; gap:8px; margin-bottom:14px; font-size:13px; color:#4a5568; cursor:pointer;">
+                <label style="display:flex; align-items:center; gap:8px; margin-bottom:14px; font-size:13px; color:#4a5568; cursor:pointer;">
             <input type="checkbox" id="nuevoPreguntaBecas" style="width:auto; margin-bottom:0;">
             Preguntar si es de Programa de Honor o Fondo Permanente de Becas
         </label>
+        <label style="text-align:left; display:block; font-size:13px; color:#4a5568; margin-bottom:4px;">No permitir el registro antes de (opcional):</label>
+        <input type="datetime-local" id="nuevoHoraMinima" style="margin-bottom:14px;">
         <button onclick="crearEnlace()"><i class="fas fa-plus"></i> Crear Enlace</button>
     </div>
 
@@ -257,15 +262,20 @@
                 return;
             }
 
-                        enlaceActual = { id: doc.id, ...doc.data() };
+                                    enlaceActual = { id: doc.id, ...doc.data() };
+
+            if (enlaceActual.horaMinima && new Date() < new Date(enlaceActual.horaMinima)) {
+                const horaTexto = new Date(enlaceActual.horaMinima).toLocaleString('es-ES', { dateStyle: 'long', timeStyle: 'short' });
+                document.getElementById('tooEarlyMsg').textContent = `Este enlace estará disponible a partir de: ${horaTexto}`;
+                document.getElementById('tooEarlyScreen').style.display = 'block';
+                return;
+            }
+
             document.getElementById('tallerNombre').textContent = enlaceActual.nombre;
             if (enlaceActual.preguntaBecas) {
                 document.getElementById('becasQuestionBox').style.display = 'block';
             }
             document.getElementById('idScreen').style.display = 'block';
-        } catch (e) {
-            console.error(e);
-            document.getElementById('invalidScreen').style.display = 'block';
         }
     }
 
@@ -341,10 +351,12 @@
         }
     }
 
-        async function crearEnlace() {
+            async function crearEnlace() {
         const nombre = document.getElementById('nuevoNombre').value.trim();
         const destino = document.getElementById('nuevoDestino').value.trim();
         const preguntaBecas = document.getElementById('nuevoPreguntaBecas').checked;
+        const horaMinimaInput = document.getElementById('nuevoHoraMinima').value;
+        const horaMinima = horaMinimaInput ? new Date(horaMinimaInput).toISOString() : null;
 
         if (!nombre || !destino) {
             alert('Completa el nombre y el enlace de destino');
@@ -353,13 +365,14 @@
 
         try {
             const ref = await db.collection('enlaces_puente').add({
-                nombre, destino, preguntaBecas,
+                nombre, destino, preguntaBecas, horaMinima,
                 createdAt: new Date().toISOString()
             });
 
             document.getElementById('nuevoNombre').value = '';
             document.getElementById('nuevoDestino').value = '';
             document.getElementById('nuevoPreguntaBecas').checked = false;
+            document.getElementById('nuevoHoraMinima').value = '';
 
             const shareUrl = `${window.location.origin}${window.location.pathname}?id=${ref.id}`;
             prompt('Enlace creado. Copia y comparte este link:', shareUrl);
